@@ -3,14 +3,14 @@
 이 문서는 프로젝트의 초기 스타일 시스템(Tailwind CSS v4 + shadcn/ui 기반) 구축 과정과 발생했던 주요 이슈 및 해결 방법을 기록합니다.
 
 ## 1. 프로젝트 개요
-- **목적**: Biffusion 브랜드 가이드를 기반으로 한 프론트엔드 환경 구축
+- **목적**: Bifusion 브랜드 가이드를 기반으로 한 프론트엔드 환경 구축
 - **핵심 기술 스택**: React, Vite, TypeScript, Tailwind CSS v4, shadcn/ui
 
 ## 2. 디자인 가이드 반영 (Brand Assets)
 가이드에서 추출한 핵심 자산을 시스템에 등록했습니다.
 
 ### 브랜드 컬러
-- **Primary (Orange)**: `#E68A00` (Biffusion 로고 메인 컬러)
+- **Primary (Orange)**: `#E68A00` (Bifusion 로고 메인 컬러)
 - **Secondary (Dark Gray)**: `#434D5A` (텍스트 및 서브 컬러)
 - **Accent (Brown)**: `#8D5A00` (강조 컬러)
 

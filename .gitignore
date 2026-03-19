@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 reference_img
+context_folder
 
 # Editor directories and files
 .vscode/*

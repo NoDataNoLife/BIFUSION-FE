@@ -1,40 +1,66 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand Colors from Frame 4.png */
-  --color-primary: #E68A00;
-  --color-primary-foreground: #FFFFFF;
-  
-  --color-secondary: #434D5A;
-  --color-secondary-foreground: #FFFFFF;
-  
-  --color-accent: #8D5A00;
-  --color-accent-foreground: #FFFFFF;
+  /* Brand Colors */
+  --color-primary: #e68a00;
+  --color-primary-foreground: #ffffff;
 
-  /* Basic UI Colors */
-  --color-background: #FFFFFF;
-  --color-foreground: #434D5A;
-  --color-border: #E4E4E7;
-  --color-muted: #F4F4F5;
-  --color-muted-foreground: #71717A;
+  --color-secondary: #434d5a;
+  --color-secondary-foreground: #ffffff;
+
+  --color-accent: #8d5a00;
+  --color-accent-foreground: #ffffff;
+
+  /* UI Colors (Light Default) */
+  --color-background: #fffbf4;
+  --color-foreground: #434d5a;
+  --color-border: #e4e4e7;
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-card: #ffffff;
+  --color-card-foreground: #434d5a;
 
   /* Fonts */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-hbios: "HBIOS-SYS", monospace;
 
-  /* Border Radius */
   --radius-lg: 0.5rem;
   --radius-md: calc(0.5rem - 2px);
   --radius-sm: calc(0.5rem - 4px);
 }
 
+/* Dark Mode Overrides */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-background: #191714;
+  --color-foreground: #f3ede3;
+  --color-border: #3a352d;
+  --color-muted: #24201b;
+  --color-muted-foreground: #b8ab95;
+  --color-card: #211d18;
+  --color-card-foreground: #f3ede3;
+
+  --color-primary: #f0a53a;
+  --color-primary-foreground: #2b1c0a;
+  --color-secondary: #2e333a;
+  --color-secondary-foreground: #f7f2e8;
+  --color-accent: #c8831d;
+  --color-accent-foreground: #2b1c0a;
+}
+
 @layer base {
-  *, ::after, ::before {
+  *,
+  ::after,
+  ::before {
     border-color: var(--color-border);
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    transition:
+      background-color 0.3s,
+      color 0.3s;
   }
 }

@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+reference_img
+context_folder
+BIFUSION-PROTO
 
 # Editor directories and files
 .vscode/*

@@ -2,73 +2,73 @@
 
 이 문서는 BIFFUSION 프로젝트의 프론트엔드 개발을 위한 상세 TODO 리스트입니다. `context-bifusion.txt`와 API 명세, 그리고 `reference_img`의 디자인 가이드를 바탕으로 작성되었습니다.
 
-## 1. 초기 환경 설정 (Base Setup)
+## 1. 초기 환경 설정 (Base Setup) ✅
 
-- [ ] **shadcn/ui 도입 및 구성**
-  - `components.json` 설정 및 기본 UI 컴포넌트 설치 (Button, Input, Card, Dialog, Tabs, etc.)
-  - Tailwind CSS 테마 설정 (`reference_img/land-dark.png`, `land-white.png` 참고하여 다크/라이트 모드 지원)
-- [ ] **Global State (Zustand) 정의**
-  - `useAuthStore`: 사용자 인증 정보 및 토큰 관리
-  - `useProjectStore`: 현재 선택된 프로젝트 및 워크스페이스 상태 관리
-- [ ] **API 계층 강화 (TanStack Query + Axios)**
-  - `src/lib/axios.ts` 내 인터셉터 보완 (에러 핸들링, 토큰 갱신 로직)
-  - 커스텀 훅 구조화 (`src/hooks/api/...`)
-- [ ] **Layout 시스템 구축**
-  - `Navbar.tsx` 고도화 (로그인 상태에 따른 메뉴 분기)
-  - `Sidebar.tsx` 구현 (Private/Public 트랙 전환 및 메뉴 내비게이션)
+- [x] **shadcn/ui 및 Tailwind CSS 구성**
+  - [x] Tailwind CSS v4 테마 설정 및 커스텀 컬러 시스템 구축
+  - [x] 다크/라이트 모드 기본 지원 설정
+- [x] **Global State (Zustand) 정의**
+  - [x] `useAuthStore`: 사용자 인증 정보 및 로컬 스토리지 유지(`persist`) 기능 구현
+- [x] **API 계층 강화 (TanStack Query + Axios)**
+  - [x] TanStack Query(React Query) 도입 및 `QueryClientProvider` 설정
+  - [x] `src/lib/axios.ts` 기초 설정 완료
+- [x] **Layout 시스템 및 정석 라우팅 구축**
+  - [x] `Navbar.tsx` 고도화 (로그인 상태에 따른 메뉴 분기 및 모의 로그인 구현)
+  - [x] `Sidebar.tsx` 구현 (URL 기반 내비게이션 및 NavLink 연동)
+  - [x] **Page-based Routing 구조 확립**: `src/pages/dashboard/` 하위 정석 구조 리팩토링
 
-## 2. 인증 및 사용자 (Auth & User)
+## 2. 인증 및 사용자 (Auth & User) 🔄
 
 - [ ] **Google OAuth2 로그인 연동**
-  - `POST /api/v1/oauth2/authorization/google` 처리 로직
-- [ ] **사용자 프로필 및 활동 내역**
-  - `GET /api/v1/users/me`: 현재 로그인 사용자 정보 연동
-  - `GET /api/v1/users/{userId}/activities`: 사용자 활동 피드 구현 (Infinite Scroll 권장)
+  - [x] **모의 로그인(Mock Login) 구현**: 랜딩 페이지 및 네비바 연동 완료
+  - [ ] `POST /api/v1/oauth2/authorization/google` 실제 API 연동
+- [x] **사용자 프로필 및 활동 내역**
+  - [x] `ProfilePage.tsx` 이식 완료: 사용자 정보, 통계, 참여 프로젝트 및 활동 피드 UI 구현
+  - [ ] 실제 API 연동 (`GET /api/v1/users/me`)
 
-## 3. Private Workspace (Project Track)
+## 3. Private Workspace (Project Track) 🔄
 
-- [ ] **프로젝트 대시보드**
-  - `GET /api/v1/projects`: 프로젝트 목록 조회 및 카드 UI 구현
-  - `POST /api/v1/projects`: 신규 프로젝트 생성 모달 구현
-- [ ] **협업 기능**
-  - `PUT /api/v1/projects/{projectId}/invitations/{invitationId}`: 초대 수락/거절 UI
+- [x] **프로젝트 대시보드**
+  - [x] `DashboardHomePage.tsx`: 전체 현황, 퀵 액션, 리소스 사용량 UI 구현
+  - [x] `ProjectsPage.tsx`: 프로젝트 목록 조회, 검색 필터, 생성 모달 UI 구현
+  - [ ] 실제 API 연동 (`GET /api/v1/projects`)
 - [ ] **데이터 관리**
-  - `POST /api/v1/images/upload`: 의료 이미지 (Single) 업로드 UI 및 프로그레스 바
+  - [x] `AssetDatasetDetail.tsx`: 데이터셋 상세 정보 및 파일 목록 UI 이식 완료
+  - [ ] `POST /api/v1/images/upload`: 의료 이미지 업로드 UI 실제 구현
 
 ## 4. AI Workflow (Jobs: Augment -> Train -> Inference)
 
 - [ ] **Data Augmentation (데이터 증강)**
-  - `POST /api/v1/projects/{projectId}/jobs/augment`: 증강 파라미터 설정 UI (Recipe 선택 및 커스텀 설정)
-  - `GET /api/v1/projects/{projectId}/jobs/{jobId}/images`: 증강된 이미지 결과 프리뷰 (Normal vs Anomaly 비교)
+  - [ ] `AugmentPage.tsx` 이식 필요 (현재 Placeholder)
+  - [ ] 증강 파라미터 설정 UI 및 결과 프리뷰 연동
 - [ ] **Model Training (모델 학습)**
-  - `POST /api/v1/projects/{projectId}/jobs/train`: 학습 시작 요청
-  - `POST /api/v1/projects/{projectId}/jobs/{jobId}/train/download`: 학습 완료된 `.pth` 모델 다운로드 기능
-- [ ] **실시간 상태 모니터링**
-  - `GET /api/v1/projects/{projectId}/jobs`: SSE(Server-Sent Events)를 활용한 작업 진행률 실시간 반영
+  - [ ] `TrainPage.tsx` 이식 필요
+- [ ] **전문가 검수 (Expert Track)**
+  - [x] `ExpertPage.tsx` 이식 완료: 검수 대기/진행/완료 탭 및 통계 UI
+  - [x] `ReviewDetailPage.tsx` 이식 완료: 전문가 정밀 검수 및 코멘트 UI
 
-## 5. Public Community (Public Track)
+## 5. Public Community (Public Track) 🔄
 
-- [ ] **Dataset 및 Recipe 탐색**
-  - `GET /api/v1/community/datasets`: 공개 데이터셋 리스트 및 상세 페이지
-  - `GET /api/v1/recipes/search`: Augmentation 레시피 검색 및 필터링
-- [ ] **레시피 생성 및 공유**
-  - `POST /api/v1/recipes/new`: 새로운 증강 레시피 작성 및 배포 UI
-  - `POST /api/v1/recipes/{recipe_id}/fork`: 기존 레시피 복사 및 수정 기능
-- [ ] **리뷰 및 피드백**
-  - `GET/POST /api/v1/recipes/{recipe_id}/reviews`: 레시피 평점 및 댓글 시스템
+- [x] **Dataset 및 Recipe 탐색**
+  - [x] `AssetsPage.tsx` 이식 완료: 보유 레시피 및 데이터셋 관리 UI
+  - [x] `RecipeDetail.tsx` 이식 완료: 레시피 상세 정보, 통계, 리뷰 UI
+- [ ] **커뮤니티 메인**
+  - [ ] `CommunityPage.tsx` 이식 필요 (현재 Placeholder)
+- [ ] **레시피 공유 및 리뷰**
+  - [ ] 리뷰 작성 기능 실제 구현
 
-## 6. UI/UX 정교화 (Design & Refinement)
+## 6. UI/UX 정교화 (Design & Refinement) 🔄
 
-- [ ] **다크/라이트 모드 최적화**
-  - `land-dark.png`와 `land-white.png`의 시각적 계층 구조(land-hierarchy.png) 반영
+- [x] **모던 UI 스타일 적용**
+  - [x] 둥근 모서리(2xl, 3xl), 입체적 그림자, 포인트 컬러(primary) 시스템 적용
 - [ ] **반응형 디자인**
-  - 모바일 및 태블릿 환경 고려한 레이아웃 대응
+  - [ ] 모바일 환경 최적화 점검
 - [ ] **알림 시스템**
-  - `GET /api/v1/notifications`: 실시간 알림 팝업 및 알림함 구현
+  - [ ] `NotificationCenter` 컴포넌트 이식 및 연동
 
 ## 7. 검증 및 배포 준비
 
-- [ ] **Unit/Integration Test**
-  - 주요 비즈니스 로직 및 API 연동 테스트
+- [ ] **API 명세 대조 및 타입 정의**
+  - [ ] `src/types/api.ts` 명세서 기반 구축
 - [ ] **Build Optimization**
-  - Vite 빌드 설정 최적화 및 배포 환경 점검
+  - [x] Vite 빌드 환경 점검 및 중복 익스포트 에러 해결

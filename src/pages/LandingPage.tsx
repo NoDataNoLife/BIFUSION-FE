@@ -1,6 +1,30 @@
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
 import { Zap, Shield, Share2, Terminal } from "lucide-react";
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuthStore();
+
+  const handleMockLogin = () => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+      return;
+    }
+
+    // 나중에 실제 구글 로그인 API 응답을 이 데이터 대신 넣으면 됩니다.
+    const mockUser = {
+      id: "google-12345",
+      email: "yeom@bifusion.com",
+      name: "염승빈",
+      profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
+    };
+
+    login(mockUser);
+    alert("구글 계정으로 성공적으로 로그인되었습니다! (모의 로그인)");
+    navigate("/dashboard");
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 transition-colors font-sans overflow-x-hidden">
       {/* 1. HERO SECTION - [land-white / land-hierarchy] */}
@@ -24,12 +48,15 @@ export default function LandingPage() {
                   </span>
                 </h1>
                 <p className="text-muted-foreground text-base leading-relaxed transition-colors">
-                  구글 계정으로 즉시 시작하세요.
+                  {isAuthenticated ? "환영합니다! 이미 로그인되어 있습니다." : "구글 계정으로 즉시 시작하세요."}
                 </p>
               </header>
 
               <div className="space-y-5">
-                <button className="w-full h-14 bg-card border border-border rounded-xl flex items-center justify-center gap-3 hover:bg-muted transition-all active:scale-[0.98]">
+                <button 
+                  onClick={handleMockLogin}
+                  className="w-full h-14 bg-card border border-border rounded-xl flex items-center justify-center gap-3 hover:bg-muted transition-all active:scale-[0.98]"
+                >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
@@ -48,7 +75,9 @@ export default function LandingPage() {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  <span className="text-base font-bold">Google로 시작하기</span>
+                  <span className="text-base font-bold">
+                    {isAuthenticated ? "대시보드로 이동하기" : "Google로 시작하기"}
+                  </span>
                 </button>
                 <p className="text-[11px] text-center text-muted-foreground font-medium leading-relaxed transition-colors">
                   안전한 연구 환경에서 빠르게 워크스페이스를 시작하세요.

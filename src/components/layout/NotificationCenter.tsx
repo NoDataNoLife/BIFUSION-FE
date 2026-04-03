@@ -1,0 +1,184 @@
+import React, { useState } from 'react';
+import { 
+  CheckCircle, 
+  XCircle, 
+  Users, 
+  Bell, 
+  Star, 
+  MessageCircle, 
+  X, 
+  Filter, 
+  Check,
+  ChevronRight,
+  Info
+} from 'lucide-react';
+
+interface Notification {
+  id: string;
+  type: 'job_complete' | 'job_failed' | 'team_invite' | 'system_notice' | 'expert_review' | 'comment';
+  title: string;
+  description: string;
+  timestamp: Date;
+  isRead: boolean;
+  link?: string;
+}
+
+interface NotificationCenterProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: 'NOT-001',
+      type: 'job_complete',
+      title: '데이터 증강 작업 완료',
+      description: 'Lung Cancer Detection 프로젝트의 증강 작업 10개가 성공적으로 완료되었습니다.',
+      timestamp: new Date(Date.now() - 3 * 60 * 1000),
+      isRead: false,
+      link: '/dashboard/projects/1/jobs/JOB-001/result',
+    },
+    {
+      id: 'NOT-002',
+      type: 'team_invite',
+      title: '새로운 팀 초대',
+      description: '조현희님이 "Brain MRI Analysis" 프로젝트에 초대했습니다.',
+      timestamp: new Date(Date.now() - 15 * 60 * 1000),
+      isRead: false,
+      link: '/dashboard/projects',
+    },
+    {
+      id: 'NOT-003',
+      type: 'expert_review',
+      title: '전문가 인증 승인 완료',
+      description: '제출하신 전문가 인증이 검수 완료되어 승인되었습니다.',
+      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
+      isRead: true,
+      link: '/dashboard/profile',
+    },
+    {
+      id: 'NOT-004',
+      type: 'comment',
+      title: '새로운 댓글',
+      description: '김성한님이 "High-Res Enhancement" 레시피에 댓글을 남겼습니다.',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      isRead: true,
+      link: '/dashboard/community',
+    },
+    {
+      id: 'NOT-005',
+      type: 'job_failed',
+      title: '작업 실패',
+      description: 'CT Scan 프로젝트의 증강 작업 2개가 실패했습니다. 로그를 확인해주세요.',
+      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      isRead: true,
+    },
+  ]);
+
+  if (!isOpen) return null;
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'job_complete':
+        return <div className="p-2 bg-green-50 text-green-600 rounded-xl"><CheckCircle className="w-5 h-5" /></div>;
+      case 'job_failed':
+        return <div className="p-2 bg-red-50 text-red-600 rounded-xl"><XCircle className="w-5 h-5" /></div>;
+      case 'team_invite':
+        return <div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Users className="w-5 h-5" /></div>;
+      case 'expert_review':
+        return <div className="p-2 bg-yellow-50 text-yellow-600 rounded-xl"><Star className="w-5 h-5" /></div>;
+      case 'comment':
+        return <div className="p-2 bg-purple-50 text-purple-600 rounded-xl"><MessageCircle className="w-5 h-5" /></div>;
+      default:
+        return <div className="p-2 bg-gray-50 text-gray-600 rounded-xl"><Bell className="w-5 h-5" /></div>;
+    }
+  };
+
+  const getRelativeTime = (date: Date) => {
+    const diff = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    return date.toLocaleDateString();
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      
+      {/* Notification Panel */}
+      <div className="absolute top-16 right-8 w-[420px] bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+        {/* Header */}
+        <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black text-gray-900 tracking-tight italic flex items-center gap-2">
+              알림 센터 <span className="px-2 py-0.5 bg-primary text-white text-[10px] rounded-full not-italic tracking-normal">{notifications.filter(n => !n.isRead).length}</span>
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={markAllAsRead}
+              className="p-2 hover:bg-white rounded-xl text-gray-400 hover:text-primary transition-all"
+              title="모두 읽음 처리"
+            >
+              <Check className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white rounded-xl text-gray-400 hover:text-gray-900 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="max-h-[500px] overflow-y-auto p-4 space-y-2 custom-scrollbar">
+          {notifications.length > 0 ? (
+            notifications.map((notification) => (
+              <div 
+                key={notification.id}
+                className={`group p-4 rounded-3xl transition-all cursor-pointer flex gap-4 items-start ${
+                  notification.isRead ? 'opacity-60 grayscale-[0.5]' : 'bg-white shadow-sm border border-gray-100 hover:border-primary/20'
+                }`}
+              >
+                {getNotificationIcon(notification.type)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="text-sm font-black text-gray-900 truncate tracking-tight">{notification.title}</h4>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getRelativeTime(notification.timestamp)}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 font-medium leading-relaxed line-clamp-2">{notification.description}</p>
+                  
+                  {!notification.isRead && (
+                    <div className="mt-3 flex justify-end">
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-20 text-center space-y-4">
+              <div className="w-16 h-16 bg-gray-50 text-gray-200 rounded-3xl flex items-center justify-center mx-auto">
+                <Bell size={32} />
+              </div>
+              <p className="text-sm font-black text-gray-400 uppercase tracking-widest italic">새로운 알림이 없습니다</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <button className="w-full py-5 bg-gray-50 border-t border-gray-100 text-xs font-black text-gray-400 hover:text-primary hover:bg-white transition-all uppercase tracking-widest italic">
+          전체 알림 기록 보기
+        </button>
+      </div>
+    </>
+  );
+}

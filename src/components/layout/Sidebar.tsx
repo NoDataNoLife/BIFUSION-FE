@@ -27,7 +27,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     { id: 'assets', label: 'Assets', icon: Package, path: '/dashboard/assets' },
     { id: 'expert', label: 'Expert', icon: Award, path: '/dashboard/expert' },
     { id: 'community', label: 'Community', icon: Users, path: '/dashboard/community' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' },
   ];
 
   return (

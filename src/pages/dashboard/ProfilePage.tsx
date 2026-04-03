@@ -17,7 +17,12 @@ import {
   Briefcase, 
   HelpCircle,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Crown,
+  AlertTriangle,
+  CheckCircle,
+  UserX,
+  ShieldCheck
 } from 'lucide-react';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -36,9 +41,11 @@ interface CommunityActivity {
   isExpertVerified?: boolean;
 }
 
-export default function PublicProfilePage() {
+export default function ProfilePage() {
   const { user, logout } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'projects' | 'activities'>('projects');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'plan' | 'verification' | 'account'>('plan');
   
   // Mock Stats
   const stats = [
@@ -96,7 +103,7 @@ export default function PublicProfilePage() {
               <div className="flex items-center gap-3">
                 <h1 className="text-4xl font-black text-gray-900 tracking-tight">{user?.name || '사용자'}</h1>
                 <div className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                  <Award size={12} /> 전문가 인증
+                  <ShieldCheck size={12} /> 전문가 인증
                 </div>
               </div>
               <p className="text-gray-400 font-bold text-lg">@{user?.email?.split('@')[0] || 'username'}</p>
@@ -122,14 +129,11 @@ export default function PublicProfilePage() {
 
           {/* Actions */}
           <div className="flex flex-col gap-3 w-full md:w-auto">
-            <button className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-95">
-              <SettingsIcon size={18} /> 프로필 수정
-            </button>
             <button 
-              onClick={logout}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-red-50 text-red-500 rounded-2xl font-black text-sm hover:bg-red-50 transition-all active:scale-95"
+              onClick={() => setShowSettingsModal(true)}
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-95"
             >
-              <LogOut size={18} /> 로그아웃
+              <SettingsIcon size={18} /> 설정
             </button>
           </div>
         </div>
@@ -222,6 +226,155 @@ export default function PublicProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-[#F8FAFC]">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight italic">계정 설정</h2>
+                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Manage your account and preferences</p>
+              </div>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="p-3 hover:bg-white rounded-2xl transition-all shadow-sm active:scale-95"
+              >
+                <X size={24} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="px-8 border-b border-gray-50 flex gap-8 bg-[#F8FAFC]">
+              {[
+                { id: 'plan', label: '플랜 요금제', icon: Crown },
+                { id: 'verification', label: '전문가 인증', icon: ShieldCheck },
+                { id: 'account', label: '계정 관리', icon: UserX },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSettingsTab(tab.id as any)}
+                  className={`pb-4 flex items-center gap-2 font-black text-sm transition-all relative ${
+                    settingsTab === tab.id ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <tab.icon size={16} />
+                  {tab.label}
+                  {settingsTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full" />}
+                </button>
+              ))}
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+              {settingsTab === 'plan' && (
+                <div className="space-y-8">
+                  <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-xl font-black text-gray-900 mb-1">현재 플랜: Basic</h3>
+                        <p className="text-sm text-primary font-bold uppercase tracking-widest">Free Researcher</p>
+                      </div>
+                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm">
+                        <Crown size={24} />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {[
+                        '월 100개 데이터 증강 작업',
+                        '연구 프로젝트 최대 3개',
+                        '커뮤니티 레시피 사용 가능',
+                        '전문가 리뷰 요청 (유료)',
+                      ].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                          <Check size={16} className="text-primary" /> {feature}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-black text-gray-900 tracking-tight italic">Pro 플랜으로 업그레이드</h4>
+                    <button className="w-full py-5 bg-primary text-white rounded-3xl font-black text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-[0.98]">
+                      Upgrade to PRO — $19/mo
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'verification' && (
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-black text-gray-900 tracking-tight italic">전문가 인증 신청</h3>
+                    <p className="text-gray-500 font-medium leading-relaxed">
+                      의료 전문가 인증을 완료하면 데이터셋 검증 권한과 전문가 전용 배지를 획득할 수 있습니다.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 flex items-start gap-4">
+                      <div className="p-3 bg-white rounded-2xl text-blue-500 shadow-sm">
+                        <Upload size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-black text-gray-900 mb-1">증명 서류 업로드</p>
+                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">의료 면허증 또는 학위 증명서 (PDF, JPG)</p>
+                        <button className="mt-4 px-6 py-2 bg-white border border-gray-200 rounded-xl font-black text-xs hover:bg-gray-100 transition-colors">
+                          파일 선택
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-yellow-50 rounded-3xl border border-yellow-100 flex items-start gap-4">
+                    <AlertTriangle size={24} className="text-yellow-600 flex-shrink-0" />
+                    <p className="text-sm font-bold text-yellow-800 leading-relaxed">
+                      전문가 인증은 영업일 기준 3-5일이 소요될 수 있으며, 허위 서류 제출 시 이용이 제한될 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'account' && (
+                <div className="space-y-8">
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-black text-gray-900 tracking-tight italic">계정 관리</h3>
+                      <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">이메일 계정</span>
+                          <span className="text-sm font-black text-gray-900">{user?.email}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">가입일</span>
+                          <span className="text-sm font-black text-gray-900">2024년 3월 12일</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 space-y-3">
+                      <button 
+                        onClick={() => {
+                          logout();
+                          setShowSettingsModal(false);
+                        }}
+                        className="w-full py-5 bg-white border-2 border-red-50 text-red-500 rounded-3xl font-black text-lg hover:bg-red-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                      >
+                        <LogOut size={20} /> 로그아웃
+                      </button>
+                      <button className="w-full py-4 text-gray-400 font-black text-sm hover:text-red-500 transition-colors uppercase tracking-widest italic underline decoration-gray-100 decoration-4">
+                        계정 탈퇴하기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

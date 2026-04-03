@@ -40,8 +40,8 @@ export default function LandingPage() {
                   <span className="text-primary">ANT</span>
                   <span className="flex items-end gap-1 whitespace-nowrap">
                     <img
-                      src="/logo 1.png"
-                      alt="Logo 1"
+                      src="/logo1.png"
+                      alt="Logo1"
                       className="h-12 lg:h-16 w-auto object-contain"
                     />
                     <span className="text-primary">?</span>

@@ -21,7 +21,7 @@ export default function Navbar() {
       id: "google-12345",
       email: "yeom@bifusion.com",
       name: "염승빈",
-      profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
+      // profileImage 속성을 비워두면 useAuthStore에서 기본 이미지를 할당합니다.
     };
     login(mockUser);
     navigate("/dashboard");

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Award, 
   MapPin, 
@@ -22,22 +22,23 @@ import {
   AlertTriangle,
   CheckCircle,
   UserX,
-  ShieldCheck
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  GripVertical
 } from 'lucide-react';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import { useAuthStore } from '../../store/useAuthStore';
 
+// --- Types ---
 interface CommunityActivity {
   id: string;
   type: 'showcase' | 'dataset' | 'qna' | 'recruiting';
   title: string;
   description?: string;
   timestamp: string;
-  stats?: {
-    likes?: number;
-    downloads?: number;
-    comments?: number;
-  };
+  isPublic: boolean;
+  stats?: { likes?: number; downloads?: number; comments?: number; };
   isExpertVerified?: boolean;
 }
 
@@ -47,215 +48,196 @@ export default function ProfilePage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'plan' | 'verification' | 'account'>('plan');
   
-  // Mock Stats
-  const stats = [
-    { label: '프로젝트', value: 12, icon: Users, color: 'text-blue-500' },
-    { label: '레시피', value: 45, icon: Award, color: 'text-purple-500' },
-    { label: '데이터셋', value: 8, icon: Database, color: 'text-green-500' },
-    { label: '리워드', value: '12.5k', icon: TrendingUp, color: 'text-orange-500' },
-  ];
-
   const communityActivities: CommunityActivity[] = [
-    {
-      id: '1',
-      type: 'showcase',
-      title: 'ECG Data Augmentation Pipeline',
-      description: '심전도 신호 분류를 위한 전문가 검증 레시피',
-      timestamp: '1일 전',
-      stats: { likes: 512, comments: 24 },
-      isExpertVerified: true,
-    },
-    {
-      id: '2',
-      type: 'dataset',
-      title: 'ECG Heartbeat Categorization',
-      description: '심전도 신호 분류를 위한 대규모 데이터셋 (109,446 files)',
-      timestamp: '5일 전',
-      stats: { downloads: 2145, likes: 789 },
-      isExpertVerified: true,
-    },
+    { id: '1', type: 'showcase', title: 'ECG Data Augmentation Pipeline', description: '심전도 신호 분류를 위한 전문가 검증 레시피', timestamp: '1일 전', isPublic: true, stats: { likes: 512, comments: 24 }, isExpertVerified: true },
+    { id: '2', type: 'dataset', title: 'ECG Heartbeat Categorization', description: '심전도 신호 분류를 위한 대규모 데이터셋 (109,446 files)', timestamp: '5일 전', isPublic: true, stats: { downloads: 2145, likes: 789 }, isExpertVerified: true },
   ];
 
   return (
-    <div className="p-8 space-y-10 max-w-7xl mx-auto">
-      {/* Profile Header Card */}
-      <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary/10 transition-colors duration-700" />
-        
-        <div className="flex flex-col md:flex-row gap-10 items-start relative z-10">
-          {/* Avatar */}
-          <div className="relative">
-            <div className="w-40 h-40 rounded-[3rem] overflow-hidden ring-8 ring-gray-50 shadow-inner">
+    <div className="p-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+      
+      {/* --- Left Column: Profile Card (Based on Prototype Structure) --- */}
+      <div className="lg:w-1/3 space-y-6">
+        <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center">
+          {/* Avatar Section */}
+          <div className="relative mb-6">
+            <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-gray-50 shadow-inner">
               <ImageWithFallback 
-                src={user?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'user'}`} 
+                src={user?.profileImage || '/defalutUserProfile.png'} 
                 alt={user?.name} 
                 className="w-full h-full object-cover"
               />
             </div>
-            <button className="absolute -bottom-2 -right-2 p-3 bg-primary text-white rounded-2xl shadow-xl hover:scale-110 transition-transform active:scale-95">
-              <Edit2 size={20} />
+            <button className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+              <Edit2 size={18} />
             </button>
           </div>
 
-          {/* Info */}
-          <div className="flex-1 space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-black text-gray-900 tracking-tight">{user?.name || '사용자'}</h1>
-                <div className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                  <ShieldCheck size={12} /> 전문가 인증
-                </div>
-              </div>
-              <p className="text-gray-400 font-bold text-lg">@{user?.email?.split('@')[0] || 'username'}</p>
-            </div>
-
-            <p className="text-gray-500 font-medium leading-relaxed max-w-2xl text-lg">
-              의료 AI 연구원으로서 데이터 증강 기술을 통해 정밀 진단 모델의 성능을 향상시키는 연구를 진행하고 있습니다. 
-              주로 MRI와 CT 영상 데이터 처리에 집중하고 있습니다.
-            </p>
-
-            <div className="flex flex-wrap gap-6 items-center pt-4">
-              <div className="flex items-center gap-2 text-gray-400 font-bold text-sm">
-                <MapPin size={18} className="text-primary" /> 서울, 대한민국
-              </div>
-              <div className="flex items-center gap-2 text-gray-400 font-bold text-sm hover:text-primary transition-colors cursor-pointer">
-                <LinkIcon size={18} className="text-primary" /> bifusion.ai/researcher
-              </div>
-              <div className="flex items-center gap-2 text-gray-400 font-bold text-sm">
-                <Calendar size={18} className="text-primary" /> 2024년 3월 가입
-              </div>
+          {/* Basic Info */}
+          <div className="space-y-1 mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">{user?.name || '사용자'}</h1>
+            <p className="text-sm text-gray-400 font-medium">@{user?.email?.split('@')[0] || 'researcher'}</p>
+            <div className="pt-2">
+              <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
+                <ShieldCheck size={12} /> 전문가 인증됨
+              </span>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-3 w-full md:w-auto">
+          {/* Bio Section */}
+          <div className="w-full text-left space-y-2 border-t border-gray-50 pt-6">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">About Me</p>
+              <Edit2 size={12} className="text-gray-300" />
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              의료 AI 연구원으로서 데이터 증강 기술을 통해 정밀 진단 모델의 성능을 향상시키는 연구를 진행하고 있습니다.
+            </p>
+          </div>
+
+          {/* Account Settings Trigger */}
+          <div className="w-full pt-8">
             <button 
               onClick={() => setShowSettingsModal(true)}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-95"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-50 text-gray-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-gray-100 transition-all active:scale-[0.98]"
             >
-              <SettingsIcon size={18} /> 설정
+              <SettingsIcon size={16} /> Account Settings
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-lg transition-all group">
-            <div className={`w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center ${stat.color} mb-6 group-hover:scale-110 transition-transform`}>
-              <stat.icon size={24} />
-            </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
-            <p className="text-3xl font-black text-gray-900">{stat.value}</p>
+        {/* Info List Section */}
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+            <MapPin size={18} className="text-primary" /> 서울, 대한민국
           </div>
-        ))}
+          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium hover:text-primary transition-colors cursor-pointer">
+            <LinkIcon size={18} className="text-primary" /> bifusion.ai/researcher
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+            <Calendar size={18} className="text-primary" /> Joined Mar 2024
+          </div>
+        </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden">
-        {/* Tabs */}
-        <div className="px-10 pt-10 border-b border-gray-50 flex gap-10">
-          <button
-            onClick={() => setActiveTab('projects')}
-            className={`pb-8 text-lg font-black transition-all relative ${
-              activeTab === 'projects' ? 'text-primary' : 'text-gray-300 hover:text-gray-500'
-            }`}
-          >
-            참여 프로젝트
-            {activeTab === 'projects' && <div className="absolute bottom-0 left-0 w-full h-1.5 bg-primary rounded-full" />}
-          </button>
-          <button
-            onClick={() => setActiveTab('activities')}
-            className={`pb-8 text-lg font-black transition-all relative ${
-              activeTab === 'activities' ? 'text-primary' : 'text-gray-300 hover:text-gray-500'
-            }`}
-          >
-            커뮤니티 활동
-            {activeTab === 'activities' && <div className="absolute bottom-0 left-0 w-full h-1.5 bg-primary rounded-full" />}
-          </button>
+      {/* --- Right Column: Stats & Content (Based on Prototype Structure) --- */}
+      <div className="flex-1 space-y-8">
+        
+        {/* Statistics Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: '프로젝트', value: 12, icon: Briefcase, color: 'text-blue-500' },
+            { label: '레시피', value: 45, icon: Award, color: 'text-purple-500' },
+            { label: '데이터셋', value: 8, icon: Database, color: 'text-green-500' },
+            { label: '리워드', value: '12.5k', icon: TrendingUp, color: 'text-orange-500' },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm text-center">
+              <div className={`w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center ${stat.color} mx-auto mb-3`}>
+                <stat.icon size={20} />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="p-10">
-          {activeTab === 'projects' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {[1, 2].map((i) => (
-                <div key={i} className="group flex items-center gap-6 p-6 bg-gray-50/50 rounded-3xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer">
-                  <div className="w-32 h-20 rounded-2xl overflow-hidden shadow-sm">
-                    <img src={`https://images.unsplash.com/photo-${i === 1 ? '1576091160550-2173dba999ef' : '1559757175-0eb30cd8c063'}?w=400&q=80`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-black text-gray-900 text-lg truncate group-hover:text-primary transition-colors">{i === 1 ? '심장 질환 예측 모델' : '뇌 MRI 이미지 분석'}</h3>
-                    <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">{i === 1 ? 'Manager' : 'Member'}</p>
-                  </div>
-                  <ChevronRight size={24} className="text-gray-200 group-hover:text-primary transition-colors group-hover:translate-x-1 transition-transform" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {communityActivities.map((activity) => (
-                <div key={activity.id} className="p-8 bg-gray-50/50 rounded-[2rem] border border-gray-100 flex items-start gap-6 hover:bg-white hover:shadow-xl transition-all group">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${
-                    activity.type === 'showcase' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    {activity.type === 'showcase' ? <Award size={28} /> : <Database size={28} />}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                        activity.type === 'showcase' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                      }`}>
-                        {activity.type}
-                      </span>
-                      <h3 className="text-xl font-black text-gray-900 group-hover:text-primary transition-colors">{activity.title}</h3>
+        {/* Content Card with Tabs */}
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+          {/* Tabs Header */}
+          <div className="px-8 pt-8 border-b border-gray-50 flex gap-10">
+            <button
+              onClick={() => setActiveTab('projects')}
+              className={`pb-6 text-base font-bold transition-all relative ${
+                activeTab === 'projects' ? 'text-primary' : 'text-gray-300 hover:text-gray-500'
+              }`}
+            >
+              My Projects
+              {activeTab === 'projects' && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full shadow-[0_-4px_12px_rgba(var(--color-primary),0.3)]" />}
+            </button>
+            <button
+              onClick={() => setActiveTab('activities')}
+              className={`pb-6 text-base font-bold transition-all relative ${
+                activeTab === 'activities' ? 'text-primary' : 'text-gray-300 hover:text-gray-500'
+              }`}
+            >
+              Diagnosis Activities
+              {activeTab === 'activities' && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full shadow-[0_-4px_12px_rgba(var(--color-primary),0.3)]" />}
+            </button>
+          </div>
+
+          <div className="p-8 flex-1">
+            {activeTab === 'projects' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2].map((i) => (
+                  <div key={i} className="group flex items-center gap-6 p-6 bg-gray-50/50 rounded-2xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all cursor-pointer">
+                    <div className="w-24 h-16 rounded-xl overflow-hidden shadow-sm">
+                      <img src={`https://images.unsplash.com/photo-${i === 1 ? '1576091160550-2173dba999ef' : '1559757175-0eb30cd8c063'}?w=400&q=80`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                    <p className="text-gray-500 font-medium leading-relaxed">{activity.description}</p>
-                    <div className="flex items-center gap-6 pt-4 text-gray-400 font-bold text-xs uppercase tracking-widest">
-                      <span>{activity.timestamp}</span>
-                      <div className="flex items-center gap-4">
-                        {activity.stats?.likes && <span className="flex items-center gap-1.5 text-red-400"><Heart size={14} fill="currentColor" /> {activity.stats.likes}</span>}
-                        {activity.stats?.comments && <span className="flex items-center gap-1.5 text-blue-400"><MessageSquare size={14} fill="currentColor" /> {activity.stats.comments}</span>}
-                        {activity.stats?.downloads && <span className="flex items-center gap-1.5 text-green-400"><Upload size={14} /> {activity.stats.downloads}</span>}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-primary transition-colors">{i === 1 ? '심장 질환 예측 모델' : '뇌 MRI 이미지 분석'}</h3>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">{i === 1 ? 'Manager' : 'Member'}</p>
+                    </div>
+                    <ChevronRight size={18} className="text-gray-200 group-hover:text-primary transition-all" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {communityActivities.map((activity) => (
+                  <div key={activity.id} className="p-6 bg-gray-50/50 rounded-2xl border border-gray-100 flex items-start gap-5 hover:bg-white hover:shadow-lg transition-all group">
+                    <div className={`w-12 h-10 rounded-xl flex items-center justify-center shadow-inner ${
+                      activity.type === 'showcase' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      {activity.type === 'showcase' ? <Award size={24} /> : <Database size={24} />}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                          activity.type === 'showcase' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {activity.type}
+                        </span>
+                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">{activity.title}</h3>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{activity.description}</p>
+                      <div className="flex items-center gap-6 pt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <span>{activity.timestamp}</span>
+                        <div className="flex items-center gap-4">
+                          {activity.stats?.likes && <span className="flex items-center gap-1 text-red-400"><Heart size={12} fill="currentColor" /> {activity.stats.likes}</span>}
+                          {activity.stats?.downloads && <span className="flex items-center gap-1 text-green-400"><Upload size={12} /> {activity.stats.downloads}</span>}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Settings Modal */}
+      {/* --- Settings Modal (Plan, Verification, Account) --- */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-            {/* Modal Header */}
-            <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-[#F8FAFC]">
-              <div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight italic">계정 설정</h2>
-                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Manage your account and preferences</p>
-              </div>
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="p-3 hover:bg-white rounded-2xl transition-all shadow-sm active:scale-95"
-              >
+          <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-[#F8FAFC]">
+              <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight">Account Settings</h2>
+              <button onClick={() => setShowSettingsModal(false)} className="p-2.5 hover:bg-white rounded-xl transition-all">
                 <X size={24} className="text-gray-400" />
               </button>
             </div>
 
-            {/* Tabs */}
-            <div className="px-8 border-b border-gray-50 flex gap-8 bg-[#F8FAFC]">
+            {/* Modal Tabs */}
+            <div className="px-8 border-b border-gray-100 flex gap-8 bg-[#F8FAFC]">
               {[
-                { id: 'plan', label: '플랜 요금제', icon: Crown },
-                { id: 'verification', label: '전문가 인증', icon: ShieldCheck },
-                { id: 'account', label: '계정 관리', icon: UserX },
+                { id: 'plan', label: 'Plan', icon: Crown },
+                { id: 'verification', label: 'Verify', icon: ShieldCheck },
+                { id: 'account', label: 'Security', icon: UserX },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setSettingsTab(tab.id as any)}
-                  className={`pb-4 flex items-center gap-2 font-black text-sm transition-all relative ${
+                  className={`pb-4 flex items-center gap-2 font-bold text-xs uppercase tracking-widest transition-all relative ${
                     settingsTab === tab.id ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
@@ -267,107 +249,36 @@ export default function ProfilePage() {
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+            <div className="flex-1 overflow-y-auto p-10 space-y-8">
               {settingsTab === 'plan' && (
                 <div className="space-y-8">
                   <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-xl font-black text-gray-900 mb-1">현재 플랜: Basic</h3>
-                        <p className="text-sm text-primary font-bold uppercase tracking-widest">Free Researcher</p>
-                      </div>
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm">
-                        <Crown size={24} />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {[
-                        '월 100개 데이터 증강 작업',
-                        '연구 프로젝트 최대 3개',
-                        '커뮤니티 레시피 사용 가능',
-                        '전문가 리뷰 요청 (유료)',
-                      ].map((feature, i) => (
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">현재 플랜: Basic</h3>
+                    <div className="space-y-3">
+                      {['100 Data Augmentation / mo', 'Max 3 Research Projects', 'Community Recipe Access'].map((f, i) => (
                         <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                          <Check size={16} className="text-primary" /> {feature}
+                          <Check size={16} className="text-primary" /> {f}
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-black text-gray-900 tracking-tight italic">Pro 플랜으로 업그레이드</h4>
-                    <button className="w-full py-5 bg-primary text-white rounded-3xl font-black text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-[0.98]">
-                      Upgrade to PRO — $19/mo
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {settingsTab === 'verification' && (
-                <div className="space-y-8">
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight italic">전문가 인증 신청</h3>
-                    <p className="text-gray-500 font-medium leading-relaxed">
-                      의료 전문가 인증을 완료하면 데이터셋 검증 권한과 전문가 전용 배지를 획득할 수 있습니다.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 flex items-start gap-4">
-                      <div className="p-3 bg-white rounded-2xl text-blue-500 shadow-sm">
-                        <Upload size={20} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-black text-gray-900 mb-1">증명 서류 업로드</p>
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">의료 면허증 또는 학위 증명서 (PDF, JPG)</p>
-                        <button className="mt-4 px-6 py-2 bg-white border border-gray-200 rounded-xl font-black text-xs hover:bg-gray-100 transition-colors">
-                          파일 선택
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-yellow-50 rounded-3xl border border-yellow-100 flex items-start gap-4">
-                    <AlertTriangle size={24} className="text-yellow-600 flex-shrink-0" />
-                    <p className="text-sm font-bold text-yellow-800 leading-relaxed">
-                      전문가 인증은 영업일 기준 3-5일이 소요될 수 있으며, 허위 서류 제출 시 이용이 제한될 수 있습니다.
-                    </p>
-                  </div>
+                  <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">Upgrade to PRO — $19/mo</button>
                 </div>
               )}
 
               {settingsTab === 'account' && (
-                <div className="space-y-8">
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="text-xl font-black text-gray-900 tracking-tight italic">계정 관리</h3>
-                      <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">이메일 계정</span>
-                          <span className="text-sm font-black text-gray-900">{user?.email}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">가입일</span>
-                          <span className="text-sm font-black text-gray-900">2024년 3월 12일</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 space-y-3">
-                      <button 
-                        onClick={() => {
-                          logout();
-                          setShowSettingsModal(false);
-                        }}
-                        className="w-full py-5 bg-white border-2 border-red-50 text-red-500 rounded-3xl font-black text-lg hover:bg-red-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
-                      >
-                        <LogOut size={20} /> 로그아웃
-                      </button>
-                      <button className="w-full py-4 text-gray-400 font-black text-sm hover:text-red-500 transition-colors uppercase tracking-widest italic underline decoration-gray-100 decoration-4">
-                        계정 탈퇴하기
-                      </button>
-                    </div>
+                <div className="space-y-8 text-center pt-4">
+                  <div className="p-8 bg-gray-50 rounded-3xl border border-gray-100 inline-block mx-auto min-w-[250px]">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-widest">Login Email</p>
+                    <p className="text-lg font-bold text-gray-900">{user?.email}</p>
+                  </div>
+                  <div className="pt-6">
+                    <button 
+                      onClick={() => { logout(); setShowSettingsModal(false); }}
+                      className="w-full py-4 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3"
+                    >
+                      <LogOut size={20} /> Sign Out
+                    </button>
                   </div>
                 </div>
               )}

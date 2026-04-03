@@ -17,7 +17,6 @@ export default function LandingPage() {
       id: "google-12345",
       email: "yeom@bifusion.com",
       name: "염승빈",
-      profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
     };
 
     login(mockUser);

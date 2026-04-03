@@ -32,7 +32,10 @@ export const useAuthStore = create<AuthState>()(
       // --- (B) 데이터를 바꾸는 함수들 (set 함수를 사용합니다) ---
       // set({ 새데이터 }) 라고 하면 지갑 속의 데이터가 바뀝니다.
       login: (userData) => set({ 
-        user: userData, 
+        user: {
+          ...userData,
+          profileImage: userData.profileImage || '/defalutUserProfile.png'
+        }, 
         isAuthenticated: true 
       }),
       

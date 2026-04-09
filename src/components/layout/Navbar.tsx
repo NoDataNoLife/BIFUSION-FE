@@ -1,31 +1,9 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Moon, Sun } from "lucide-react";
-import { useAuthStore } from "../../store/useAuthStore";
+import { useThemeMode } from "../../hooks/useThemeMode";
 
 export default function Navbar() {
-  const [isDark, setIsDark] = useState(false);
-  const navigate = useNavigate();
-  const { login } = useAuthStore();
-
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDark]);
-
-  const handleMockLogin = () => {
-    const mockUser = {
-      id: "google-12345",
-      email: "yeom@bifusion.com",
-      name: "염승빈",
-      // profileImage 속성을 비워두면 useAuthStore에서 기본 이미지를 할당합니다.
-    };
-    login(mockUser);
-    navigate("/dashboard");
-  };
+  const { isDark, toggleTheme } = useThemeMode();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-background/80 backdrop-blur-md border-b border-border px-8 h-20 flex items-center justify-between transition-colors">
@@ -57,7 +35,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setIsDark(!isDark)}
+            onClick={toggleTheme}
             className="p-2.5 rounded-xl hover:bg-muted transition-colors text-foreground/70"
             aria-label="Toggle dark mode"
           >

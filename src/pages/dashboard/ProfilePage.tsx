@@ -476,7 +476,7 @@ export default function ProfilePage() {
             >
               {showAllProjects
                 ? "접기"
-                : `더보기 (+${publicProjects.length - displayedProjects.length})`}
+                : `${publicProjects.length - displayedProjects.length}개 더보기`}
             </button>
           )}
         </section>
@@ -485,7 +485,7 @@ export default function ProfilePage() {
         <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-              <TrendingUp size={20} className="text-primary" /> 커뮤니티 활동
+              <TrendingUp size={20} className="text-primary" /> 집단 활동
             </h2>
 
             <button

@@ -40,6 +40,7 @@ interface Review {
 export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, isAuthor, onDelete, onVerificationRequest }: RecipeDetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'config' | 'reviews'>('overview');
   const [forked, setForked] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
@@ -78,6 +79,12 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
     setTimeout(() => setForked(false), 2000);
   };
 
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header */}
@@ -89,12 +96,27 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
           </button>
           
           <div className="flex items-center gap-3">
-            <button onClick={handleForkRecipe} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all text-sm">
-              {forked ? <Check className="w-4 h-4 text-green-600" /> : <GitFork className="w-4 h-4" />}
+            <button 
+              onClick={handleForkRecipe} 
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm border ${
+                forked 
+                  ? 'bg-green-50 border-green-200 text-green-600' 
+                  : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              {forked ? <Check className="w-4 h-4" /> : <GitFork className="w-4 h-4" />}
               {forked ? 'Fork됨' : '이 레시피 Fork'}
             </button>
-            <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all text-sm">
-              <Share2 className="w-4 h-4" /> 공유
+            <button 
+              onClick={handleShare}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm shadow-lg ${
+                copied
+                  ? 'bg-green-600 text-white shadow-green-200'
+                  : 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
+              }`}
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              {copied ? '링크 복사됨' : '공유'}
             </button>
           </div>
         </div>

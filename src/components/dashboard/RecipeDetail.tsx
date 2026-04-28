@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Star, GitFork, Eye, Award, Download, Calendar, MessageCircle, Share2, Check, Trash2, Clock, CheckCircle, AlertCircle, Save } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
+import { useAssetStore } from '../../store/useAssetStore';
 
 interface RecipeDetailProps {
   recipe: {
@@ -39,7 +40,8 @@ interface Review {
 
 export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, isAuthor, onDelete, onVerificationRequest }: RecipeDetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'config' | 'reviews'>('overview');
-  const [forked, setForked] = useState(false);
+  const { toggleFork, isForked } = useAssetStore();
+  const forked = isForked(recipe.id);
   const [copied, setCopied] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -74,9 +76,8 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
   };
 
   const handleForkRecipe = () => {
+    toggleFork(recipe.id);
     if (onFork) onFork(recipe);
-    setForked(true);
-    setTimeout(() => setForked(false), 2000);
   };
 
   const handleShare = () => {

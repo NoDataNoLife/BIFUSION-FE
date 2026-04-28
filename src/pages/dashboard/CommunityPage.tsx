@@ -5,11 +5,11 @@ import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import QnaDetail from '../../components/dashboard/QnaDetail';
 import RecruitmentDetail from '../../components/dashboard/RecruitmentDetail';
 import CommunityDatasetDetail from '../../components/dashboard/CommunityDatasetDetail';
+import { ALL_RECIPES, type Recipe } from '../../store/mockData';
 
 // --- Types ---
-interface ShowcasePost {
-  id: string; title: string; author: string; authorAvatar: string; thumbnail: string;
-  forkCount: number; likeCount: number; isExpertVerified?: boolean;
+interface ShowcasePost extends Recipe {
+  likeCount: number;
 }
 
 interface QAPost {
@@ -29,10 +29,10 @@ interface DatasetPost {
 }
 
 // --- Mock Data ---
-const mockShowcasePosts: ShowcasePost[] = [
-  { id: 'SC-001', title: 'Lung Cancer High-Res Enhancement', author: '김성한', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim', thumbnail: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=600&q=80', forkCount: 124, likeCount: 356, isExpertVerified: true },
-  { id: 'SC-003', title: 'ECG Data Augmentation Pipeline', author: '염승빈', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yeom', thumbnail: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80', forkCount: 203, likeCount: 512, isExpertVerified: true },
-];
+const mockShowcasePosts: ShowcasePost[] = ALL_RECIPES.map(r => ({
+  ...r,
+  likeCount: r.forkCount * 3 // 임의의 좋아요 수 생성
+}));
 
 const mockQAPosts: QAPost[] = [
   { id: 'QA-001', title: 'Diffusion 모델 학습 시 메모리 부족 오류 해결 방법은?', author: '연구자A', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=userA', status: 'Solved', tags: ['#Error', '#Diffusion'], commentCount: 12, hasExpertReply: true },
@@ -57,7 +57,7 @@ export default function CommunityPage() {
   if (selectedId) {
     if (activeTab === 'showcase') {
       const post = mockShowcasePosts.find(p => p.id === selectedId);
-      if (post) return <RecipeDetail recipe={{...post, name: post.title, reviewCount: 45, rating: 4.8, usageCount: 1200, description: '커뮤니티 레시피', createdAt: '2025-01-01'}} onBack={() => setSelectedId(null)} />;
+      if (post) return <RecipeDetail recipe={post} onBack={() => setSelectedId(null)} />;
     }
     if (activeTab === 'qa') {
       const post = mockQAPosts.find(p => p.id === selectedId);
@@ -133,7 +133,7 @@ export default function CommunityPage() {
             {mockShowcasePosts.map(post => (
               <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative">
                 <div className="aspect-[4/3] overflow-hidden bg-gray-50">
-                  <ImageWithFallback src={post.thumbnail} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <ImageWithFallback src={post.thumbnail} alt={post.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   {post.isExpertVerified && (
                     <div className="absolute top-6 right-6 px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
                       <Award size={14} /> Expert
@@ -141,7 +141,7 @@ export default function CommunityPage() {
                   )}
                 </div>
                 <div className="p-8 space-y-6">
-                  <h3 className="text-xl font-black text-gray-900 leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
+                  <h3 className="text-xl font-black text-gray-900 leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.name}</h3>
                   <div className="flex items-center justify-between pt-6 border-t border-gray-50">
                     <div className="flex items-center gap-3">
                       <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
@@ -158,6 +158,7 @@ export default function CommunityPage() {
           </div>
         )}
 
+        {/* ... (이전과 동일한 QA, recruitment, datasets 렌더링 코드) ... */}
         {activeTab === 'qa' && (
           <div className="space-y-4">
             {mockQAPosts.map(post => (

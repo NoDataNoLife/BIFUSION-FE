@@ -115,7 +115,7 @@ export default function AssetsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">자산 관리</h1>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Assets</h1>
           <p className="text-gray-500 mt-1 font-medium">내가 보유한 레시피와 데이터셋을 관리하세요</p>
         </div>
         
@@ -126,7 +126,7 @@ export default function AssetsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="자산 검색..."
+              placeholder="ASSET 검색..."
               className="w-64 pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>

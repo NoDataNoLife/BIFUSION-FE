@@ -4,6 +4,7 @@ import ImageWithFallback from '../../components/common/ImageWithFallback';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import AssetDatasetDetail from '../../components/dashboard/AssetDatasetDetail';
 import { useAssetStore } from '../../store/useAssetStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ALL_RECIPES, type Recipe } from '../../store/mockData';
 
 interface Dataset {
@@ -24,6 +25,7 @@ export default function AssetsPage() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { forkedRecipeIds } = useAssetStore();
+  const { user } = useAuthStore();
 
   const datasets: Dataset[] = [
     {
@@ -51,14 +53,12 @@ export default function AssetsPage() {
   ];
 
   const filteredRecipes = ALL_RECIPES.filter(r => {
-    const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (activeTab === 'recipes') {
-      // Fork한 레시피: 내가 Fork한 ID 목록에 포함되어야 함
       return forkedRecipeIds.includes(r.id) && matchesSearch;
     } else if (activeTab === 'uploaded-recipes') {
-      // 내 레시피: 작성자가 나(염승빈)여야 함
-      return r.author === '염승빈' && matchesSearch;
+      return r.author === user?.name && matchesSearch;
     }
     return matchesSearch;
   });
@@ -69,7 +69,7 @@ export default function AssetsPage() {
   );
 
   if (selectedRecipe) {
-    return <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} isAuthor={selectedRecipe.author === '염승빈'} />;
+    return <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} isAuthor={selectedRecipe.author === user?.name} />;
   }
 
   if (selectedDataset) {
@@ -128,7 +128,7 @@ export default function AssetsPage() {
                 className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
               >
                 <div className="aspect-video relative overflow-hidden bg-gray-50">
-                  <ImageWithFallback src={recipe.thumbnail} alt={recipe.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   {recipe.isExpertVerified && (
                     <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-lg uppercase tracking-widest">
                       Expert
@@ -136,7 +136,7 @@ export default function AssetsPage() {
                   )}
                 </div>
                 <div className="p-8">
-                  <h3 className="text-lg font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-primary transition-colors">{recipe.name}</h3>
+                  <h3 className="text-lg font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-primary transition-colors">{recipe.title}</h3>
                   <p className="text-sm text-gray-500 font-medium line-clamp-2 mb-6">{recipe.description}</p>
                   <div className="flex items-center justify-between pt-6 border-t border-gray-50">
                     <div className="flex items-center gap-2">
@@ -144,8 +144,8 @@ export default function AssetsPage() {
                       <span className="text-sm font-black text-gray-900">{recipe.rating}</span>
                     </div>
                     <div className="flex items-center gap-4 text-gray-300 font-bold text-xs uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {recipe.forkCount}</span>
-                      <span className="flex items-center gap-1.5"><Eye size={14} /> {recipe.usageCount}</span>
+                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {recipe.forkedCount}</span>
+                      <span className="flex items-center gap-1.5"><Eye size={14} /> {recipe.viewCount}</span>
                     </div>
                   </div>
                 </div>

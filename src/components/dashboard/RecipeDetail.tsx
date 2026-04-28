@@ -2,27 +2,12 @@ import { useState } from 'react';
 import { ArrowLeft, Star, GitFork, Eye, Award, Download, Calendar, MessageCircle, Share2, Check, Trash2, Clock, CheckCircle, AlertCircle, Save } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { useAssetStore } from '../../store/useAssetStore';
+import { type Recipe } from '../../store/mockData';
 
 interface RecipeDetailProps {
-  recipe: {
-    id: string;
-    name: string;
-    author: string;
-    authorAvatar: string;
-    authorId?: string;
-    isExpertVerified: boolean;
-    rating: number;
-    reviewCount: number;
-    forkCount: number;
-    usageCount: number;
-    thumbnail: string;
-    description: string;
-    forkedFrom?: string;
-    createdAt: string;
-    verificationStatus?: 'none' | 'pending' | 'verified';
-  };
+  recipe: Recipe;
   onBack: () => void;
-  onFork?: (recipe: any) => void;
+  onFork?: (recipe: Recipe) => void;
   onAuthorClick?: (authorId: string, authorName: string) => void;
   isAuthor?: boolean;
   onDelete?: (recipeId: string) => void;
@@ -64,16 +49,6 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
       date: '2025-02-10',
     },
   ];
-
-  const configDetails = {
-    model: 'Stable Diffusion XL',
-    steps: 50,
-    sampler: 'DPM++ 2M Karras',
-    cfgScale: 7.5,
-    seed: 'Random',
-    resolution: '1024x1024',
-    batchSize: 4,
-  };
 
   const handleForkRecipe = () => {
     toggleFork(recipe.id);
@@ -127,7 +102,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
       <div className="max-w-7xl mx-auto px-8 py-10 space-y-10">
         <div className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm grid md:grid-cols-2">
           <div className="aspect-video md:aspect-auto bg-gray-50">
-            <ImageWithFallback src={recipe.thumbnail} alt={recipe.name} className="w-full h-full object-cover" />
+            <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover" />
           </div>
 
           <div className="p-10 space-y-6">
@@ -139,7 +114,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               )}
             </div>
             
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-tight">{recipe.name}</h1>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-tight">{recipe.title}</h1>
             <p className="text-gray-500 font-medium leading-relaxed">{recipe.description}</p>
 
             {/* Author Card */}
@@ -147,7 +122,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               <ImageWithFallback src={recipe.authorAvatar} alt={recipe.author} className="w-12 h-12 rounded-xl ring-4 ring-white shadow-sm" />
               <div>
                 <p className="font-bold text-gray-900">{recipe.author}</p>
-                <p className="text-xs text-gray-400 font-medium">{recipe.createdAt} 작성됨</p>
+                <p className="text-xs text-gray-400 font-medium">{recipe.createdAt.split('T')[0]} 작성됨</p>
               </div>
             </div>
 
@@ -162,7 +137,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               <div className="p-4 bg-white border border-gray-100 rounded-2xl text-center">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Fork 수</p>
                 <p className="text-xl font-black text-primary flex items-center justify-center gap-1">
-                  <GitFork size={18} /> {recipe.forkCount}
+                  <GitFork size={18} /> {recipe.forkedCount}
                 </p>
               </div>
             </div>
@@ -189,20 +164,55 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
           <div className="p-10">
             {activeTab === 'overview' && (
               <div className="space-y-10">
-                <div className="prose prose-slate max-w-none">
-                  <h3 className="text-2xl font-black text-gray-900 mb-6">연구 배경 및 방법론</h3>
-                  <p className="text-gray-600 font-medium leading-loose">
-                    이 레시피는 대규모 의료 영상 데이터 증강을 위해 설계된 최적화 파이프라인입니다. 
-                    Stable Diffusion XL 아키텍처를 기반으로 하며, 의료 전문가의 피드백을 반영하여 
-                    해부학적 정확도를 극대화했습니다.
-                  </p>
+                <div className="grid md:grid-cols-3 gap-10">
+                  <div className="md:col-span-2 space-y-8">
+                    <div className="prose prose-slate max-w-none">
+                      <h3 className="text-2xl font-black text-gray-900 mb-6">연구 배경 및 방법론</h3>
+                      <p className="text-gray-600 font-medium leading-loose whitespace-pre-line">
+                        {recipe.overview.content}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-black text-gray-900">핵심 기능</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {recipe.overview.features.map((feature, i) => (
+                          <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Check size={14} />
+                            </div>
+                            <span className="text-sm font-bold text-gray-700">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="p-8 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6">
+                      <h4 className="text-lg font-black text-primary">추천 활용 사례</h4>
+                      <ul className="space-y-4">
+                        {recipe.overview.recommendations.map((rec, i) => (
+                          <li key={i} className="flex gap-3 text-sm font-bold text-gray-600">
+                            <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 flex-shrink-0" />
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
 
                 {isAuthor && (
                   <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-6">
-                    <h3 className="text-xl font-black text-gray-900">작성자 관리 도구</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-black text-gray-900">작성자 관리 도구</h3>
+                      <div className="px-4 py-1.5 bg-gray-200 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                        내 레시피
+                      </div>
+                    </div>
                     
-                    {recipe.verificationStatus === 'none' && (
+                    {recipe.id === '3' && ( // 임시로 ID 3번(내 레시피)만 검증 신청 가능하게 표시
                       <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white">
@@ -235,7 +245,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
 
             {activeTab === 'config' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Object.entries(configDetails).map(([key, value]) => (
+                {Object.entries(recipe.settings).map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center p-6 bg-gray-50 rounded-2xl border border-gray-100">
                     <span className="text-sm font-black text-gray-400 uppercase tracking-widest">{key}</span>
                     <span className="font-mono font-bold text-primary bg-white px-4 py-1.5 rounded-lg border border-gray-200 shadow-sm">{value}</span>
@@ -269,10 +279,10 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
         </div>
       </div>
 
-      {/* Modals (Simplified) */}
+      {/* Modals */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in duration-200">
             <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 mx-auto mb-6">
               <AlertCircle size={32} />
             </div>

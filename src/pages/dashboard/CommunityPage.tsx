@@ -5,6 +5,7 @@ import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import QnaDetail from '../../components/dashboard/QnaDetail';
 import RecruitmentDetail from '../../components/dashboard/RecruitmentDetail';
 import CommunityDatasetDetail from '../../components/dashboard/CommunityDatasetDetail';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ALL_RECIPES, type Recipe } from '../../store/mockData';
 
 // --- Types ---
@@ -31,7 +32,7 @@ interface DatasetPost {
 // --- Mock Data ---
 const mockShowcasePosts: ShowcasePost[] = ALL_RECIPES.map(r => ({
   ...r,
-  likeCount: r.forkCount * 3 // 임의의 좋아요 수 생성
+  likeCount: r.forkedCount * 3
 }));
 
 const mockQAPosts: QAPost[] = [
@@ -52,12 +53,13 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'showcase' | 'qa' | 'recruitment' | 'datasets'>('showcase');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { user } = useAuthStore();
 
   // --- Sub-page Rendering Logic ---
   if (selectedId) {
     if (activeTab === 'showcase') {
       const post = mockShowcasePosts.find(p => p.id === selectedId);
-      if (post) return <RecipeDetail recipe={post} onBack={() => setSelectedId(null)} />;
+      if (post) return <RecipeDetail recipe={post} onBack={() => setSelectedId(null)} isAuthor={post.author === user?.name} />;
     }
     if (activeTab === 'qa') {
       const post = mockQAPosts.find(p => p.id === selectedId);
@@ -133,7 +135,7 @@ export default function CommunityPage() {
             {mockShowcasePosts.map(post => (
               <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative">
                 <div className="aspect-[4/3] overflow-hidden bg-gray-50">
-                  <ImageWithFallback src={post.thumbnail} alt={post.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <ImageWithFallback src={post.thumbnailUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   {post.isExpertVerified && (
                     <div className="absolute top-6 right-6 px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
                       <Award size={14} /> Expert
@@ -141,14 +143,14 @@ export default function CommunityPage() {
                   )}
                 </div>
                 <div className="p-8 space-y-6">
-                  <h3 className="text-xl font-black text-gray-900 leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.name}</h3>
+                  <h3 className="text-xl font-black text-gray-900 leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
                   <div className="flex items-center justify-between pt-6 border-t border-gray-50">
                     <div className="flex items-center gap-3">
                       <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
                       <span className="text-sm font-bold text-gray-600">{post.author}</span>
                     </div>
                     <div className="flex items-center gap-4 text-gray-300 font-black text-[10px] uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkCount}</span>
+                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkedCount}</span>
                       <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount}</span>
                     </div>
                   </div>
@@ -158,7 +160,6 @@ export default function CommunityPage() {
           </div>
         )}
 
-        {/* ... (이전과 동일한 QA, recruitment, datasets 렌더링 코드) ... */}
         {activeTab === 'qa' && (
           <div className="space-y-4">
             {mockQAPosts.map(post => (

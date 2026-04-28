@@ -5,11 +5,12 @@ import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import QnaDetail from '../../components/dashboard/QnaDetail';
 import RecruitmentDetail from '../../components/dashboard/RecruitmentDetail';
 import CommunityDatasetDetail from '../../components/dashboard/CommunityDatasetDetail';
+import { useAuthStore } from '../../store/useAuthStore';
+import { ALL_RECIPES, type Recipe } from '../../store/mockData';
 
 // --- Types ---
-interface ShowcasePost {
-  id: string; title: string; author: string; authorAvatar: string; thumbnail: string;
-  forkCount: number; likeCount: number; isExpertVerified?: boolean;
+interface ShowcasePost extends Recipe {
+  likeCount: number;
 }
 
 interface QAPost {
@@ -29,10 +30,10 @@ interface DatasetPost {
 }
 
 // --- Mock Data ---
-const mockShowcasePosts: ShowcasePost[] = [
-  { id: 'SC-001', title: 'Lung Cancer High-Res Enhancement', author: '김성한', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim', thumbnail: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=600&q=80', forkCount: 124, likeCount: 356, isExpertVerified: true },
-  { id: 'SC-003', title: 'ECG Data Augmentation Pipeline', author: '염승빈', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yeom', thumbnail: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80', forkCount: 203, likeCount: 512, isExpertVerified: true },
-];
+const mockShowcasePosts: ShowcasePost[] = ALL_RECIPES.map(r => ({
+  ...r,
+  likeCount: r.forkedCount * 3
+}));
 
 const mockQAPosts: QAPost[] = [
   { id: 'QA-001', title: 'Diffusion 모델 학습 시 메모리 부족 오류 해결 방법은?', author: '연구자A', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=userA', status: 'Solved', tags: ['#Error', '#Diffusion'], commentCount: 12, hasExpertReply: true },
@@ -52,12 +53,13 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'showcase' | 'qa' | 'recruitment' | 'datasets'>('showcase');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { user } = useAuthStore();
 
   // --- Sub-page Rendering Logic ---
   if (selectedId) {
     if (activeTab === 'showcase') {
       const post = mockShowcasePosts.find(p => p.id === selectedId);
-      if (post) return <RecipeDetail recipe={{...post, name: post.title, reviewCount: 45, rating: 4.8, usageCount: 1200, description: '커뮤니티 레시피', createdAt: '2025-01-01'}} onBack={() => setSelectedId(null)} />;
+      if (post) return <RecipeDetail recipe={post} onBack={() => setSelectedId(null)} isAuthor={post.author === user?.name} />;
     }
     if (activeTab === 'qa') {
       const post = mockQAPosts.find(p => p.id === selectedId);
@@ -133,7 +135,7 @@ export default function CommunityPage() {
             {mockShowcasePosts.map(post => (
               <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative">
                 <div className="aspect-[4/3] overflow-hidden bg-gray-50">
-                  <ImageWithFallback src={post.thumbnail} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <ImageWithFallback src={post.thumbnailUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   {post.isExpertVerified && (
                     <div className="absolute top-6 right-6 px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
                       <Award size={14} /> Expert
@@ -148,7 +150,7 @@ export default function CommunityPage() {
                       <span className="text-sm font-bold text-gray-600">{post.author}</span>
                     </div>
                     <div className="flex items-center gap-4 text-gray-300 font-black text-[10px] uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkCount}</span>
+                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkedCount}</span>
                       <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount}</span>
                     </div>
                   </div>

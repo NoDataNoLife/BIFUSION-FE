@@ -3,23 +3,9 @@ import { Star, GitFork, Eye, Award, Search, Plus, Database, Calendar, Download, 
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import AssetDatasetDetail from '../../components/dashboard/AssetDatasetDetail';
-
-interface Recipe {
-  id: string;
-  name: string;
-  author: string;
-  authorAvatar: string;
-  isExpertVerified: boolean;
-  rating: number;
-  reviewCount: number;
-  forkCount: number;
-  usageCount: number;
-  thumbnail: string;
-  description: string;
-  forkedFrom?: string;
-  createdAt: string;
-  verificationStatus?: 'none' | 'pending' | 'verified';
-}
+import { useAssetStore } from '../../store/useAssetStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { ALL_RECIPES, type Recipe } from '../../store/mockData';
 
 interface Dataset {
   id: string;
@@ -38,38 +24,8 @@ export default function AssetsPage() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Mock Data
-  const recipes: Recipe[] = [
-    {
-      id: '1',
-      name: '심장 질환 예측 모델 최적화',
-      author: '김성한',
-      authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim',
-      isExpertVerified: true,
-      rating: 4.8,
-      reviewCount: 127,
-      forkCount: 45,
-      usageCount: 892,
-      thumbnail: 'https://images.unsplash.com/photo-1682706841289-9d7ddf5eb999?w=800&q=80',
-      description: 'ECG 데이터 증강을 위한 고성능 레시피. FID Score 12.3 달성',
-      createdAt: '2025-01-15',
-    },
-    {
-      id: '3',
-      name: 'MRI 데이터 증강 파이프라인',
-      author: '염승빈',
-      authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yeom',
-      isExpertVerified: true,
-      rating: 4.9,
-      reviewCount: 156,
-      forkCount: 67,
-      usageCount: 1243,
-      thumbnail: 'https://images.unsplash.com/photo-1758691463165-ca9b5bc2b28a?w=800&q=80',
-      description: '뇌 MRI 이미지 증강. 종양 검출 모델 성능 15% 향상',
-      createdAt: '2025-01-10',
-    },
-  ];
+  const { forkedRecipeIds } = useAssetStore();
+  const { user } = useAuthStore();
 
   const datasets: Dataset[] = [
     {
@@ -96,14 +52,24 @@ export default function AssetsPage() {
     },
   ];
 
-  const filteredRecipes = recipes.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredRecipes = ALL_RECIPES.filter(r => {
+    const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (activeTab === 'recipes') {
+      return forkedRecipeIds.includes(r.id) && matchesSearch;
+    } else if (activeTab === 'uploaded-recipes') {
+      return r.author === user?.name && matchesSearch;
+    }
+    return matchesSearch;
+  });
+
   const filteredDatasets = datasets.filter(d => 
     (activeTab === 'datasets' ? d.type === 'uploaded' : d.type === 'augmented') &&
     d.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (selectedRecipe) {
-    return <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} isAuthor={selectedRecipe.author === '염승빈'} />;
+    return <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} isAuthor={selectedRecipe.author === user?.name} />;
   }
 
   if (selectedDataset) {
@@ -154,36 +120,42 @@ export default function AssetsPage() {
       {/* Grid Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {activeTab.includes('recipe') ? (
-          filteredRecipes.map(recipe => (
-            <div 
-              key={recipe.id}
-              onClick={() => setSelectedRecipe(recipe)}
-              className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
-            >
-              <div className="aspect-video relative overflow-hidden bg-gray-50">
-                <ImageWithFallback src={recipe.thumbnail} alt={recipe.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                {recipe.isExpertVerified && (
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-lg uppercase tracking-widest">
-                    Expert
-                  </div>
-                )}
-              </div>
-              <div className="p-8">
-                <h3 className="text-lg font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-primary transition-colors">{recipe.name}</h3>
-                <p className="text-sm text-gray-500 font-medium line-clamp-2 mb-6">{recipe.description}</p>
-                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                  <div className="flex items-center gap-2">
-                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                    <span className="text-sm font-black text-gray-900">{recipe.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-gray-300 font-bold text-xs uppercase tracking-widest">
-                    <span className="flex items-center gap-1.5"><GitFork size={14} /> {recipe.forkCount}</span>
-                    <span className="flex items-center gap-1.5"><Eye size={14} /> {recipe.usageCount}</span>
+          filteredRecipes.length > 0 ? (
+            filteredRecipes.map(recipe => (
+              <div 
+                key={recipe.id}
+                onClick={() => setSelectedRecipe(recipe)}
+                className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
+              >
+                <div className="aspect-video relative overflow-hidden bg-gray-50">
+                  <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  {recipe.isExpertVerified && (
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-lg uppercase tracking-widest">
+                      Expert
+                    </div>
+                  )}
+                </div>
+                <div className="p-8">
+                  <h3 className="text-lg font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-primary transition-colors">{recipe.title}</h3>
+                  <p className="text-sm text-gray-500 font-medium line-clamp-2 mb-6">{recipe.description}</p>
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                      <span className="text-sm font-black text-gray-900">{recipe.rating}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-gray-300 font-bold text-xs uppercase tracking-widest">
+                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {recipe.forkedCount}</span>
+                      <span className="flex items-center gap-1.5"><Eye size={14} /> {recipe.viewCount}</span>
+                    </div>
                   </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="col-span-full py-20 text-center">
+              <p className="text-gray-400 font-bold">표시할 레시피가 없습니다.</p>
             </div>
-          ))
+          )
         ) : (
           filteredDatasets.map(dataset => (
             <div 

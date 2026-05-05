@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/layout/Navbar';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
+import OAuth2RedirectHandler from './pages/auth/OAuth2RedirectHandler';
 import { useAuthStore } from './store/useAuthStore';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -44,7 +45,7 @@ function App() {
           element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <><Navbar /><LandingPage /></>} 
         />
         
-        {/* 2. 대시보드 (인증 보호 적용) */}
+        {/* 2. 대시보드 및 보호된 경로 */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />}>
             <Route index element={<DashboardHomePage />} />
@@ -75,9 +76,15 @@ function App() {
             
             <Route path="settings" element={<Placeholder title="Settings" />} />
           </Route>
+          
+          {/* 추가 정보 입력 페이지 */}
+          <Route path="/onboarding" element={<Placeholder title="Onboarding (닉네임 설정)" />} />
         </Route>
 
-        {/* 3. 404 및 예외 처리 */}
+        {/* 3. OAuth2 리다이렉트 핸들러 (인증 결과 처리 전용) */}
+        <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+
+        {/* 4. 404 및 예외 처리 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

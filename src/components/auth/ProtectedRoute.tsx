@@ -1,14 +1,18 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
-export default function ProtectedRoute() {
+interface ProtectedRouteProps {
+  children?: React.ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated } = useAuthStore();
 
-  // 로그인되지 않은 경우 메인(랜딩) 페이지로 이동
+  // 로그인되지 않은 경우 루트(랜딩 페이지)로 이동
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  // 로그인된 경우 하위 라우트(Outlet) 렌더링
-  return <Outlet />;
+  // 로그인된 경우: children이 있으면 children을, 없으면 Outlet을 렌더링
+  return children ? <>{children}</> : <Outlet />;
 }

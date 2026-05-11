@@ -25,6 +25,7 @@ import ExpertPage from './pages/dashboard/ExpertPage';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import CommunityPage from './pages/dashboard/CommunityPage';
 import ActivitiesPage from './pages/dashboard/ActivitiesPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 // 임시 컴포넌트들
 const Placeholder = ({ title }: { title: string }) => (
@@ -59,7 +60,13 @@ function App() {
         {/* 1. 루트 경로: 로그인 상태면 대시보드로 자동 이동 */}
         <Route 
           path="/" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <><Navbar /><LandingPage /></>} 
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <><Navbar /><LandingPage /></>
+            )
+          } 
         />
         
         {/* 2. 대시보드 및 보호된 경로 */}
@@ -95,7 +102,7 @@ function App() {
           </Route>
           
           {/* 추가 정보 입력 페이지 */}
-          <Route path="/onboarding" element={<Placeholder title="Onboarding (닉네임 설정)" />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
         </Route>
 
         {/* 3. OAuth2 리다이렉트 핸들러 (인증 결과 처리 전용) */}

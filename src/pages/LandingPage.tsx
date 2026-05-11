@@ -6,7 +6,7 @@ import { Zap, Shield, Share2, Terminal } from "lucide-react";
 export default function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuthStore();
+  const { login, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

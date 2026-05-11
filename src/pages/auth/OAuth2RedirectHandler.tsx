@@ -34,10 +34,9 @@ export default function OAuth2RedirectHandler() {
           if (userStr) {
             // 쿼리에 유저 정보가 있는 경우
             const user = JSON.parse(decodeURIComponent(userStr));
-            login({ accessToken, refreshToken, user });
+            login({ user });
           } else {
-            // 토큰만 있는 경우
-            setTokens({ accessToken, refreshToken });
+            // 토큰만 있는 경우 (쿠키 기반 연동)
             await fetchUser();
           }
         } else {

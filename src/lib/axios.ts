@@ -1,6 +1,16 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
+// 1. Auth 관련 인스턴스 먼저 선언 (참조 에러 방지)
+export const authApi = axios.create({
+  baseURL: '/auth',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 2. 기본 API 인스턴스
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   withCredentials: true,
@@ -9,12 +19,9 @@ const api = axios.create({
   },
 });
 
+// 요청 인터셉터 (Zustand 상태를 보낼 필요가 있다면 사용)
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().accessToken;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -26,22 +33,16 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 401 에러이고 재시도한 적이 없을 때 실행
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // /auth/refresh 호출하여 토큰 갱신
-        // authApi는 baseURL이 '/auth'이므로 '/refresh'만 호출
         await authApi.post('/refresh');
-
-        // 토큰 갱신 성공 시 원래 요청 재시도
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh Token까지 만료된 경우 로그아웃 처리
         console.error('Refresh token expired or invalid');
-        // circular dependency 피하기 위해 로컬스토리지 비우고 홈으로 이동
-        localStorage.removeItem('auth-storage');
+        // Zustand 상태까지 완전히 초기화
+        useAuthStore.getState().logout();
         window.location.href = '/';
         return Promise.reject(refreshError);
       }
@@ -50,13 +51,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-export const authApi = axios.create({
-  baseURL: '/auth',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 export default api;

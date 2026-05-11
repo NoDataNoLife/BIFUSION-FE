@@ -6,7 +6,6 @@ export default function OAuth2RedirectHandler() {
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore((state) => state.login);
-  const setTokens = useAuthStore((state) => state.setTokens);
   const fetchUser = useAuthStore((state) => state.fetchUser);
 
   useEffect(() => {
@@ -62,7 +61,7 @@ export default function OAuth2RedirectHandler() {
     };
 
     processLogin();
-  }, [location, login, setTokens, fetchUser, navigate]);
+  }, [location, login, fetchUser, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">

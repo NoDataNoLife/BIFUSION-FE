@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
 interface ProtectedRouteProps {
@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, user } = useAuthStore();
+  const location = useLocation();
 
   // 1. 로그인되지 않은 경우 루트(랜딩 페이지)로 이동
   if (!isAuthenticated) {
@@ -16,7 +17,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // 2. 로그인되었으나 온보딩이 안 된 경우 (닉네임이 없는 경우로 판단)
   // 온보딩 페이지 자체가 보호된 경로 안에 있다면 무한 루프 주의
   // 현재 App.tsx 구조 상 /onboarding은 ProtectedRoute 내부에 있음
-  if (isAuthenticated && !user?.nickname && window.location.pathname !== '/onboarding') {
+  if (isAuthenticated && !user?.nickname && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 

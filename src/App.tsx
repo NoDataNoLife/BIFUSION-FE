@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import LandingPage from './pages/LandingPage';
@@ -34,7 +35,23 @@ const Placeholder = ({ title }: { title: string }) => (
 );
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
+
+  useEffect(() => {
+    // 앱이 처음 로드될 때만 세션 체크
+    if (!isInitialized) {
+      fetchUser();
+    }
+  }, [isInitialized, fetchUser]);
+
+  if (!isInitialized) {
+    // 초기화 중에는 로딩 표시
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <Router>

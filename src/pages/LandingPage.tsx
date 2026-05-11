@@ -1,10 +1,22 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { Zap, Shield, Share2, Terminal } from "lucide-react";
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuthStore();
+  const location = useLocation();
+  const { isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const hasUrlToken = params.get("accessToken") || params.get("access_token") || params.get("token");
+
+    if (hasUrlToken) {
+      // URL에 토큰이 있는 경우 (OAuth2 리다이렉트 상황)
+      navigate(`/oauth2/redirect${location.search}`, { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleGoogleLogin = () => {
     if (isAuthenticated) {
@@ -13,7 +25,7 @@ export default function LandingPage() {
     }
 
     // [임시] 백엔드 수리 전까지 개발을 위해 Mock 로그인을 사용합니다.
-    const isMock = true; 
+    const isMock = false; 
 
     if (isMock) {
       console.warn("개발 모드: Mock 로그인을 진행합니다.");
@@ -36,7 +48,7 @@ export default function LandingPage() {
 
     // 백엔드 명세에 따른 실제 구글 로그인 엔드포인트
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-    window.location.href = `${baseUrl}/api/v1/oauth2/authorization/google`;
+    window.location.href = `${baseUrl}/oauth2/authorization/google`;
   };
 
   return (

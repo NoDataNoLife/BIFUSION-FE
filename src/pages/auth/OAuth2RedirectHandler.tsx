@@ -1,51 +1,77 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export default function OAuth2RedirectHandler() {
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore((state) => state.login);
+  const setTokens = useAuthStore((state) => state.setTokens);
+  const fetchUser = useAuthStore((state) => state.fetchUser);
 
   useEffect(() => {
-    // URL에서 쿼리 파라미터를 추출합니다.
-    const params = new URLSearchParams(location.search);
-    const accessToken = params.get('accessToken');
-    const refreshToken = params.get('refreshToken');
-    const isNewUser = params.get('isNewUser') === 'true';
-    
-    // 유저 데이터가 복잡할 경우 JSON 스트링으로 올 수도 있습니다.
-    const userStr = params.get('user');
-    
-    if (accessToken && refreshToken && userStr) {
-      try {
-        const user = JSON.parse(decodeURIComponent(userStr));
-        
-        // 스토어에 로그인 정보 저장
-        login({ accessToken, refreshToken, user });
+    // 1. 쿼리(?a=b) 또는 해시(#/path?a=b) 기반 콜백에서 토큰 추출 시도
+    const hashQuery = location.hash.includes("?")
+      ? location.hash.substring(location.hash.indexOf("?"))
+      : "";
+    const rawQuery = location.search || hashQuery;
+    const params = new URLSearchParams(rawQuery);
 
-        // 신규 유저라면 프로필 설정(회원가입 추가 정보) 페이지로, 
-        // 기존 유저라면 대시보드로 이동
-        if (isNewUser) {
-          navigate('/onboarding', { replace: true });
+    const accessToken =
+      params.get("accessToken") ||
+      params.get("access_token") ||
+      params.get("token");
+    const refreshToken =
+      params.get("refreshToken") || params.get("refresh_token");
+    const isNewUser =
+      (params.get("isNewUser") || params.get("is_new_user")) === "true";
+    const userStr =
+      params.get("user") || params.get("userInfo") || params.get("user_info");
+
+    const processLogin = async () => {
+      try {
+        if (accessToken && refreshToken) {
+          if (userStr) {
+            // 쿼리에 유저 정보가 있는 경우
+            const user = JSON.parse(decodeURIComponent(userStr));
+            login({ accessToken, refreshToken, user });
+          } else {
+            // 토큰만 있는 경우
+            setTokens({ accessToken, refreshToken });
+            await fetchUser();
+          }
         } else {
-          navigate('/dashboard', { replace: true });
+          // 토큰이 없더라도 쿠키 방식일 수 있으므로 유저 정보를 페치해봄
+          await fetchUser();
+        }
+
+        // 로그인 성공 시 이동 (fetchUser가 실패하면 내부적으로 logout 처리됨)
+        if (useAuthStore.getState().isAuthenticated) {
+          if (isNewUser) {
+            navigate("/onboarding", { replace: true });
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
+        } else {
+          console.error("인증 데이터가 유효하지 않음");
+          navigate("/", { replace: true });
         }
       } catch (error) {
-        console.error('인증 데이터 파싱 오류:', error);
-        navigate('/login', { replace: true });
+        console.error("인증 처리 중 오류 발생:", error);
+        navigate("/", { replace: true });
       }
-    } else {
-      // 데이터가 부족하면 로그인 페이지로 되돌림
-      navigate('/login', { replace: true });
-    }
-  }, [location, login, navigate]);
+    };
+
+    processLogin();
+  }, [location, login, setTokens, fetchUser, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
       <div className="text-center space-y-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-gray-500 font-bold animate-pulse">로그인 중입니다. 잠시만 기다려주세요...</p>
+        <p className="text-gray-500 font-bold animate-pulse">
+          로그인 중입니다. 잠시만 기다려주세요...
+        </p>
       </div>
     </div>
   );

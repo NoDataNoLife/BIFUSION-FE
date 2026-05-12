@@ -225,9 +225,29 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, deleteAccount } = useAuthStore();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("정말로 계정을 삭제하시겠습니까? 작성하신 모든 정보가 삭제되며 이 작업은 되돌릴 수 없습니다.")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    const success = await deleteAccount();
+    setIsDeleting(false);
+
+    if (success) {
+      alert("계정이 삭제되었습니다. 그동안 이용해주셔서 감사합니다.");
+      setShowSettingsModal(false);
+      // deleteAccount 내부에서 상태를 초기화하므로 라우터가 자동으로 랜딩페이지로 보냅니다.
+    } else {
+      alert("계정 삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
   const [projects, setProjects] = useState<ProfileProject[]>(initialProjects);
   const [showProjectVisibilityModal, setShowProjectVisibilityModal] =
     useState(false);
@@ -259,9 +279,9 @@ export default function ProfilePage() {
     label: string;
     icon: typeof Crown;
   }> = [
-    { id: "plan", label: "Plan", icon: Crown },
-    { id: "verification", label: "Verify", icon: ShieldCheck },
-    { id: "account", label: "Security", icon: UserX },
+    { id: "plan", label: "요금제", icon: Crown },
+    { id: "verification", label: "전문가 인증", icon: ShieldCheck },
+    { id: "account", label: "계정 보안", icon: UserX },
   ];
 
   const openProjectVisibilityModal = () => {
@@ -379,7 +399,7 @@ export default function ProfilePage() {
               {user?.name || "사용자"}
             </h1>
             <p className="text-sm text-gray-400 font-medium">
-              @{user?.email?.split("@")[0] || "researcher"}
+              @{user?.nickname || user?.email?.split("@")[0] || "researcher"}
             </p>
             <div className="pt-2">
               <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
@@ -397,8 +417,7 @@ export default function ProfilePage() {
               <Edit2 size={12} className="text-gray-300" />
             </div>
             <p className="text-sm text-gray-500 leading-relaxed">
-              의료 AI 연구원으로서 데이터 증강 기술을 통해 정밀 진단 모델의
-              성능을 향상시키는 연구를 진행하고 있습니다.
+              {user?.bio || "자기소개를 입력해주세요."}
             </p>
           </div>
 
@@ -416,14 +435,14 @@ export default function ProfilePage() {
         {/* Info List Section */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <MapPin size={18} className="text-primary" /> 서울, 대한민국
+            <MapPin size={18} className="text-primary" /> {user?.organization || "소속 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium hover:text-primary transition-colors cursor-pointer">
             <LinkIcon size={18} className="text-primary" />{" "}
-            bifusion.ai/researcher
+            {user?.contact || "연락처 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <Calendar size={18} className="text-primary" /> Joined Mar 2024
+            <Calendar size={18} className="text-primary" /> {user?.createdAt ? `Joined ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : "Joined ..."}
           </div>
         </div>
       </div>
@@ -726,7 +745,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-[#F8FAFC]">
               <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight">
-                Account Settings
+                계정 설정
               </h2>
               <button
                 onClick={() => setShowSettingsModal(false)}
@@ -762,26 +781,48 @@ export default function ProfilePage() {
               {settingsTab === "plan" && (
                 <div className="space-y-8">
                   <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">
-                      현재 플랜: Basic
-                    </h3>
-                    <div className="space-y-3">
-                      {[
-                        "100 Data Augmentation / mo",
-                        "Max 3 Research Projects",
-                        "Community Recipe Access",
-                      ].map((f, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-3 text-sm font-bold text-gray-600"
-                        >
-                          <Check size={16} className="text-primary" /> {f}
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">현재 플랜</p>
+                        <h3 className="text-2xl font-black text-gray-900">Basic Plan</h3>
+                      </div>
+                      <span className="px-4 py-1.5 bg-white border border-primary/20 text-primary rounded-full text-sm font-bold shadow-sm">
+                        무료
+                      </span>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">플랜 제한사항</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                            <Check size={18} className="text-primary flex-shrink-0" /> 월 100개 데이터 증강 작업
+                          </div>
+                          <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                            <Check size={18} className="text-primary flex-shrink-0" /> 프로젝트 3개까지 생성 가능
+                          </div>
+                          <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                            <Check size={18} className="text-primary flex-shrink-0" /> 기본 AI 모델 사용
+                          </div>
+                          <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
+                            <X size={18} className="text-gray-300 flex-shrink-0" /> 고급 AI 모델 및 커스텀 설정
+                          </div>
+                          <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
+                            <X size={18} className="text-gray-300 flex-shrink-0" /> 우선 지원 및 전용 서버
+                          </div>
                         </div>
-                      ))}
+                      </div>
+
+                      <div className="pt-6 border-t border-gray-100">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
+                        <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                          무제한 데이터 증강, 고급 AI 모델, 우선 지원, 팀 협업 기능 등 모든 기능을 제한 없이 이용해보세요.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                    Upgrade to PRO — $19/mo
+                  <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
+                    Pro 플랜으로 업그레이드 — 월 $19
                   </button>
                 </div>
               )}
@@ -790,22 +831,40 @@ export default function ProfilePage() {
                 <div className="space-y-8 text-center pt-4">
                   <div className="p-8 bg-gray-50 rounded-3xl border border-gray-100 inline-block mx-auto min-w-[250px]">
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-widest">
-                      Login Email
+                      연동된 이메일
                     </p>
                     <p className="text-lg font-bold text-gray-900">
                       {user?.email}
                     </p>
                   </div>
-                  <div className="pt-6">
+                  <div className="pt-6 space-y-4">
                     <button
                       onClick={() => {
                         logout();
                         setShowSettingsModal(false);
                       }}
-                      className="w-full py-4 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all flex items-center justify-center gap-3"
                     >
-                      <LogOut size={20} /> Sign Out
+                      <LogOut size={20} /> 로그아웃 (Sign Out)
                     </button>
+
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-[10px] font-bold text-red-400 uppercase mb-3 tracking-widest flex items-center justify-center gap-2">
+                        <AlertTriangle size={12} /> 위험 구역 (Danger Zone)
+                      </p>
+                      <button
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="w-full py-4 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDeleting ? (
+                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <UserX size={20} />
+                        )}
+                        계정 삭제 (Delete Account)
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

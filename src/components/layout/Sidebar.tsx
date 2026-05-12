@@ -143,7 +143,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           {!isCollapsed && (
             <div className="min-w-0 text-left">
               <p className="text-sm font-bold text-gray-900 dark:text-foreground truncate">
-                {user?.name || "사용자"}
+                {user?.nickname || user?.name || "사용자"}
               </p>
               <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">
                 {user?.email || "user@example.com"}

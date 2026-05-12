@@ -225,10 +225,28 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout, deleteAccount } = useAuthStore();
+  const { user, logout, deleteAccount, updateNickname } = useAuthStore();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Nickname Editing State
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [newNickname, setNewNickname] = useState(user?.nickname || "");
+
+  const handleNicknameUpdate = async () => {
+    if (!newNickname.trim() || newNickname === user?.nickname) {
+      setIsEditingNickname(false);
+      return;
+    }
+
+    const success = await updateNickname(newNickname);
+    if (success) {
+      setIsEditingNickname(false);
+    } else {
+      alert("닉네임 수정에 실패했습니다. 이미 사용 중이거나 올바르지 않은 형식일 수 있습니다.");
+    }
+  };
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("정말로 계정을 삭제하시겠습니까? 작성하신 모든 정보가 삭제되며 이 작업은 되돌릴 수 없습니다.")) {
@@ -395,12 +413,61 @@ export default function ProfilePage() {
 
           {/* Basic Info */}
           <div className="space-y-1 mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {user?.name || "사용자"}
-            </h1>
-            <p className="text-sm text-gray-400 font-medium">
-              @{user?.nickname || user?.email?.split("@")[0] || "researcher"}
-            </p>
+            <div className="group relative flex flex-col items-center">
+              {isEditingNickname ? (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200 mb-1">
+                  <input
+                    type="text"
+                    value={newNickname}
+                    onChange={(e) => setNewNickname(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleNicknameUpdate()}
+                    autoFocus
+                    placeholder="닉네임 입력"
+                    className="text-2xl font-bold text-gray-900 bg-gray-50 border-b-2 border-primary outline-none px-2 py-0.5 w-48 text-center"
+                  />
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={handleNicknameUpdate}
+                      className="p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                      title="저장"
+                    >
+                      <Check size={20} />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setIsEditingNickname(false);
+                        setNewNickname(user?.nickname || "");
+                      }}
+                      className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                      title="취소"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+                    {user?.nickname || "닉네임을 설정해주세요"}
+                  </h1>
+                  <button 
+                    onClick={() => {
+                      setNewNickname(user?.nickname || "");
+                      setIsEditingNickname(true);
+                    }}
+                    className="p-1 text-gray-300 hover:text-primary hover:bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    title="닉네임 수정"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                </div>
+              )}
+              
+              <p className="text-sm text-gray-400 font-medium">
+                @{user?.name || "researcher"}
+              </p>
+            </div>
+
             <div className="pt-2">
               <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
                 <ShieldCheck size={12} /> 전문가 인증됨

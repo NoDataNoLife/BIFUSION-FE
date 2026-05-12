@@ -22,6 +22,7 @@ interface AuthState {
   login: (data: { user: User }) => void;
   logout: () => Promise<void>;
   updateUser: (userData: User) => void;
+  updateNickname: (nickname: string) => Promise<boolean>;
   fetchUser: () => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
   setInitialized: (value: boolean) => void;
@@ -78,6 +79,23 @@ export const useAuthStore = create<AuthState>()(
       updateUser: (userData) => set((state) => ({
         user: state.user ? { ...state.user, ...userData } : userData
       })),
+
+      updateNickname: async (nickname: string) => {
+        try {
+          const response = await api.put('/profile/nickname', { nickname });
+          if (response.data.success) {
+            const { nickname: newNickname, updatedAt } = response.data.data;
+            set((state) => ({
+              user: state.user ? { ...state.user, nickname: newNickname, updatedAt } : null
+            }));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Failed to update nickname:', error);
+          return false;
+        }
+      },
 
       fetchUser: async () => {
         try {

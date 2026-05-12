@@ -51,7 +51,7 @@ export default function DashboardHeader() {
         >
           <div className="text-right hidden md:block">
             <p className="text-sm font-black text-gray-900 dark:text-foreground leading-tight group-hover:text-primary transition-colors">
-              {user?.name || "사용자"}
+              {user?.nickname || user?.name || "사용자"}
             </p>
             <p className="text-[10px] font-bold text-gray-400 dark:text-muted-foreground uppercase tracking-widest leading-tight">
               Researcher

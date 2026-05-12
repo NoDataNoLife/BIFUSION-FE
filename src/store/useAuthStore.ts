@@ -24,6 +24,7 @@ interface AuthState {
   updateUser: (userData: User) => void;
   updateNickname: (nickname: string) => Promise<boolean>;
   updateBio: (bio: string) => Promise<boolean>;
+  updateOrganization: (organization: string) => Promise<boolean>;
   fetchUser: () => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
   setInitialized: (value: boolean) => void;
@@ -111,6 +112,24 @@ export const useAuthStore = create<AuthState>()(
           return false;
         } catch (error) {
           console.error('Failed to update bio:', error);
+          return false;
+        }
+      },
+
+      updateOrganization: async (organization: string) => {
+        try {
+          const response = await api.put('/profile/location', { organization });
+          if (response.data.success) {
+            // 서버 응답의 location 필드가 있다면 그것을 쓰거나, 보낸 값을 사용함
+            const updatedAt = response.data.data.updatedAt;
+            set((state) => ({
+              user: state.user ? { ...state.user, organization, updatedAt } : null
+            }));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Failed to update organization:', error);
           return false;
         }
       },

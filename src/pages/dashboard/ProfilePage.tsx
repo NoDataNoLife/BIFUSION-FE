@@ -225,7 +225,7 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout, deleteAccount, updateNickname, updateBio } = useAuthStore();
+  const { user, logout, deleteAccount, updateNickname, updateBio, updateOrganization } = useAuthStore();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -263,6 +263,24 @@ export default function ProfilePage() {
       setIsEditingBio(false);
     } else {
       alert("자기소개 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  // Organization Editing State
+  const [isEditingOrg, setIsEditingOrg] = useState(false);
+  const [newOrg, setNewOrg] = useState(user?.organization || "");
+
+  const handleOrgUpdate = async () => {
+    if (newOrg === user?.organization) {
+      setIsEditingOrg(false);
+      return;
+    }
+
+    const success = await updateOrganization(newOrg);
+    if (success) {
+      setIsEditingOrg(false);
+    } else {
+      alert("소속 정보 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
     }
   };
 
@@ -559,8 +577,44 @@ export default function ProfilePage() {
 
         {/* Info List Section */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
-          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <MapPin size={18} className="text-primary" /> {user?.organization || "소속 정보 없음"}
+          <div className="flex items-center justify-between group h-6">
+            <div className="flex items-center gap-3 text-sm text-gray-500 font-medium flex-1">
+              <MapPin size={18} className="text-primary" />
+              {isEditingOrg ? (
+                <input
+                  type="text"
+                  value={newOrg}
+                  onChange={(e) => setNewOrg(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleOrgUpdate()}
+                  autoFocus
+                  className="bg-gray-50 border-b border-primary outline-none px-1 w-full"
+                />
+              ) : (
+                <span className="truncate">{user?.organization || "소속 정보 없음"}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {isEditingOrg ? (
+                <>
+                  <button onClick={handleOrgUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg">
+                    <Check size={14} />
+                  </button>
+                  <button onClick={() => setIsEditingOrg(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg">
+                    <X size={14} />
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setNewOrg(user?.organization || "");
+                    setIsEditingOrg(true);
+                  }}
+                  className="p-1 text-gray-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Edit2 size={12} />
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium hover:text-primary transition-colors cursor-pointer">
             <LinkIcon size={18} className="text-primary" />{" "}

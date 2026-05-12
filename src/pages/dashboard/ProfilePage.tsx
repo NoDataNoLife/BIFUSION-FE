@@ -225,7 +225,7 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout, deleteAccount, updateNickname, updateBio, updateOrganization } = useAuthStore();
+  const { user, logout, deleteAccount, updateNickname, updateBio, updateOrganization, updateWebsite } = useAuthStore();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -281,6 +281,24 @@ export default function ProfilePage() {
       setIsEditingOrg(false);
     } else {
       alert("소속 정보 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  // Website Editing State
+  const [isEditingWebsite, setIsEditingWebsite] = useState(false);
+  const [newWebsite, setNewWebsite] = useState(user?.websiteUrl || "");
+
+  const handleWebsiteUpdate = async () => {
+    if (newWebsite === user?.websiteUrl) {
+      setIsEditingWebsite(false);
+      return;
+    }
+
+    const success = await updateWebsite(newWebsite);
+    if (success) {
+      setIsEditingWebsite(false);
+    } else {
+      alert("웹사이트 주소 수정에 실패했습니다. 올바른 URL 형식인지 확인해주세요.");
     }
   };
 
@@ -616,8 +634,48 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium hover:text-primary transition-colors cursor-pointer">
-            <LinkIcon size={18} className="text-primary" />{" "}
+          <div className="flex items-center justify-between group h-6">
+            <div className="flex items-center gap-3 text-sm text-gray-500 font-medium flex-1">
+              <LinkIcon size={18} className="text-primary" />
+              {isEditingWebsite ? (
+                <input
+                  type="text"
+                  value={newWebsite}
+                  onChange={(e) => setNewWebsite(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleWebsiteUpdate()}
+                  autoFocus
+                  placeholder="https://example.com"
+                  className="bg-gray-50 border-b border-primary outline-none px-1 w-full"
+                />
+              ) : (
+                <span className="truncate">{user?.websiteUrl || "웹사이트 정보 없음"}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {isEditingWebsite ? (
+                <>
+                  <button onClick={handleWebsiteUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg">
+                    <Check size={14} />
+                  </button>
+                  <button onClick={() => setIsEditingWebsite(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg">
+                    <X size={14} />
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setNewWebsite(user?.websiteUrl || "");
+                    setIsEditingWebsite(true);
+                  }}
+                  className="p-1 text-gray-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Edit2 size={12} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+            <MessageSquare size={18} className="text-primary" />
             {user?.contact || "연락처 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">

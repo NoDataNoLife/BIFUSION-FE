@@ -9,6 +9,7 @@ interface User {
   nickname: string;
   organization?: string;
   contact?: string;
+  websiteUrl?: string;
   bio?: string;
   createdAt: string;
   updatedAt: string;
@@ -25,6 +26,7 @@ interface AuthState {
   updateNickname: (nickname: string) => Promise<boolean>;
   updateBio: (bio: string) => Promise<boolean>;
   updateOrganization: (organization: string) => Promise<boolean>;
+  updateWebsite: (websiteUrl: string) => Promise<boolean>;
   fetchUser: () => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
   setInitialized: (value: boolean) => void;
@@ -130,6 +132,23 @@ export const useAuthStore = create<AuthState>()(
           return false;
         } catch (error) {
           console.error('Failed to update organization:', error);
+          return false;
+        }
+      },
+
+      updateWebsite: async (websiteUrl: string) => {
+        try {
+          const response = await api.put('/profile/website', { websiteUrl });
+          if (response.data.success) {
+            const updatedAt = response.data.data.updatedAt;
+            set((state) => ({
+              user: state.user ? { ...state.user, websiteUrl, updatedAt } : null
+            }));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Failed to update website:', error);
           return false;
         }
       },

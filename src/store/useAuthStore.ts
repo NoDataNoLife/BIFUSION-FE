@@ -9,6 +9,7 @@ interface User {
   nickname: string;
   organization?: string;
   contact?: string;
+  bio?: string;
   createdAt: string;
   updatedAt: string;
   profileImage?: string;
@@ -22,6 +23,7 @@ interface AuthState {
   logout: () => Promise<void>;
   updateUser: (userData: User) => void;
   fetchUser: () => Promise<boolean>;
+  deleteAccount: () => Promise<boolean>;
   setInitialized: (value: boolean) => void;
 }
 
@@ -53,6 +55,23 @@ export const useAuthStore = create<AuthState>()(
             isInitialized: true 
           });
           localStorage.removeItem('auth-storage');
+        }
+      },
+
+      deleteAccount: async () => {
+        try {
+          await api.delete('/users/me');
+          set({ 
+            user: null, 
+            isAuthenticated: false,
+            isInitialized: true 
+          });
+          localStorage.removeItem('auth-storage');
+          return true;
+        } catch (error) {
+          console.error('Failed to delete account:', error);
+          // 실패하더라도 안전을 위해 로컬 세션은 정리 시도할 수 있음
+          return false;
         }
       },
 

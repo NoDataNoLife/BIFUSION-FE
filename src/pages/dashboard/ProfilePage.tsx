@@ -225,9 +225,29 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, deleteAccount } = useAuthStore();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("정말로 계정을 삭제하시겠습니까? 작성하신 모든 정보가 삭제되며 이 작업은 되돌릴 수 없습니다.")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    const success = await deleteAccount();
+    setIsDeleting(false);
+
+    if (success) {
+      alert("계정이 삭제되었습니다. 그동안 이용해주셔서 감사합니다.");
+      setShowSettingsModal(false);
+      // deleteAccount 내부에서 상태를 초기화하므로 라우터가 자동으로 랜딩페이지로 보냅니다.
+    } else {
+      alert("계정 삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
   const [projects, setProjects] = useState<ProfileProject[]>(initialProjects);
   const [showProjectVisibilityModal, setShowProjectVisibilityModal] =
     useState(false);
@@ -379,7 +399,7 @@ export default function ProfilePage() {
               {user?.name || "사용자"}
             </h1>
             <p className="text-sm text-gray-400 font-medium">
-              @{user?.email?.split("@")[0] || "researcher"}
+              @{user?.nickname || user?.email?.split("@")[0] || "researcher"}
             </p>
             <div className="pt-2">
               <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
@@ -397,8 +417,7 @@ export default function ProfilePage() {
               <Edit2 size={12} className="text-gray-300" />
             </div>
             <p className="text-sm text-gray-500 leading-relaxed">
-              의료 AI 연구원으로서 데이터 증강 기술을 통해 정밀 진단 모델의
-              성능을 향상시키는 연구를 진행하고 있습니다.
+              {user?.bio || "자기소개를 입력해주세요."}
             </p>
           </div>
 
@@ -416,14 +435,14 @@ export default function ProfilePage() {
         {/* Info List Section */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <MapPin size={18} className="text-primary" /> 서울, 대한민국
+            <MapPin size={18} className="text-primary" /> {user?.organization || "소속 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium hover:text-primary transition-colors cursor-pointer">
             <LinkIcon size={18} className="text-primary" />{" "}
-            bifusion.ai/researcher
+            {user?.contact || "연락처 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <Calendar size={18} className="text-primary" /> Joined Mar 2024
+            <Calendar size={18} className="text-primary" /> {user?.createdAt ? `Joined ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : "Joined ..."}
           </div>
         </div>
       </div>
@@ -796,16 +815,34 @@ export default function ProfilePage() {
                       {user?.email}
                     </p>
                   </div>
-                  <div className="pt-6">
+                  <div className="pt-6 space-y-4">
                     <button
                       onClick={() => {
                         logout();
                         setShowSettingsModal(false);
                       }}
-                      className="w-full py-4 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all flex items-center justify-center gap-3"
                     >
                       <LogOut size={20} /> Sign Out
                     </button>
+
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-[10px] font-bold text-red-400 uppercase mb-3 tracking-widest flex items-center justify-center gap-2">
+                        <AlertTriangle size={12} /> Danger Zone
+                      </p>
+                      <button
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="w-full py-4 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDeleting ? (
+                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <UserX size={20} />
+                        )}
+                        Delete Account
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

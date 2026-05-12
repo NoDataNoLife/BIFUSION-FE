@@ -225,7 +225,7 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout, deleteAccount, updateNickname } = useAuthStore();
+  const { user, logout, deleteAccount, updateNickname, updateBio } = useAuthStore();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -245,6 +245,24 @@ export default function ProfilePage() {
       setIsEditingNickname(false);
     } else {
       alert("닉네임 수정에 실패했습니다. 이미 사용 중이거나 올바르지 않은 형식일 수 있습니다.");
+    }
+  };
+
+  // Bio Editing State
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [newBio, setNewBio] = useState(user?.bio || "");
+
+  const handleBioUpdate = async () => {
+    if (newBio === user?.bio) {
+      setIsEditingBio(false);
+      return;
+    }
+
+    const success = await updateBio(newBio);
+    if (success) {
+      setIsEditingBio(false);
+    } else {
+      alert("자기소개 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
     }
   };
 
@@ -481,11 +499,51 @@ export default function ProfilePage() {
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                 About Me
               </p>
-              <Edit2 size={12} className="text-gray-300" />
+              {!isEditingBio && (
+                <button 
+                  onClick={() => {
+                    setNewBio(user?.bio || "");
+                    setIsEditingBio(true);
+                  }}
+                  className="p-1 text-gray-300 hover:text-primary transition-colors"
+                >
+                  <Edit2 size={12} />
+                </button>
+              )}
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              {user?.bio || "자기소개를 입력해주세요."}
-            </p>
+            
+            {isEditingBio ? (
+              <div className="space-y-2 animate-in fade-in duration-200">
+                <textarea
+                  value={newBio}
+                  onChange={(e) => setNewBio(e.target.value)}
+                  className="w-full text-sm text-gray-600 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl p-3 outline-none focus:border-primary/30 min-h-[100px] resize-none"
+                  placeholder="자기소개를 입력해주세요."
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <button 
+                    onClick={() => {
+                      setIsEditingBio(false);
+                      setNewBio(user?.bio || "");
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button 
+                    onClick={handleBioUpdate}
+                    className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                  >
+                    저장하기
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 leading-relaxed">
+                {user?.bio || "자기소개를 입력해주세요."}
+              </p>
+            )}
           </div>
 
           {/* Account Settings Trigger */}

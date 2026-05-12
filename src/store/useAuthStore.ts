@@ -23,6 +23,7 @@ interface AuthState {
   logout: () => Promise<void>;
   updateUser: (userData: User) => void;
   updateNickname: (nickname: string) => Promise<boolean>;
+  updateBio: (bio: string) => Promise<boolean>;
   fetchUser: () => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
   setInitialized: (value: boolean) => void;
@@ -93,6 +94,23 @@ export const useAuthStore = create<AuthState>()(
           return false;
         } catch (error) {
           console.error('Failed to update nickname:', error);
+          return false;
+        }
+      },
+
+      updateBio: async (bio: string) => {
+        try {
+          const response = await api.put('/profile/introduction', { bio });
+          if (response.data.success) {
+            const { bio: newBio, updatedAt } = response.data.data;
+            set((state) => ({
+              user: state.user ? { ...state.user, bio: newBio, updatedAt } : null
+            }));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Failed to update bio:', error);
           return false;
         }
       },

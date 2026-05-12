@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
+import OAuth2RedirectHandler from './pages/auth/OAuth2RedirectHandler';
 import { useAuthStore } from './store/useAuthStore';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -23,6 +25,7 @@ import ExpertPage from './pages/dashboard/ExpertPage';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import CommunityPage from './pages/dashboard/CommunityPage';
 import ActivitiesPage from './pages/dashboard/ActivitiesPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 // 임시 컴포넌트들
 const Placeholder = ({ title }: { title: string }) => (
@@ -33,7 +36,23 @@ const Placeholder = ({ title }: { title: string }) => (
 );
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
+
+  useEffect(() => {
+    // 앱이 처음 로드될 때만 세션 체크
+    if (!isInitialized) {
+      fetchUser();
+    }
+  }, [isInitialized, fetchUser]);
+
+  if (!isInitialized) {
+    // 초기화 중에는 로딩 표시
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -41,10 +60,16 @@ function App() {
         {/* 1. 루트 경로: 로그인 상태면 대시보드로 자동 이동 */}
         <Route 
           path="/" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <><Navbar /><LandingPage /></>} 
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <><Navbar /><LandingPage /></>
+            )
+          } 
         />
         
-        {/* 2. 대시보드 (인증 보호 적용) */}
+        {/* 2. 대시보드 및 보호된 경로 */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />}>
             <Route index element={<DashboardHomePage />} />
@@ -75,9 +100,15 @@ function App() {
             
             <Route path="settings" element={<Placeholder title="Settings" />} />
           </Route>
+          
+          {/* 추가 정보 입력 페이지 */}
+          <Route path="/onboarding" element={<OnboardingPage />} />
         </Route>
 
-        {/* 3. 404 및 예외 처리 */}
+        {/* 3. OAuth2 리다이렉트 핸들러 (인증 결과 처리 전용) */}
+        <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+
+        {/* 4. 404 및 예외 처리 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

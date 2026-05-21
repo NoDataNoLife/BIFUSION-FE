@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Award,
   MapPin,
@@ -225,10 +225,55 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout, deleteAccount, updateNickname, updateBio, updateOrganization, updateWebsite } = useAuthStore();
+  const { 
+    user, 
+    logout, 
+    deleteAccount, 
+    updateNickname, 
+    updateBio, 
+    updateOrganization, 
+    updateWebsite,
+    updateProfileImage,
+    fetchUserProfile
+  } = useAuthStore();
+
+  useEffect(() => {
+    if (user?.userId) {
+      fetchUserProfile(user.userId);
+    }
+  }, [user?.userId, fetchUserProfile]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("이미지 크기는 5MB 이하여야 합니다.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const success = await updateProfileImage(file);
+    setIsUploadingImage(false);
+
+    if (!success) {
+      alert("프로필 사진 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
 
   // Nickname Editing State
   const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -453,14 +498,31 @@ export default function ProfilePage() {
         <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center">
           {/* Avatar Section */}
           <div className="relative mb-6">
-            <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-gray-50 shadow-inner">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-gray-50 shadow-inner relative">
+              {isUploadingImage && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 animate-in fade-in duration-200">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
+                </div>
+              )}
               <ImageWithFallback
-                src={user?.profileImage || "/defalutUserProfile.png"}
+                src={user?.profileImage || "/defaultUserProfile.png"}
                 alt={user?.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            <button className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+            <button 
+              onClick={handleImageClick}
+              disabled={isUploadingImage}
+              className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform disabled:opacity-50 disabled:scale-100"
+              title="프로필 사진 수정"
+            >
               <Edit2 size={18} />
             </button>
           </div>
@@ -522,11 +584,13 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            <div className="pt-2">
-              <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
-                <ShieldCheck size={12} /> 전문가 인증됨
-              </span>
-            </div>
+            {user?.isExpert && (
+              <div className="pt-2">
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
+                  <ShieldCheck size={12} /> 전문가 인증됨
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Bio Section */}
@@ -679,7 +743,16 @@ export default function ProfilePage() {
             {user?.contact || "연락처 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <Calendar size={18} className="text-primary" /> {user?.createdAt ? `Joined ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : "Joined ..."}
+            <Calendar size={18} className="text-primary" />{' '}
+            {user?.createdAt ? (
+              isNaN(Date.parse(user.createdAt)) ? (
+                user.createdAt.includes('가입') ? user.createdAt : `Joined ${user.createdAt}`
+              ) : (
+                `Joined ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+              )
+            ) : (
+              "Joined ..."
+            )}
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import {
   Award,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
+import ImageWithFallback from "../common/ImageWithFallback";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -130,7 +131,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           `}
         >
           {user?.profileImage ? (
-            <img
+            <ImageWithFallback
               src={user.profileImage}
               alt={user.name || "사용자"}
               className="w-10 h-10 rounded-full flex-shrink-0 object-cover ring-2 ring-white dark:ring-background"

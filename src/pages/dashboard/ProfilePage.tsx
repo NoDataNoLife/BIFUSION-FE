@@ -235,7 +235,8 @@ export default function ProfilePage() {
     updateWebsite,
     updateProfileImage,
     fetchUserProfile,
-    changePlan
+    changePlan,
+    applyExpert
   } = useAuthStore();
 
   useEffect(() => {
@@ -286,6 +287,47 @@ export default function ProfilePage() {
       alert(`플랜이 ${targetPlan === 'PRO' ? 'Pro' : 'Basic'} 플랜으로 성공적으로 변경되었습니다.`);
     } else {
       alert("플랜 변경에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  const [isApplyingExpert, setIsApplyingExpert] = useState(false);
+  const [expertFile, setExpertFile] = useState<File | null>(null);
+  const expertFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExpertFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    if (!fileExt || !allowedExtensions.includes(fileExt)) {
+      alert("PDF, JPG, JPEG, PNG 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("파일 크기는 10MB 이하여야 합니다.");
+      return;
+    }
+
+    setExpertFile(file);
+  };
+
+  const handleExpertApply = async () => {
+    if (!expertFile) {
+      alert("인증을 위해 증명서 파일을 첨부해 주세요.");
+      return;
+    }
+
+    setIsApplyingExpert(true);
+    const success = await applyExpert(expertFile);
+    setIsApplyingExpert(false);
+
+    if (success) {
+      alert("전문가 인증 신청이 완료되었습니다! 관리자 승인까지 1~3 영업일이 소요됩니다.");
+      setExpertFile(null);
+    } else {
+      alert("전문가 인증 신청에 실패했습니다. 다시 시도해 주세요.");
     }
   };
 
@@ -1175,6 +1217,130 @@ export default function ProfilePage() {
                       "Pro 플랜으로 업그레이드 — 월 $19"
                     )}
                   </button>
+                </div>
+              )}
+
+              {settingsTab === "verification" && (
+                <div className="space-y-8">
+                  {/* Case 1: Already Approved / Verified Expert */}
+                  {(user?.isExpert || user?.expertStatus === "APPROVED") ? (
+                    <div className="text-center py-10 space-y-6 bg-emerald-50/50 rounded-3xl border border-emerald-100 p-8">
+                      <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                        <ShieldCheck size={48} className="animate-pulse" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-emerald-800">전문가 인증 완료</h3>
+                        <p className="text-sm font-medium text-emerald-600">
+                          인증된 전문가 회원님입니다. 전문가 전용 권한과 혜택을 이용하실 수 있습니다.
+                        </p>
+                      </div>
+                      <div className="pt-6 border-t border-emerald-100/50 max-w-md mx-auto text-xs text-emerald-700/80 font-bold space-y-2">
+                        <p>✓ 전문가 데이터셋 및 레시피 검토 기능 활성화</p>
+                        <p>✓ 프로필에 전문가 인증 배지 표시</p>
+                      </div>
+                    </div>
+                  ) : user?.expertStatus === "PENDING" ? (
+                    /* Case 2: Under Review / Pending status */
+                    <div className="text-center py-10 space-y-6 bg-amber-50/50 rounded-3xl border border-amber-100 p-8">
+                      <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto text-amber-600">
+                        <AlertTriangle size={48} className="animate-pulse" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-amber-800">인증 심사 진행 중</h3>
+                        <p className="text-sm font-medium text-amber-600">
+                          전문가 인증 신청이 성공적으로 접수되어 심사 중입니다.
+                        </p>
+                      </div>
+                      <p className="text-xs text-amber-700 max-w-sm mx-auto font-medium leading-relaxed bg-white border border-amber-200/50 px-4 py-3 rounded-2xl">
+                        첨부하신 의료 면허증 또는 학위 증명서 검토에는 **영업일 기준 1~3일**이 소요됩니다. 심사가 완료되면 결과가 메일 등으로 통보됩니다.
+                      </p>
+                    </div>
+                  ) : (
+                    /* Case 3: Apply / None / Rejected status */
+                    <div className="space-y-6">
+                      <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10 space-y-4">
+                        <div className="flex gap-4">
+                          <div className="p-3 bg-white border border-primary/20 text-primary rounded-2xl shadow-sm h-fit">
+                            <ShieldCheck size={24} />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-black text-gray-900 mb-1">의료 및 학위 전문가 신청</h4>
+                            <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                              의료진, 관련 학계 연구자 등 전문 지식을 인증받아 신뢰받는 기여를 시작해보세요. 의료 면허증 또는 학위 증명서를 첨부하여 인증을 요청할 수 있습니다.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100 space-y-3">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">지원 대상서류</p>
+                          <ul className="text-xs text-gray-600 font-medium space-y-2 pl-4 list-disc">
+                            <li>의사 면허증 / 간호사 면허증 등 전문 의료 면허증</li>
+                            <li>의학 또는 생명과학 석사/박사 학위 증명서</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      {/* File Upload Zone */}
+                      <div 
+                        onClick={() => expertFileInputRef.current?.click()}
+                        className={`border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all ${
+                          expertFile 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input 
+                          type="file" 
+                          ref={expertFileInputRef} 
+                          onChange={handleExpertFileChange}
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          className="hidden"
+                        />
+                        {expertFile ? (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-white border border-primary/20 text-primary rounded-2xl shadow-sm inline-flex items-center justify-center">
+                              <Upload size={24} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-900 break-all">{expertFile.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">{(expertFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpertFile(null);
+                              }}
+                              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all"
+                            >
+                              파일 재선택
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-gray-50 text-gray-400 border border-gray-100 rounded-2xl inline-flex items-center justify-center">
+                              <Upload size={24} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-700">인증 서류 파일 업로드</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                클릭하여 컴퓨터에서 파일을 선택하세요 (PDF, JPG, JPEG, PNG / 최대 10MB)
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Submit button */}
+                      <button
+                        onClick={handleExpertApply}
+                        disabled={isApplyingExpert || !expertFile}
+                        className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isApplyingExpert ? "제출 중..." : "전문가 인증 신청하기"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

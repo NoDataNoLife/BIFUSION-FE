@@ -30,6 +30,7 @@ interface User {
   profileImage?: string;
   profileImageUrl?: string;
   planType?: 'BASIC' | 'PRO';
+  expertStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
   // API 응답 매핑 필드 추가
   introduction?: string | null;
   location?: string | null;
@@ -50,6 +51,7 @@ interface AuthState {
   updateWebsite: (websiteUrl: string) => Promise<boolean>;
   updateProfileImage: (file: File) => Promise<boolean>;
   changePlan: (planType: 'BASIC' | 'PRO') => Promise<boolean>;
+  applyExpert: (file: File) => Promise<boolean>;
   fetchUser: () => Promise<boolean>;
   fetchUserProfile: (userId: number) => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
@@ -217,6 +219,28 @@ export const useAuthStore = create<AuthState>()(
           return false;
         } catch (error) {
           console.error('Failed to change plan:', error);
+          return false;
+        }
+      },
+
+      applyExpert: async (file: File) => {
+        try {
+          const formData = new FormData();
+          formData.append('certificationFile', file);
+          const response = await api.post('/users/me/expert', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          if (response.data.success) {
+            set((state) => ({
+              user: state.user ? { ...state.user, expertStatus: 'PENDING' } : null
+            }));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Failed to apply for expert verification:', error);
           return false;
         }
       },

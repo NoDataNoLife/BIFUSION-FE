@@ -29,6 +29,7 @@ interface User {
   updatedAt?: string;
   profileImage?: string;
   profileImageUrl?: string;
+  planType?: 'BASIC' | 'PRO';
   // API 응답 매핑 필드 추가
   introduction?: string | null;
   location?: string | null;
@@ -48,6 +49,7 @@ interface AuthState {
   updateOrganization: (organization: string) => Promise<boolean>;
   updateWebsite: (websiteUrl: string) => Promise<boolean>;
   updateProfileImage: (file: File) => Promise<boolean>;
+  changePlan: (planType: 'BASIC' | 'PRO') => Promise<boolean>;
   fetchUser: () => Promise<boolean>;
   fetchUserProfile: (userId: number) => Promise<boolean>;
   deleteAccount: () => Promise<boolean>;
@@ -199,6 +201,22 @@ export const useAuthStore = create<AuthState>()(
           return false;
         } catch (error) {
           console.error('Failed to update profile image:', error);
+          return false;
+        }
+      },
+
+      changePlan: async (planType: 'BASIC' | 'PRO') => {
+        try {
+          const response = await api.put('/users/me/plan', { planType });
+          if (response.data.success) {
+            set((state) => ({
+              user: state.user ? { ...state.user, planType } : null
+            }));
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Failed to change plan:', error);
           return false;
         }
       },

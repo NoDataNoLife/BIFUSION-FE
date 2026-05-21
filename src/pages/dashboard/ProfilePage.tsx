@@ -234,7 +234,8 @@ export default function ProfilePage() {
     updateOrganization, 
     updateWebsite,
     updateProfileImage,
-    fetchUserProfile
+    fetchUserProfile,
+    changePlan
   } = useAuthStore();
 
   useEffect(() => {
@@ -246,6 +247,7 @@ export default function ProfilePage() {
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isChangingPlan, setIsChangingPlan] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageClick = () => {
@@ -272,6 +274,18 @@ export default function ProfilePage() {
 
     if (!success) {
       alert("프로필 사진 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  const handlePlanChange = async (targetPlan: 'BASIC' | 'PRO') => {
+    setIsChangingPlan(true);
+    const success = await changePlan(targetPlan);
+    setIsChangingPlan(false);
+
+    if (success) {
+      alert(`플랜이 ${targetPlan === 'PRO' ? 'Pro' : 'Basic'} 플랜으로 성공적으로 변경되었습니다.`);
+    } else {
+      alert("플랜 변경에 실패했습니다. 잠시 후 다시 시도해주세요.");
     }
   };
 
@@ -1094,10 +1108,12 @@ export default function ProfilePage() {
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">현재 플랜</p>
-                        <h3 className="text-2xl font-black text-gray-900">Basic Plan</h3>
+                        <h3 className="text-2xl font-black text-gray-900">
+                          {user?.planType === "PRO" ? "Pro Plan" : "Basic Plan"}
+                        </h3>
                       </div>
                       <span className="px-4 py-1.5 bg-white border border-primary/20 text-primary rounded-full text-sm font-bold shadow-sm">
-                        무료
+                        {user?.planType === "PRO" ? "유료" : "무료"}
                       </span>
                     </div>
 
@@ -1106,33 +1122,58 @@ export default function ProfilePage() {
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">플랜 제한사항</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 월 100개 데이터 증강 작업
+                            <Check size={18} className="text-primary flex-shrink-0" /> 월 {user?.planType === "PRO" ? "무제한" : "100개"} 데이터 증강 작업
                           </div>
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 프로젝트 3개까지 생성 가능
+                            <Check size={18} className="text-primary flex-shrink-0" /> 프로젝트 {user?.planType === "PRO" ? "무제한" : "3개까지"} 생성 가능
                           </div>
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 기본 AI 모델 사용
+                            <Check size={18} className="text-primary flex-shrink-0" /> {user?.planType === "PRO" ? "고급 AI 모델 및 커스텀 설정" : "기본 AI 모델 사용"}
                           </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                            <X size={18} className="text-gray-300 flex-shrink-0" /> 고급 AI 모델 및 커스텀 설정
-                          </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                            <X size={18} className="text-gray-300 flex-shrink-0" /> 우선 지원 및 전용 서버
-                          </div>
+                          {user?.planType === "PRO" ? (
+                            <>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                                <Check size={18} className="text-primary flex-shrink-0" /> 우선 지원 및 전용 서버
+                              </div>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                                <Check size={18} className="text-primary flex-shrink-0" /> 팀 협업 기능 제공
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
+                                <X size={18} className="text-gray-300 flex-shrink-0" /> 고급 AI 모델 및 커스텀 설정
+                              </div>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
+                                <X size={18} className="text-gray-300 flex-shrink-0" /> 우선 지원 및 전용 서버
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-gray-100">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
-                        <p className="text-sm text-gray-500 font-medium leading-relaxed">
-                          무제한 데이터 증강, 고급 AI 모델, 우선 지원, 팀 협업 기능 등 모든 기능을 제한 없이 이용해보세요.
-                        </p>
-                      </div>
+                      {user?.planType !== "PRO" && (
+                        <div className="pt-6 border-t border-gray-100">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
+                          <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                            무제한 데이터 증강, 고급 AI 모델, 우선 지원, 팀 협업 기능 등 모든 기능을 제한 없이 이용해보세요.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
-                    Pro 플랜으로 업그레이드 — 월 $19
+                  <button 
+                    onClick={() => handlePlanChange(user?.planType === "PRO" ? "BASIC" : "PRO")}
+                    disabled={isChangingPlan}
+                    className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isChangingPlan ? (
+                      "처리 중..."
+                    ) : user?.planType === "PRO" ? (
+                      "Basic 플랜으로 변경"
+                    ) : (
+                      "Pro 플랜으로 업그레이드 — 월 $19"
+                    )}
                   </button>
                 </div>
               )}

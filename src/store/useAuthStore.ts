@@ -7,7 +7,7 @@ const safeEncodeUrl = (url?: string): string => {
   if (url.startsWith('/') || url.startsWith('data:')) return url;
   try {
     return encodeURI(decodeURI(url));
-  } catch (e) {
+  } catch {
     try {
       return encodeURI(url);
     } catch {
@@ -256,8 +256,8 @@ export const useAuthStore = create<AuthState>()(
               ...currentUser,
               ...userData,
               profileImage: safeEncodeUrl(userData.profileImage || userData.profileImageUrl || currentUser?.profileImage || '/defaultUserProfile.png'),
-              bio: userData.bio || currentUser?.bio,
-              websiteUrl: userData.websiteUrl || currentUser?.websiteUrl
+              bio: userData.bio ?? currentUser?.bio,
+              websiteUrl: userData.websiteUrl ?? currentUser?.websiteUrl
             },
             isAuthenticated: true,
             isInitialized: true

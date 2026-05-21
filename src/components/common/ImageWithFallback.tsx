@@ -8,7 +8,7 @@ const safeEncodeUrl = (url?: string): string => {
   if (url.startsWith('/') || url.startsWith('data:')) return url;
   try {
     return encodeURI(decodeURI(url));
-  } catch (e) {
+  } catch {
     try {
       return encodeURI(url);
     } catch {

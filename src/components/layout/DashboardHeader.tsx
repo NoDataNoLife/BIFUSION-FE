@@ -4,6 +4,7 @@ import { Bell, Moon, Sun } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import NotificationCenter from "./NotificationCenter";
 import { useThemeMode } from "../../hooks/useThemeMode";
+import ImageWithFallback from "../common/ImageWithFallback";
 
 export default function DashboardHeader() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -51,7 +52,7 @@ export default function DashboardHeader() {
         >
           <div className="text-right hidden md:block">
             <p className="text-sm font-black text-gray-900 dark:text-foreground leading-tight group-hover:text-primary transition-colors">
-              {user?.name || "사용자"}
+              {user?.nickname || user?.name || "사용자"}
             </p>
             <p className="text-[10px] font-bold text-gray-400 dark:text-muted-foreground uppercase tracking-widest leading-tight">
               Researcher
@@ -59,7 +60,7 @@ export default function DashboardHeader() {
           </div>
           <div className="relative">
             {user?.profileImage ? (
-              <img
+              <ImageWithFallback
                 src={user.profileImage}
                 alt={user.name}
                 className="w-11 h-11 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all shadow-sm"

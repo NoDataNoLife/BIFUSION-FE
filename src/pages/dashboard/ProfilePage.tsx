@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Award,
   MapPin,
@@ -225,10 +225,183 @@ const initialActivities: CommunityActivity[] = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout, deleteAccount } = useAuthStore();
+  const { 
+    user, 
+    logout, 
+    deleteAccount, 
+    updateNickname, 
+    updateBio, 
+    updateOrganization, 
+    updateWebsite,
+    updateProfileImage,
+    fetchUserProfile,
+    changePlan,
+    applyExpert
+  } = useAuthStore();
+
+  useEffect(() => {
+    if (user?.userId) {
+      fetchUserProfile(user.userId);
+    }
+  }, [user?.userId, fetchUserProfile]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isChangingPlan, setIsChangingPlan] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("이미지 크기는 5MB 이하여야 합니다.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const success = await updateProfileImage(file);
+    setIsUploadingImage(false);
+
+    if (!success) {
+      alert("프로필 사진 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  const handlePlanChange = async (targetPlan: 'BASIC' | 'PRO') => {
+    setIsChangingPlan(true);
+    const success = await changePlan(targetPlan);
+    setIsChangingPlan(false);
+
+    if (success) {
+      alert(`플랜이 ${targetPlan === 'PRO' ? 'Pro' : 'Basic'} 플랜으로 성공적으로 변경되었습니다.`);
+    } else {
+      alert("플랜 변경에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  const [isApplyingExpert, setIsApplyingExpert] = useState(false);
+  const [expertFile, setExpertFile] = useState<File | null>(null);
+  const expertFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExpertFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    if (!fileExt || !allowedExtensions.includes(fileExt)) {
+      alert("PDF, JPG, JPEG, PNG 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("파일 크기는 10MB 이하여야 합니다.");
+      return;
+    }
+
+    setExpertFile(file);
+  };
+
+  const handleExpertApply = async () => {
+    if (!expertFile) {
+      alert("인증을 위해 증명서 파일을 첨부해 주세요.");
+      return;
+    }
+
+    setIsApplyingExpert(true);
+    const success = await applyExpert(expertFile);
+    setIsApplyingExpert(false);
+
+    if (success) {
+      alert("전문가 인증 신청이 완료되었습니다! 관리자 승인까지 1~3 영업일이 소요됩니다.");
+      setExpertFile(null);
+    } else {
+      alert("전문가 인증 신청에 실패했습니다. 다시 시도해 주세요.");
+    }
+  };
+
+  // Nickname Editing State
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [newNickname, setNewNickname] = useState(user?.nickname || "");
+
+  const handleNicknameUpdate = async () => {
+    if (!newNickname.trim() || newNickname === user?.nickname) {
+      setIsEditingNickname(false);
+      return;
+    }
+
+    const success = await updateNickname(newNickname);
+    if (success) {
+      setIsEditingNickname(false);
+    } else {
+      alert("닉네임 수정에 실패했습니다. 이미 사용 중이거나 올바르지 않은 형식일 수 있습니다.");
+    }
+  };
+
+  // Bio Editing State
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [newBio, setNewBio] = useState(user?.bio || "");
+
+  const handleBioUpdate = async () => {
+    if (newBio === user?.bio) {
+      setIsEditingBio(false);
+      return;
+    }
+
+    const success = await updateBio(newBio);
+    if (success) {
+      setIsEditingBio(false);
+    } else {
+      alert("자기소개 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  // Organization Editing State
+  const [isEditingOrg, setIsEditingOrg] = useState(false);
+  const [newOrg, setNewOrg] = useState(user?.organization || "");
+
+  const handleOrgUpdate = async () => {
+    if (newOrg === user?.organization) {
+      setIsEditingOrg(false);
+      return;
+    }
+
+    const success = await updateOrganization(newOrg);
+    if (success) {
+      setIsEditingOrg(false);
+    } else {
+      alert("소속 정보 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  // Website Editing State
+  const [isEditingWebsite, setIsEditingWebsite] = useState(false);
+  const [newWebsite, setNewWebsite] = useState(user?.websiteUrl || "");
+
+  const handleWebsiteUpdate = async () => {
+    if (newWebsite === user?.websiteUrl) {
+      setIsEditingWebsite(false);
+      return;
+    }
+
+    const success = await updateWebsite(newWebsite);
+    if (success) {
+      setIsEditingWebsite(false);
+    } else {
+      alert("웹사이트 주소 수정에 실패했습니다. 올바른 URL 형식인지 확인해주세요.");
+    }
+  };
 
   const handleDeleteAccount = async () => {
     if (!window.confirm("정말로 계정을 삭제하시겠습니까? 작성하신 모든 정보가 삭제되며 이 작업은 되돌릴 수 없습니다.")) {
@@ -381,31 +554,99 @@ export default function ProfilePage() {
         <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center">
           {/* Avatar Section */}
           <div className="relative mb-6">
-            <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-gray-50 shadow-inner">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-gray-50 shadow-inner relative">
+              {isUploadingImage && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 animate-in fade-in duration-200">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
+                </div>
+              )}
               <ImageWithFallback
-                src={user?.profileImage || "/defalutUserProfile.png"}
+                src={user?.profileImage || "/defaultUserProfile.png"}
                 alt={user?.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            <button className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+            <button 
+              onClick={handleImageClick}
+              disabled={isUploadingImage}
+              className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform disabled:opacity-50 disabled:scale-100"
+              title="프로필 사진 수정"
+            >
               <Edit2 size={18} />
             </button>
           </div>
 
           {/* Basic Info */}
           <div className="space-y-1 mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {user?.name || "사용자"}
-            </h1>
-            <p className="text-sm text-gray-400 font-medium">
-              @{user?.nickname || user?.email?.split("@")[0] || "researcher"}
-            </p>
-            <div className="pt-2">
-              <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
-                <ShieldCheck size={12} /> 전문가 인증됨
-              </span>
+            <div className="group relative flex flex-col items-center">
+              {isEditingNickname ? (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200 mb-1">
+                  <input
+                    type="text"
+                    value={newNickname}
+                    onChange={(e) => setNewNickname(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleNicknameUpdate()}
+                    autoFocus
+                    placeholder="닉네임 입력"
+                    className="text-2xl font-bold text-gray-900 bg-gray-50 border-b-2 border-primary outline-none px-2 py-0.5 w-48 text-center"
+                  />
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={handleNicknameUpdate}
+                      className="p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                      title="저장"
+                    >
+                      <Check size={20} />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setIsEditingNickname(false);
+                        setNewNickname(user?.nickname || "");
+                      }}
+                      className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                      title="취소"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+                    {user?.nickname || "닉네임을 설정해주세요"}
+                  </h1>
+                  <button 
+                    onClick={() => {
+                      setNewNickname(user?.nickname || "");
+                      setIsEditingNickname(true);
+                    }}
+                    className="p-1 text-gray-300 hover:text-primary hover:bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    title="닉네임 수정"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                </div>
+              )}
+              
+              <p className="text-sm text-gray-400 font-medium">
+                @{user?.name || "researcher"}
+              </p>
             </div>
+
+            {user?.isExpert && (
+              <div className="pt-2">
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
+                  <ShieldCheck size={12} /> 전문가 인증됨
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Bio Section */}
@@ -414,11 +655,51 @@ export default function ProfilePage() {
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                 About Me
               </p>
-              <Edit2 size={12} className="text-gray-300" />
+              {!isEditingBio && (
+                <button 
+                  onClick={() => {
+                    setNewBio(user?.bio || "");
+                    setIsEditingBio(true);
+                  }}
+                  className="p-1 text-gray-300 hover:text-primary transition-colors"
+                >
+                  <Edit2 size={12} />
+                </button>
+              )}
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              {user?.bio || "자기소개를 입력해주세요."}
-            </p>
+            
+            {isEditingBio ? (
+              <div className="space-y-2 animate-in fade-in duration-200">
+                <textarea
+                  value={newBio}
+                  onChange={(e) => setNewBio(e.target.value)}
+                  className="w-full text-sm text-gray-600 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl p-3 outline-none focus:border-primary/30 min-h-[100px] resize-none"
+                  placeholder="자기소개를 입력해주세요."
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <button 
+                    onClick={() => {
+                      setIsEditingBio(false);
+                      setNewBio(user?.bio || "");
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button 
+                    onClick={handleBioUpdate}
+                    className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                  >
+                    저장하기
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 leading-relaxed">
+                {user?.bio || "자기소개를 입력해주세요."}
+              </p>
+            )}
           </div>
 
           {/* Account Settings Trigger */}
@@ -434,15 +715,100 @@ export default function ProfilePage() {
 
         {/* Info List Section */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
-          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <MapPin size={18} className="text-primary" /> {user?.organization || "소속 정보 없음"}
+          <div className="flex items-center justify-between group h-6">
+            <div className="flex items-center gap-3 text-sm text-gray-500 font-medium flex-1">
+              <MapPin size={18} className="text-primary" />
+              {isEditingOrg ? (
+                <input
+                  type="text"
+                  value={newOrg}
+                  onChange={(e) => setNewOrg(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleOrgUpdate()}
+                  autoFocus
+                  className="bg-gray-50 border-b border-primary outline-none px-1 w-full"
+                />
+              ) : (
+                <span className="truncate">{user?.organization || "소속 정보 없음"}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {isEditingOrg ? (
+                <>
+                  <button onClick={handleOrgUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg">
+                    <Check size={14} />
+                  </button>
+                  <button onClick={() => setIsEditingOrg(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg">
+                    <X size={14} />
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setNewOrg(user?.organization || "");
+                    setIsEditingOrg(true);
+                  }}
+                  className="p-1 text-gray-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Edit2 size={12} />
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium hover:text-primary transition-colors cursor-pointer">
-            <LinkIcon size={18} className="text-primary" />{" "}
+          <div className="flex items-center justify-between group h-6">
+            <div className="flex items-center gap-3 text-sm text-gray-500 font-medium flex-1">
+              <LinkIcon size={18} className="text-primary" />
+              {isEditingWebsite ? (
+                <input
+                  type="text"
+                  value={newWebsite}
+                  onChange={(e) => setNewWebsite(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleWebsiteUpdate()}
+                  autoFocus
+                  placeholder="https://example.com"
+                  className="bg-gray-50 border-b border-primary outline-none px-1 w-full"
+                />
+              ) : (
+                <span className="truncate">{user?.websiteUrl || "웹사이트 정보 없음"}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {isEditingWebsite ? (
+                <>
+                  <button onClick={handleWebsiteUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg">
+                    <Check size={14} />
+                  </button>
+                  <button onClick={() => setIsEditingWebsite(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg">
+                    <X size={14} />
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setNewWebsite(user?.websiteUrl || "");
+                    setIsEditingWebsite(true);
+                  }}
+                  className="p-1 text-gray-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Edit2 size={12} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+            <MessageSquare size={18} className="text-primary" />
             {user?.contact || "연락처 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-            <Calendar size={18} className="text-primary" /> {user?.createdAt ? `Joined ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : "Joined ..."}
+            <Calendar size={18} className="text-primary" />{' '}
+            {user?.createdAt ? (
+              isNaN(Date.parse(user.createdAt)) ? (
+                user.createdAt.includes('가입') ? user.createdAt : `Joined ${user.createdAt}`
+              ) : (
+                `Joined ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+              )
+            ) : (
+              "Joined ..."
+            )}
           </div>
         </div>
       </div>
@@ -784,10 +1150,12 @@ export default function ProfilePage() {
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">현재 플랜</p>
-                        <h3 className="text-2xl font-black text-gray-900">Basic Plan</h3>
+                        <h3 className="text-2xl font-black text-gray-900">
+                          {user?.planType === "PRO" ? "Pro Plan" : "Basic Plan"}
+                        </h3>
                       </div>
                       <span className="px-4 py-1.5 bg-white border border-primary/20 text-primary rounded-full text-sm font-bold shadow-sm">
-                        무료
+                        {user?.planType === "PRO" ? "유료" : "무료"}
                       </span>
                     </div>
 
@@ -796,34 +1164,183 @@ export default function ProfilePage() {
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">플랜 제한사항</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 월 100개 데이터 증강 작업
+                            <Check size={18} className="text-primary flex-shrink-0" /> 월 {user?.planType === "PRO" ? "무제한" : "100개"} 데이터 증강 작업
                           </div>
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 프로젝트 3개까지 생성 가능
+                            <Check size={18} className="text-primary flex-shrink-0" /> 프로젝트 {user?.planType === "PRO" ? "무제한" : "3개까지"} 생성 가능
                           </div>
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 기본 AI 모델 사용
+                            <Check size={18} className="text-primary flex-shrink-0" /> {user?.planType === "PRO" ? "고급 AI 모델 및 커스텀 설정" : "기본 AI 모델 사용"}
                           </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                            <X size={18} className="text-gray-300 flex-shrink-0" /> 고급 AI 모델 및 커스텀 설정
-                          </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                            <X size={18} className="text-gray-300 flex-shrink-0" /> 우선 지원 및 전용 서버
-                          </div>
+                          {user?.planType === "PRO" ? (
+                            <>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                                <Check size={18} className="text-primary flex-shrink-0" /> 우선 지원 및 전용 서버
+                              </div>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                                <Check size={18} className="text-primary flex-shrink-0" /> 팀 협업 기능 제공
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
+                                <X size={18} className="text-gray-300 flex-shrink-0" /> 고급 AI 모델 및 커스텀 설정
+                              </div>
+                              <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
+                                <X size={18} className="text-gray-300 flex-shrink-0" /> 우선 지원 및 전용 서버
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-gray-100">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
-                        <p className="text-sm text-gray-500 font-medium leading-relaxed">
-                          무제한 데이터 증강, 고급 AI 모델, 우선 지원, 팀 협업 기능 등 모든 기능을 제한 없이 이용해보세요.
-                        </p>
-                      </div>
+                      {user?.planType !== "PRO" && (
+                        <div className="pt-6 border-t border-gray-100">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
+                          <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                            무제한 데이터 증강, 고급 AI 모델, 우선 지원, 팀 협업 기능 등 모든 기능을 제한 없이 이용해보세요.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
-                    Pro 플랜으로 업그레이드 — 월 $19
+                  <button 
+                    onClick={() => handlePlanChange(user?.planType === "PRO" ? "BASIC" : "PRO")}
+                    disabled={isChangingPlan}
+                    className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isChangingPlan ? (
+                      "처리 중..."
+                    ) : user?.planType === "PRO" ? (
+                      "Basic 플랜으로 변경"
+                    ) : (
+                      "Pro 플랜으로 업그레이드 — 월 $19"
+                    )}
                   </button>
+                </div>
+              )}
+
+              {settingsTab === "verification" && (
+                <div className="space-y-8">
+                  {/* Case 1: Already Approved / Verified Expert */}
+                  {(user?.isExpert || user?.expertStatus === "APPROVED") ? (
+                    <div className="text-center py-10 space-y-6 bg-emerald-50/50 rounded-3xl border border-emerald-100 p-8">
+                      <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                        <ShieldCheck size={48} className="animate-pulse" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-emerald-800">전문가 인증 완료</h3>
+                        <p className="text-sm font-medium text-emerald-600">
+                          인증된 전문가 회원님입니다. 전문가 전용 권한과 혜택을 이용하실 수 있습니다.
+                        </p>
+                      </div>
+                      <div className="pt-6 border-t border-emerald-100/50 max-w-md mx-auto text-xs text-emerald-700/80 font-bold space-y-2">
+                        <p>✓ 전문가 데이터셋 및 레시피 검토 기능 활성화</p>
+                        <p>✓ 프로필에 전문가 인증 배지 표시</p>
+                      </div>
+                    </div>
+                  ) : user?.expertStatus === "PENDING" ? (
+                    /* Case 2: Under Review / Pending status */
+                    <div className="text-center py-10 space-y-6 bg-amber-50/50 rounded-3xl border border-amber-100 p-8">
+                      <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto text-amber-600">
+                        <AlertTriangle size={48} className="animate-pulse" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-amber-800">인증 심사 진행 중</h3>
+                        <p className="text-sm font-medium text-amber-600">
+                          전문가 인증 신청이 성공적으로 접수되어 심사 중입니다.
+                        </p>
+                      </div>
+                      <p className="text-xs text-amber-700 max-w-sm mx-auto font-medium leading-relaxed bg-white border border-amber-200/50 px-4 py-3 rounded-2xl">
+                        첨부하신 의료 면허증 또는 학위 증명서 검토에는 **영업일 기준 1~3일**이 소요됩니다. 심사가 완료되면 결과가 메일 등으로 통보됩니다.
+                      </p>
+                    </div>
+                  ) : (
+                    /* Case 3: Apply / None / Rejected status */
+                    <div className="space-y-6">
+                      <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10 space-y-4">
+                        <div className="flex gap-4">
+                          <div className="p-3 bg-white border border-primary/20 text-primary rounded-2xl shadow-sm h-fit">
+                            <ShieldCheck size={24} />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-black text-gray-900 mb-1">의료 및 학위 전문가 신청</h4>
+                            <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                              의료진, 관련 학계 연구자 등 전문 지식을 인증받아 신뢰받는 기여를 시작해보세요. 의료 면허증 또는 학위 증명서를 첨부하여 인증을 요청할 수 있습니다.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100 space-y-3">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">지원 대상서류</p>
+                          <ul className="text-xs text-gray-600 font-medium space-y-2 pl-4 list-disc">
+                            <li>의사 면허증 / 간호사 면허증 등 전문 의료 면허증</li>
+                            <li>의학 또는 생명과학 석사/박사 학위 증명서</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      {/* File Upload Zone */}
+                      <div 
+                        onClick={() => expertFileInputRef.current?.click()}
+                        className={`border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all ${
+                          expertFile 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input 
+                          type="file" 
+                          ref={expertFileInputRef} 
+                          onChange={handleExpertFileChange}
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          className="hidden"
+                        />
+                        {expertFile ? (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-white border border-primary/20 text-primary rounded-2xl shadow-sm inline-flex items-center justify-center">
+                              <Upload size={24} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-900 break-all">{expertFile.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">{(expertFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpertFile(null);
+                              }}
+                              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all"
+                            >
+                              파일 재선택
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-gray-50 text-gray-400 border border-gray-100 rounded-2xl inline-flex items-center justify-center">
+                              <Upload size={24} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-700">인증 서류 파일 업로드</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                클릭하여 컴퓨터에서 파일을 선택하세요 (PDF, JPG, JPEG, PNG / 최대 10MB)
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Submit button */}
+                      <button
+                        onClick={handleExpertApply}
+                        disabled={isApplyingExpert || !expertFile}
+                        className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isApplyingExpert ? "제출 중..." : "전문가 인증 신청하기"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

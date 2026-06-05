@@ -288,6 +288,8 @@ export const useAuthStore = create<AuthState>()(
                 websiteUrl: profileData.website ?? state.user.websiteUrl,
                 isExpert: profileData.isExpert ?? state.user.isExpert,
                 createdAt: profileData.createdAt ?? state.user.createdAt,
+                profileImage: profileData.profileImageUrl ? safeEncodeUrl(profileData.profileImageUrl) : state.user.profileImage,
+                planType: profileData.planType ?? state.user.planType,
               } : {
                 userId: profileData.userId,
                 name: profileData.name,
@@ -301,7 +303,8 @@ export const useAuthStore = create<AuthState>()(
                 website: profileData.website,
                 createdAt: profileData.createdAt,
                 isExpert: profileData.isExpert,
-                profileImage: '/defaultUserProfile.png',
+                planType: profileData.planType,
+                profileImage: profileData.profileImageUrl ? safeEncodeUrl(profileData.profileImageUrl) : '/defaultUserProfile.png',
               } as User
             }));
             return true;

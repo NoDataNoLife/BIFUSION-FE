@@ -10,11 +10,10 @@ import {
   ChevronRight,
   FolderKanban,
   X,
-  Upload,
-  Mail,
-  ChevronDown,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useProjectStore } from "../../store/useProjectStore";
+import { useEffect } from "react";
 
 interface Project {
   id: string;
@@ -28,80 +27,35 @@ interface Project {
   lastActivity: string;
 }
 
-const initialProjects: Project[] = [
-  {
-    id: "1",
-    title: "심장 질환 예측 모델",
-    description: "ECG 데이터를 활용한 심장 질환 조기 진단 AI 모델 개발",
-    coverImage:
-      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
-    teamMembers: [
-      {
-        name: "염승빈",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
-      },
-      {
-        name: "권나현",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kwon",
-      },
-      {
-        name: "김성한",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kim",
-      },
-    ],
-    status: "Running",
-    role: "manager",
-    isFavorite: true,
-    lastActivity: "2시간 전",
-  },
-  {
-    id: "2",
-    title: "뇌 MRI 이미지 분석",
-    description: "알츠하이머 질환 조기 발견을 위한 뇌 MRI 이미지 분석 시스템",
-    coverImage:
-      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&q=80",
-    teamMembers: [
-      {
-        name: "조현희",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=cho",
-      },
-      {
-        name: "모채현",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mo",
-      },
-    ],
-    status: "Running",
-    role: "member",
-    isFavorite: false,
-    lastActivity: "5시간 전",
-  },
-  {
-    id: "3",
-    title: "합성 환자 데이터 생성",
-    description: "GAN을 활용한 개인정보 보호형 합성 환자 데이터 생성 연구",
-    coverImage:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
-    teamMembers: [
-      {
-        name: "염승빈",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
-      },
-      {
-        name: "김성한",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kim",
-      },
-    ],
-    status: "Completed",
-    role: "manager",
-    isFavorite: true,
-    lastActivity: "2주 전",
-  },
-];
-
 export default function ProjectListPage() {
   const navigate = useNavigate();
   const { user: userInfo } = useAuthStore();
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const { managingProjects, participatingProjects, fetchMyProjects } = useProjectStore();
+  
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    fetchMyProjects();
+  }, [fetchMyProjects]);
+
+  useEffect(() => {
+    const allProjects = [...managingProjects, ...participatingProjects];
+    const mappedProjects: Project[] = allProjects.map(p => ({
+      id: p.projectId.toString(),
+      title: p.title,
+      description: p.description,
+      coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
+      teamMembers: p.members?.map(m => ({
+        name: m.nickname || "사용자",
+        avatar: m.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`
+      })) || [],
+      status: "Running",
+      role: p.role === "LEADER" ? "manager" : "member",
+      isFavorite: p.isFavorited,
+      lastActivity: p.lastActivityAt ? new Date(p.lastActivityAt).toLocaleDateString() : "방금 전"
+    }));
+    setProjects(mappedProjects);
+  }, [managingProjects, participatingProjects]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({
@@ -115,7 +69,7 @@ export default function ProjectListPage() {
   const memberScrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (
-    ref: React.RefObject<HTMLDivElement>,
+    ref: React.RefObject<HTMLDivElement | null>,
     direction: "left" | "right",
   ) => {
     if (ref.current) {
@@ -315,6 +269,12 @@ export default function ProjectListPage() {
                 onOpen={() => navigate(`/dashboard/projects/${project.id}`)}
               />
             ))}
+          {projects.filter((p) => p.role === "member").length === 0 && (
+            <EmptyState
+              icon={<Users />}
+              title="참여중인 개미굴이 없습니다"
+            />
+          )}
         </div>
       </section>
 

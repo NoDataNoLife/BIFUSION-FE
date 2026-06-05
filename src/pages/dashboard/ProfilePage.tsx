@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useProjectStore } from "../../store/useProjectStore";
 
 // --- Types ---
 interface CommunityActivity {
@@ -50,80 +51,7 @@ interface ProfileProject {
 
 type SettingsTab = "plan" | "verification" | "account";
 
-const initialProjects: ProfileProject[] = [
-  {
-    id: "P-001",
-    title: "심장 질환 예측 모델",
-    role: "관리자",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-002",
-    title: "뇌 MRI 이미지 분석",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-003",
-    title: "합성 환자 데이터 생성",
-    role: "관리자",
-    status: "Completed",
-    coverImage:
-      "https://images.unsplash.com/photo-1584982751601-97dcc096659c?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-004",
-    title: "CT 스캔 노이즈 제거",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1581595219315-a187dd40c322?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-005",
-    title: "폐 질환 진단 시스템",
-    role: "관리자",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-006",
-    title: "피부 질환 분류 모델",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-007",
-    title: "망막 질환 탐지",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1576671081837-49000212a370?w=600&q=80",
-    isPublic: false,
-  },
-  {
-    id: "P-008",
-    title: "초음파 자동 판독",
-    role: "관리자",
-    status: "Completed",
-    coverImage:
-      "https://images.unsplash.com/photo-1581594549595-35f6edc7b762?w=600&q=80",
-    isPublic: false,
-  },
-];
+
 
 const initialActivities: CommunityActivity[] = [
   {
@@ -239,11 +167,17 @@ export default function ProfilePage() {
     applyExpert
   } = useAuthStore();
 
+  const { managingProjects, participatingProjects, fetchMyProjects } = useProjectStore();
+
   useEffect(() => {
     if (user?.userId) {
       fetchUserProfile(user.userId);
     }
   }, [user?.userId, fetchUserProfile]);
+
+  useEffect(() => {
+    fetchMyProjects();
+  }, [fetchMyProjects]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -421,11 +355,25 @@ export default function ProfilePage() {
     }
   };
 
-  const [projects, setProjects] = useState<ProfileProject[]>(initialProjects);
+  const [projects, setProjects] = useState<ProfileProject[]>([]);
   const [showProjectVisibilityModal, setShowProjectVisibilityModal] =
     useState(false);
   const [draftProjects, setDraftProjects] =
-    useState<ProfileProject[]>(initialProjects);
+    useState<ProfileProject[]>([]);
+
+  useEffect(() => {
+    const allProjects = [...managingProjects, ...participatingProjects];
+    const mappedProjects: ProfileProject[] = allProjects.map(p => ({
+      id: p.projectId.toString(),
+      title: p.title,
+      role: p.role === "LEADER" ? "관리자" : "멤버",
+      status: "Running",
+      coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
+      isPublic: true
+    }));
+    setProjects(mappedProjects);
+    setDraftProjects(mappedProjects);
+  }, [managingProjects, participatingProjects]);
   const [draggingProjectId, setDraggingProjectId] = useState<string | null>(
     null,
   );

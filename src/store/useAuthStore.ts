@@ -187,11 +187,7 @@ export const useAuthStore = create<AuthState>()(
           const formData = new FormData();
           formData.append('image', file);
 
-          const response = await api.put('/profile/image', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+          const response = await api.put('/profile/image', formData);
 
           if (response.data.success) {
             const newProfileImageUrl = response.data.data.profileImageUrl;
@@ -227,11 +223,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const formData = new FormData();
           formData.append('certificationFile', file);
-          const response = await api.post('/users/me/expert', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+          const response = await api.post('/users/me/expert', formData);
           if (response.data.success) {
             set((state) => ({
               user: state.user ? { ...state.user, expertStatus: 'PENDING' } : null
@@ -288,6 +280,8 @@ export const useAuthStore = create<AuthState>()(
                 websiteUrl: profileData.website ?? state.user.websiteUrl,
                 isExpert: profileData.isExpert ?? state.user.isExpert,
                 createdAt: profileData.createdAt ?? state.user.createdAt,
+                profileImage: profileData.profileImageUrl ? safeEncodeUrl(profileData.profileImageUrl) : state.user.profileImage,
+                planType: profileData.planType ?? state.user.planType,
               } : {
                 userId: profileData.userId,
                 name: profileData.name,
@@ -301,7 +295,8 @@ export const useAuthStore = create<AuthState>()(
                 website: profileData.website,
                 createdAt: profileData.createdAt,
                 isExpert: profileData.isExpert,
-                profileImage: '/defaultUserProfile.png',
+                planType: profileData.planType,
+                profileImage: profileData.profileImageUrl ? safeEncodeUrl(profileData.profileImageUrl) : '/defaultUserProfile.png',
               } as User
             }));
             return true;

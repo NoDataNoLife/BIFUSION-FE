@@ -21,7 +21,6 @@ interface Project {
   description: string;
   coverImage: string;
   teamMembers: { name: string; avatar: string }[];
-  status: "Running" | "Completed" | "Paused";
   role: "manager" | "member";
   isFavorite: boolean;
   lastActivity: string;
@@ -49,7 +48,6 @@ export default function ProjectListPage() {
         name: m.nickname || "사용자",
         avatar: m.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`
       })) || [],
-      status: "Running",
       role: p.role === "LEADER" ? "manager" : "member",
       isFavorite: p.isFavorited,
       lastActivity: p.lastActivityAt ? new Date(p.lastActivityAt).toLocaleDateString() : "방금 전"
@@ -107,7 +105,6 @@ export default function ProjectListPage() {
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.name || "user"}`,
         },
       ],
-      status: "Running",
       role: "manager",
       isFavorite: false,
       lastActivity: "방금 전",

@@ -44,7 +44,6 @@ interface ProfileProject {
   id: string;
   title: string;
   role: "관리자" | "멤버";
-  status: "Running" | "Completed";
   coverImage: string;
   isPublic: boolean;
 }
@@ -367,7 +366,6 @@ export default function ProfilePage() {
       id: p.projectId.toString(),
       title: p.title,
       role: p.role === "LEADER" ? "관리자" : "멤버",
-      status: "Running",
       coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
       isPublic: true
     }));
@@ -794,8 +792,7 @@ export default function ProfilePage() {
                     {project.title}
                   </h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    {project.role} <span className="text-gray-300">•</span>{" "}
-                    {project.status}
+                    {project.role}
                   </p>
                 </div>
               </div>
@@ -1010,8 +1007,7 @@ export default function ProfilePage() {
                         {project.title}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {project.role} <span className="text-gray-300">•</span>{" "}
-                        {project.status}
+                        {project.role}
                       </p>
                     </div>
 

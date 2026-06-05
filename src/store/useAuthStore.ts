@@ -257,9 +257,7 @@ export const useAuthStore = create<AuthState>()(
               ...userData,
               profileImage: safeEncodeUrl(userData.profileImage || userData.profileImageUrl || currentUser?.profileImage || '/defaultUserProfile.png'),
               bio: userData.bio ?? currentUser?.bio,
-              websiteUrl: userData.websiteUrl ?? currentUser?.websiteUrl,
-              planType: userData.planType ?? currentUser?.planType ?? 'BASIC',
-              expertStatus: userData.expertStatus ?? currentUser?.expertStatus ?? 'NONE'
+              websiteUrl: userData.websiteUrl ?? currentUser?.websiteUrl
             },
             isAuthenticated: true,
             isInitialized: true
@@ -290,8 +288,6 @@ export const useAuthStore = create<AuthState>()(
                 websiteUrl: profileData.website ?? state.user.websiteUrl,
                 isExpert: profileData.isExpert ?? state.user.isExpert,
                 createdAt: profileData.createdAt ?? state.user.createdAt,
-                profileImage: safeEncodeUrl(profileData.profileImageUrl || state.user.profileImage || '/defaultUserProfile.png'),
-                planType: profileData.planType ?? state.user.planType,
               } : {
                 userId: profileData.userId,
                 name: profileData.name,
@@ -305,8 +301,7 @@ export const useAuthStore = create<AuthState>()(
                 website: profileData.website,
                 createdAt: profileData.createdAt,
                 isExpert: profileData.isExpert,
-                profileImage: safeEncodeUrl(profileData.profileImageUrl || '/defaultUserProfile.png'),
-                planType: profileData.planType || 'BASIC',
+                profileImage: '/defaultUserProfile.png',
               } as User
             }));
             return true;

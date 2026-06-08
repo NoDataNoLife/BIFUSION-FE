@@ -29,7 +29,7 @@ interface Project {
 export default function ProjectListPage() {
   const navigate = useNavigate();
   const { user: userInfo } = useAuthStore();
-  const { managingProjects, participatingProjects, fetchMyProjects } = useProjectStore();
+  const { managingProjects, participatingProjects, fetchMyProjects, createProject, isLoading } = useProjectStore();
   
   const [projects, setProjects] = useState<Project[]>([]);
 
@@ -48,7 +48,7 @@ export default function ProjectListPage() {
         name: m.nickname || "사용자",
         avatar: m.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`
       })) || [],
-      role: p.role === "LEADER" ? "manager" : "member",
+      role: p.role === "MANAGER" ? "manager" : "member",
       isFavorite: p.isFavorited,
       lastActivity: p.lastActivityAt ? new Date(p.lastActivityAt).toLocaleDateString() : "방금 전"
     }));
@@ -59,8 +59,8 @@ export default function ProjectListPage() {
   const [newProject, setNewProject] = useState({
     name: "",
     description: "",
-    coverImage: null as File | null,
-    teamMembers: [{ email: "", role: "Member" }],
+    coverImageUrl: "",
+    teamMembers: [{ email: "", role: "MEMBER" }],
   });
 
   const managerScrollRef = useRef<HTMLDivElement>(null);
@@ -88,35 +88,23 @@ export default function ProjectListPage() {
     );
   };
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    const createdProject: Project = {
-      id: `${Date.now()}`,
-      title: newProject.name,
-      description: newProject.description,
-      coverImage: newProject.coverImage
-        ? URL.createObjectURL(newProject.coverImage)
-        : "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
-      teamMembers: [
-        {
-          name: userInfo?.name || "사용자",
-          avatar:
-            userInfo?.profileImage ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.name || "user"}`,
-        },
-      ],
-      role: "manager",
-      isFavorite: false,
-      lastActivity: "방금 전",
-    };
-    setProjects([createdProject, ...projects]);
-    setIsModalOpen(false);
-    setNewProject({
-      name: "",
-      description: "",
-      coverImage: null,
-      teamMembers: [{ email: "", role: "Member" }],
-    });
+    if (isLoading) return;
+    
+    const success = await createProject(newProject);
+    if (success) {
+      await fetchMyProjects();
+      setIsModalOpen(false);
+      setNewProject({
+        name: "",
+        description: "",
+        coverImageUrl: "",
+        teamMembers: [{ email: "", role: "MEMBER" }],
+      });
+    } else {
+      alert("프로젝트 생성에 실패했습니다.");
+    }
   };
 
   return (
@@ -282,6 +270,7 @@ export default function ProjectListPage() {
           onSubmit={handleCreateProject}
           newProject={newProject}
           setNewProject={setNewProject}
+          isLoading={isLoading}
         />
       )}
     </div>
@@ -371,6 +360,7 @@ function CreateProjectModal({
   onSubmit,
   newProject,
   setNewProject,
+  isLoading
 }: any) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -425,6 +415,51 @@ function CreateProjectModal({
                 required
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 underline decoration-primary/30 decoration-4">Cover Image (배너 이미지 URL)</label>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <input
+                  type="text"
+                  value={newProject.coverImageUrl}
+                  onChange={(e) => setNewProject({ ...newProject, coverImageUrl: e.target.value })}
+                  placeholder="배너 이미지 URL을 입력하세요 (또는 클릭/드래그앤드롭 - 추후 지원 예정)"
+                  className="w-full bg-transparent text-center focus:outline-none text-sm text-gray-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-bold text-gray-700 underline decoration-primary/30 decoration-4">Team Members</label>
+                <button type="button" className="text-primary text-sm font-bold hover:text-primary/80 transition-colors">+ Add Member</button>
+              </div>
+              <div className="flex gap-4">
+                <input
+                  type="email"
+                  value={newProject.teamMembers[0].email}
+                  onChange={(e) => {
+                    const newMembers = [...newProject.teamMembers];
+                    newMembers[0].email = e.target.value;
+                    setNewProject({ ...newProject, teamMembers: newMembers });
+                  }}
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium"
+                  placeholder="팀원 이메일 (예: user@example.com)"
+                />
+                <select
+                  value={newProject.teamMembers[0].role}
+                  onChange={(e) => {
+                    const newMembers = [...newProject.teamMembers];
+                    newMembers[0].role = e.target.value;
+                    setNewProject({ ...newProject, teamMembers: newMembers });
+                  }}
+                  className="w-40 px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium cursor-pointer"
+                >
+                  <option value="MEMBER">Member</option>
+                  <option value="MANAGER">Manager</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-4 pt-4">
@@ -435,11 +470,12 @@ function CreateProjectModal({
             >
               취소
             </button>
-            <button
-              type="submit"
-              className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              프로젝트 생성하기
+              {isLoading ? "생성 중..." : "프로젝트 생성하기"}
             </button>
           </div>
         </form>

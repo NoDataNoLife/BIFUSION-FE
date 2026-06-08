@@ -11,7 +11,7 @@ export interface Project {
   projectId: number;
   title: string;
   description: string;
-  role: "LEADER" | "MEMBER";
+  role: "MANAGER" | "MEMBER";
   bannerImageUrl: string | null;
   isFavorited: boolean;
   memberCount: number;
@@ -30,6 +30,7 @@ interface ProjectState {
   isLoading: boolean;
   error: string | null;
   fetchMyProjects: () => Promise<boolean>;
+  createProject: (data: any) => Promise<boolean>;
 }
 
 export const useProjectStore = create<ProjectState>((set) => ({
@@ -56,6 +57,36 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }
     } catch (error: unknown) {
       console.error('Failed to fetch projects:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      set({ error: errorMessage, isLoading: false });
+      return false;
+    }
+  },
+
+  createProject: async (projectData: any) => {
+    set({ isLoading: true, error: null });
+    try {
+      const payload = {
+        title: projectData.name,
+        description: projectData.description,
+        isPublic: true,
+        ...(projectData.coverImageUrl && { bannerImageUrl: projectData.coverImageUrl }),
+        ...(projectData.teamMembers && projectData.teamMembers.length > 0 && projectData.teamMembers[0].email && {
+          email: projectData.teamMembers[0].email,
+          role: projectData.teamMembers[0].role.toUpperCase()
+        })
+      };
+
+      const response = await api.post('/projects', payload);
+      if (response.data.success) {
+        set({ isLoading: false });
+        return true;
+      } else {
+        set({ error: 'Failed to create project', isLoading: false });
+        return false;
+      }
+    } catch (error: unknown) {
+      console.error('Failed to create project:', error);
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       set({ error: errorMessage, isLoading: false });
       return false;

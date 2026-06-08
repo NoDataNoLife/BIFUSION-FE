@@ -187,7 +187,11 @@ export const useAuthStore = create<AuthState>()(
           const formData = new FormData();
           formData.append('image', file);
 
-          const response = await api.put('/profile/image', formData);
+          const response = await api.put('/profile/image', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
 
           if (response.data.success) {
             const newProfileImageUrl = response.data.data.profileImageUrl;
@@ -223,7 +227,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const formData = new FormData();
           formData.append('certificationFile', file);
-          const response = await api.post('/users/me/expert', formData);
+          const response = await api.post('/users/me/expert', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
           if (response.data.success) {
             set((state) => ({
               user: state.user ? { ...state.user, expertStatus: 'PENDING' } : null

@@ -399,9 +399,6 @@ export default function ProfilePage() {
     fetchProfileProjects();
   }, [fetchProfileProjects]);
 
-  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
-  const [showAllProjects, setShowAllProjects] = useState(false);
-
   const [communityActivities, setCommunityActivities] =
     useState<CommunityActivity[]>(initialActivities);
   const [isCommunityPublic, setIsCommunityPublic] = useState(true);

@@ -9,7 +9,6 @@ import {
   XCircle,
   Plus,
   Search,
-  Upload,
   X,
   Trash2,
   UserPlus,
@@ -18,6 +17,8 @@ import {
   Activity,
   Play,
 } from "lucide-react";
+import { useProjectStore } from "../../store/useProjectStore";
+import { useEffect } from "react";
 
 // --- Types ---
 interface Job {
@@ -30,13 +31,6 @@ interface Job {
   date: string;
 }
 
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: "Admin" | "Member";
-  avatar: string;
-}
 
 type StatusTab = "all" | "queue" | "processing" | "completed" | "failed";
 type JobTypeFilter = "all" | "Augment" | "Train" | "Inference";
@@ -111,49 +105,38 @@ const mockJobs: Job[] = [
   },
 ];
 
-const mockTeamMembers: TeamMember[] = [
-  {
-    id: "M-001",
-    name: "염승빈",
-    email: "seungbin@biffusion.com",
-    role: "Admin",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
-  },
-  {
-    id: "M-002",
-    name: "권나현",
-    email: "nahyun@biffusion.com",
-    role: "Member",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kwon",
-  },
-  {
-    id: "M-003",
-    name: "조현희",
-    email: "hyunhee@biffusion.com",
-    role: "Member",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=cho",
-  },
-];
 
-const projectMeta = {
-  title: "심장 질환 예측 모델",
-  description: "ECG 데이터를 활용한 심장 질환 조기 진단 AI 모델 개발",
-  coverImage:
-    "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1600&q=80",
-};
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+
+  const { currentProject, fetchProjectDetail, updateProjectInfo } = useProjectStore();
+
+  useEffect(() => {
+    if (projectId) {
+      fetchProjectDetail(projectId);
+    }
+  }, [projectId, fetchProjectDetail]);
 
   const [selectedTab, setSelectedTab] = useState<StatusTab>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] =
     useState<JobTypeFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [newMemberEmail, setNewMemberEmail] = useState("");
-  const [coverImage, setCoverImage] = useState(projectMeta.coverImage);
+  
+  // Local state for modal edits
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [coverImage, setCoverImage] = useState("");
+
+  useEffect(() => {
+    if (currentProject) {
+      setEditTitle(currentProject.title || "");
+      setEditDescription(currentProject.description || "");
+      setCoverImage(currentProject.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1600&q=80");
+    }
+  }, [currentProject]);
 
   // Statistics
   const stats = {
@@ -220,42 +203,31 @@ export default function ProjectDetailPage() {
     "Inference",
   ];
 
-  const handleRemoveMember = (memberId: string) => {
-    setTeamMembers((prev) => prev.filter((member) => member.id !== memberId));
+  // Member functions will be implemented later
+  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const handleRemoveMember = (memberId: number) => {
+    alert(`멤버(ID: ${memberId}) 삭제 기능은 준비 중입니다.`);
   };
 
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!newMemberEmail.trim()) {
-      return;
-    }
-
-    const emailPrefix = newMemberEmail.split("@")[0] || "new-user";
-    const newMember: TeamMember = {
-      id: `M-${Date.now()}`,
-      name: emailPrefix,
-      email: newMemberEmail,
-      role: "Member",
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${emailPrefix}`,
-    };
-
-    setTeamMembers((prev) => [...prev, newMember]);
+    if (!newMemberEmail.trim()) return;
+    alert("멤버 추가 기능은 준비 중입니다.");
     setNewMemberEmail("");
   };
 
-  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (!file) {
-      return;
+  const handleSaveSettings = async () => {
+    if (!projectId) return;
+    const success = await updateProjectInfo(projectId, {
+      title: editTitle,
+      description: editDescription,
+      bannerImageUrl: coverImage,
+    });
+    if (success) {
+      setIsSettingsOpen(false);
+    } else {
+      alert("설정 저장에 실패했습니다.");
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCoverImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   };
 
   const getStatusBadge = (status: Job["status"], progress?: number) => {
@@ -349,19 +321,19 @@ export default function ProjectDetailPage() {
                 <span className="text-primary">Detail</span>
               </nav>
               <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-                {projectMeta.title}
+                {currentProject?.title || "로딩 중..."}
               </h1>
             </div>
 
             <div className="ml-auto flex items-center gap-3">
               <div className="flex -space-x-2 mr-4">
-                {teamMembers.map((member) => (
+                {currentProject?.members?.map((member) => (
                   <img
-                    key={member.id}
-                    src={member.avatar}
-                    alt={member.name}
+                    key={member.userId}
+                    src={member.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.userId}`}
+                    alt={member.nickname || "사용자"}
                     className="w-8 h-8 rounded-full border-2 border-white ring-1 ring-gray-100 shadow-sm"
-                    title={member.name}
+                    title={member.nickname || "사용자"}
                   />
                 ))}
                 <button
@@ -391,17 +363,17 @@ export default function ProjectDetailPage() {
         <section className="relative h-64 md:h-72 rounded-[2rem] overflow-hidden border border-gray-200 shadow-sm">
           <img
             src={coverImage}
-            alt={projectMeta.title}
+            alt={currentProject?.title}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-6">
             <div>
               <h2 className="text-3xl font-black text-white tracking-tight">
-                {projectMeta.title}
+                {currentProject?.title}
               </h2>
               <p className="text-sm text-white/90 mt-2 max-w-2xl">
-                {projectMeta.description}
+                {currentProject?.description}
               </p>
             </div>
           </div>
@@ -602,6 +574,33 @@ export default function ProjectDetailPage() {
             </div>
 
             <div className="p-6 space-y-8">
+              {/* Basic Info Section */}
+              <section>
+                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                  기본 정보
+                </h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">프로젝트 제목</label>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">프로젝트 설명</label>
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                    />
+                  </div>
+                </div>
+              </section>
+
               {/* Cover Image Section */}
               <section>
                 <h4 className="text-lg font-bold text-gray-900 mb-4">
@@ -617,18 +616,12 @@ export default function ProjectDetailPage() {
                   </div>
                   <label className="block">
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-1">
-                        클릭하여 새 이미지 업로드
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        PNG, JPG up to 10MB
-                      </p>
                       <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCoverImageChange}
-                        className="hidden"
+                        type="text"
+                        value={coverImage}
+                        onChange={(e) => setCoverImage(e.target.value)}
+                        placeholder="배경 이미지 URL을 입력하세요"
+                        className="w-full bg-transparent text-center focus:outline-none text-sm text-gray-600"
                       />
                     </div>
                   </label>
@@ -661,39 +654,39 @@ export default function ProjectDetailPage() {
                 </form>
 
                 <div className="space-y-2">
-                  {teamMembers.map((member) => (
+                  {currentProject?.members?.map((member) => (
                     <div
-                      key={member.id}
+                      key={member.userId}
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <img
-                          src={member.avatar}
-                          alt={member.name}
+                          src={member.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.userId}`}
+                          alt={member.nickname || "사용자"}
                           className="w-10 h-10 rounded-full object-cover"
                         />
                         <div>
                           <p className="font-semibold text-gray-900">
-                            {member.name}
+                            {member.nickname || "이름 없음"}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {member.email}
+                            {member.email || "이메일 없음"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            member.role === "Admin"
+                            member.role === "MANAGER"
                               ? "bg-primary/10 text-primary"
                               : "bg-blue-100 text-blue-700"
                           }`}
                         >
-                          {member.role}
+                          {member.role === "MANAGER" ? "Manager" : "Member"}
                         </span>
-                        {member.role !== "Admin" && (
+                        {member.role !== "MANAGER" && (
                           <button
-                            onClick={() => handleRemoveMember(member.id)}
+                            onClick={() => handleRemoveMember(member.userId)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -713,7 +706,7 @@ export default function ProjectDetailPage() {
                   취소
                 </button>
                 <button
-                  onClick={() => setIsSettingsOpen(false)}
+                  onClick={handleSaveSettings}
                   className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors"
                 >
                   저장

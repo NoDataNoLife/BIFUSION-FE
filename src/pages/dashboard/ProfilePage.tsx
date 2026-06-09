@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Award,
   MapPin,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import { useAuthStore } from "../../store/useAuthStore";
+import api from "../../lib/axios";
 
 // --- Types ---
 interface CommunityActivity {
@@ -43,87 +44,13 @@ interface ProfileProject {
   id: string;
   title: string;
   role: "관리자" | "멤버";
-  status: "Running" | "Completed";
   coverImage: string;
   isPublic: boolean;
 }
 
 type SettingsTab = "plan" | "verification" | "account";
 
-const initialProjects: ProfileProject[] = [
-  {
-    id: "P-001",
-    title: "심장 질환 예측 모델",
-    role: "관리자",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-002",
-    title: "뇌 MRI 이미지 분석",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-003",
-    title: "합성 환자 데이터 생성",
-    role: "관리자",
-    status: "Completed",
-    coverImage:
-      "https://images.unsplash.com/photo-1584982751601-97dcc096659c?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-004",
-    title: "CT 스캔 노이즈 제거",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1581595219315-a187dd40c322?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-005",
-    title: "폐 질환 진단 시스템",
-    role: "관리자",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-006",
-    title: "피부 질환 분류 모델",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80",
-    isPublic: true,
-  },
-  {
-    id: "P-007",
-    title: "망막 질환 탐지",
-    role: "멤버",
-    status: "Running",
-    coverImage:
-      "https://images.unsplash.com/photo-1576671081837-49000212a370?w=600&q=80",
-    isPublic: false,
-  },
-  {
-    id: "P-008",
-    title: "초음파 자동 판독",
-    role: "관리자",
-    status: "Completed",
-    coverImage:
-      "https://images.unsplash.com/photo-1581594549595-35f6edc7b762?w=600&q=80",
-    isPublic: false,
-  },
-];
+
 
 const initialActivities: CommunityActivity[] = [
   {
@@ -421,14 +348,58 @@ export default function ProfilePage() {
     }
   };
 
-  const [projects, setProjects] = useState<ProfileProject[]>(initialProjects);
-  const [showProjectVisibilityModal, setShowProjectVisibilityModal] =
-    useState(false);
-  const [draftProjects, setDraftProjects] =
-    useState<ProfileProject[]>(initialProjects);
-  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(
-    null,
-  );
+  const [projects, setProjects] = useState<ProfileProject[]>([]);
+  const [showProjectVisibilityModal, setShowProjectVisibilityModal] = useState(false);
+  const [draftProjects, setDraftProjects] = useState<ProfileProject[]>([]);
+  
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasNext, setHasNext] = useState<boolean>(true);
+  const [isLoadingProjects, setIsLoadingProjects] = useState<boolean>(false);
+
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const isFetchingRef = useRef(false);
+
+  const fetchProfileProjects = useCallback(async (cursor?: string | null) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setIsLoadingProjects(true);
+    try {
+      const url = `/projects/me?size=6${cursor ? `&cursor=${cursor}` : ''}`;
+      const response = await api.get(url);
+      if (response.data.success) {
+        const { items, nextCursor: newCursor, hasNext: newHasNext, totalCount: newTotalCount } = response.data.data;
+        const mappedProjects: ProfileProject[] = items.map((p: any) => ({
+          id: p.projectId.toString(),
+          title: p.title,
+          role: p.role === "MANAGER" ? "관리자" : "멤버",
+          coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
+          isPublic: p.isPublic
+        }));
+
+        if (cursor) {
+          setProjects(prev => [...prev, ...mappedProjects]);
+          setDraftProjects(prev => [...prev, ...mappedProjects]);
+        } else {
+          setProjects(mappedProjects);
+          setDraftProjects(mappedProjects);
+        }
+        setNextCursor(newCursor);
+        setHasNext(newHasNext);
+        setTotalCount(newTotalCount);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile projects:", error);
+    } finally {
+      isFetchingRef.current = false;
+      setIsLoadingProjects(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfileProjects();
+  }, [fetchProfileProjects]);
+
+  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const [showAllProjects, setShowAllProjects] = useState(false);
 
   const [communityActivities, setCommunityActivities] =
@@ -436,11 +407,7 @@ export default function ProfilePage() {
   const [isCommunityPublic, setIsCommunityPublic] = useState(true);
   const [visibleActivityCount, setVisibleActivityCount] = useState(5);
 
-  const publicProjects = projects.filter((project) => project.isPublic);
-  const displayedProjects = showAllProjects
-    ? publicProjects
-    : publicProjects.slice(0, 6);
-  const hasMoreProjects = publicProjects.length > 6;
+  const displayedProjects = projects.filter((project) => project.isPublic);
 
   const displayedActivities = communityActivities.slice(
     0,
@@ -472,10 +439,28 @@ export default function ProfilePage() {
     );
   };
 
-  const saveProjectVisibility = () => {
-    setProjects(draftProjects);
-    setShowProjectVisibilityModal(false);
-    setDraggingProjectId(null);
+  const saveProjectVisibility = async () => {
+    try {
+      const payload = {
+        items: draftProjects.map(p => ({
+          projectId: Number(p.id),
+          isPublic: p.isPublic
+        }))
+      };
+      // API 문서상 GET으로 표기되어 있으나 통상적인 업데이트 메서드인 PUT(또는 PATCH/POST)를 사용합니다.
+      const response = await api.put('/users/me/projects/visibility', payload);
+      
+      if (response.data.success) {
+        setProjects(draftProjects);
+        setShowProjectVisibilityModal(false);
+        setDraggingProjectId(null);
+      } else {
+        alert("공개 여부 변경에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Failed to update project visibility:", error);
+      alert("공개 여부 변경 중 오류가 발생했습니다.");
+    }
   };
 
   const handleProjectDragStart = (projectId: string) => {
@@ -846,22 +831,22 @@ export default function ProfilePage() {
                     {project.title}
                   </h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    {project.role} <span className="text-gray-300">•</span>{" "}
-                    {project.status}
+                    {project.role}
                   </p>
                 </div>
               </div>
             ))}
           </div>
 
-          {hasMoreProjects && (
+          {hasNext && (
             <button
-              onClick={() => setShowAllProjects((prev) => !prev)}
-              className="mt-4 w-full py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors"
+              onClick={() => fetchProfileProjects(nextCursor)}
+              disabled={isLoadingProjects}
+              className="mt-4 w-full py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors disabled:opacity-50"
             >
-              {showAllProjects
-                ? "접기"
-                : `${publicProjects.length - displayedProjects.length}개 더보기`}
+              {isLoadingProjects 
+                ? "불러오는 중..." 
+                : `${Math.max(0, totalCount - projects.length)}개 더보기`}
             </button>
           )}
         </section>
@@ -1062,8 +1047,7 @@ export default function ProfilePage() {
                         {project.title}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {project.role} <span className="text-gray-300">•</span>{" "}
-                        {project.status}
+                        {project.role}
                       </p>
                     </div>
 

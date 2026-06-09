@@ -10,11 +10,10 @@ import {
   ChevronRight,
   FolderKanban,
   X,
-  Upload,
-  Mail,
-  ChevronDown,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useProjectStore } from "../../store/useProjectStore";
+import { useEffect } from "react";
 
 interface Project {
   id: string;
@@ -22,100 +21,53 @@ interface Project {
   description: string;
   coverImage: string;
   teamMembers: { name: string; avatar: string }[];
-  status: "Running" | "Completed" | "Paused";
   role: "manager" | "member";
   isFavorite: boolean;
   lastActivity: string;
 }
 
-const initialProjects: Project[] = [
-  {
-    id: "1",
-    title: "심장 질환 예측 모델",
-    description: "ECG 데이터를 활용한 심장 질환 조기 진단 AI 모델 개발",
-    coverImage:
-      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
-    teamMembers: [
-      {
-        name: "염승빈",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
-      },
-      {
-        name: "권나현",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kwon",
-      },
-      {
-        name: "김성한",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kim",
-      },
-    ],
-    status: "Running",
-    role: "manager",
-    isFavorite: true,
-    lastActivity: "2시간 전",
-  },
-  {
-    id: "2",
-    title: "뇌 MRI 이미지 분석",
-    description: "알츠하이머 질환 조기 발견을 위한 뇌 MRI 이미지 분석 시스템",
-    coverImage:
-      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&q=80",
-    teamMembers: [
-      {
-        name: "조현희",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=cho",
-      },
-      {
-        name: "모채현",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mo",
-      },
-    ],
-    status: "Running",
-    role: "member",
-    isFavorite: false,
-    lastActivity: "5시간 전",
-  },
-  {
-    id: "3",
-    title: "합성 환자 데이터 생성",
-    description: "GAN을 활용한 개인정보 보호형 합성 환자 데이터 생성 연구",
-    coverImage:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
-    teamMembers: [
-      {
-        name: "염승빈",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=yeom",
-      },
-      {
-        name: "김성한",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kim",
-      },
-    ],
-    status: "Completed",
-    role: "manager",
-    isFavorite: true,
-    lastActivity: "2주 전",
-  },
-];
-
 export default function ProjectListPage() {
   const navigate = useNavigate();
   const { user: userInfo } = useAuthStore();
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const { managingProjects, participatingProjects, fetchMyProjects, createProject, isLoading } = useProjectStore();
+  
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    fetchMyProjects();
+  }, [fetchMyProjects]);
+
+  useEffect(() => {
+    const allProjects = [...managingProjects, ...participatingProjects];
+    const mappedProjects: Project[] = allProjects.map(p => ({
+      id: p.projectId.toString(),
+      title: p.title,
+      description: p.description,
+      coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
+      teamMembers: p.members?.map(m => ({
+        name: m.nickname || "사용자",
+        avatar: m.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`
+      })) || [],
+      role: p.role === "MANAGER" ? "manager" : "member",
+      isFavorite: p.isFavorited,
+      lastActivity: p.lastActivityAt ? new Date(p.lastActivityAt).toLocaleDateString() : "방금 전"
+    }));
+    setProjects(mappedProjects);
+  }, [managingProjects, participatingProjects]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({
     name: "",
     description: "",
-    coverImage: null as File | null,
-    teamMembers: [{ email: "", role: "Member" }],
+    coverImageUrl: "",
+    teamMembers: [{ email: "", role: "MEMBER" }],
   });
 
   const managerScrollRef = useRef<HTMLDivElement>(null);
   const memberScrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (
-    ref: React.RefObject<HTMLDivElement>,
+    ref: React.RefObject<HTMLDivElement | null>,
     direction: "left" | "right",
   ) => {
     if (ref.current) {
@@ -136,36 +88,23 @@ export default function ProjectListPage() {
     );
   };
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    const createdProject: Project = {
-      id: `${Date.now()}`,
-      title: newProject.name,
-      description: newProject.description,
-      coverImage: newProject.coverImage
-        ? URL.createObjectURL(newProject.coverImage)
-        : "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
-      teamMembers: [
-        {
-          name: userInfo?.name || "사용자",
-          avatar:
-            userInfo?.profileImage ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.name || "user"}`,
-        },
-      ],
-      status: "Running",
-      role: "manager",
-      isFavorite: false,
-      lastActivity: "방금 전",
-    };
-    setProjects([createdProject, ...projects]);
-    setIsModalOpen(false);
-    setNewProject({
-      name: "",
-      description: "",
-      coverImage: null,
-      teamMembers: [{ email: "", role: "Member" }],
-    });
+    if (isLoading) return;
+    
+    const success = await createProject(newProject);
+    if (success) {
+      await fetchMyProjects();
+      setIsModalOpen(false);
+      setNewProject({
+        name: "",
+        description: "",
+        coverImageUrl: "",
+        teamMembers: [{ email: "", role: "MEMBER" }],
+      });
+    } else {
+      alert("프로젝트 생성에 실패했습니다.");
+    }
   };
 
   return (
@@ -315,6 +254,12 @@ export default function ProjectListPage() {
                 onOpen={() => navigate(`/dashboard/projects/${project.id}`)}
               />
             ))}
+          {projects.filter((p) => p.role === "member").length === 0 && (
+            <EmptyState
+              icon={<Users />}
+              title="참여중인 개미굴이 없습니다"
+            />
+          )}
         </div>
       </section>
 
@@ -325,6 +270,7 @@ export default function ProjectListPage() {
           onSubmit={handleCreateProject}
           newProject={newProject}
           setNewProject={setNewProject}
+          isLoading={isLoading}
         />
       )}
     </div>
@@ -414,6 +360,7 @@ function CreateProjectModal({
   onSubmit,
   newProject,
   setNewProject,
+  isLoading
 }: any) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -468,6 +415,51 @@ function CreateProjectModal({
                 required
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 underline decoration-primary/30 decoration-4">Cover Image (배너 이미지 URL)</label>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <input
+                  type="text"
+                  value={newProject.coverImageUrl}
+                  onChange={(e) => setNewProject({ ...newProject, coverImageUrl: e.target.value })}
+                  placeholder="배너 이미지 URL을 입력하세요 (또는 클릭/드래그앤드롭 - 추후 지원 예정)"
+                  className="w-full bg-transparent text-center focus:outline-none text-sm text-gray-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-bold text-gray-700 underline decoration-primary/30 decoration-4">Team Members</label>
+                <button type="button" className="text-primary text-sm font-bold hover:text-primary/80 transition-colors">+ Add Member</button>
+              </div>
+              <div className="flex gap-4">
+                <input
+                  type="email"
+                  value={newProject.teamMembers[0].email}
+                  onChange={(e) => {
+                    const newMembers = [...newProject.teamMembers];
+                    newMembers[0].email = e.target.value;
+                    setNewProject({ ...newProject, teamMembers: newMembers });
+                  }}
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium"
+                  placeholder="팀원 이메일 (예: user@example.com)"
+                />
+                <select
+                  value={newProject.teamMembers[0].role}
+                  onChange={(e) => {
+                    const newMembers = [...newProject.teamMembers];
+                    newMembers[0].role = e.target.value;
+                    setNewProject({ ...newProject, teamMembers: newMembers });
+                  }}
+                  className="w-40 px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium cursor-pointer"
+                >
+                  <option value="MEMBER">Member</option>
+                  <option value="MANAGER">Manager</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-4 pt-4">
@@ -478,11 +470,12 @@ function CreateProjectModal({
             >
               취소
             </button>
-            <button
-              type="submit"
-              className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              프로젝트 생성하기
+              {isLoading ? "생성 중..." : "프로젝트 생성하기"}
             </button>
           </div>
         </form>

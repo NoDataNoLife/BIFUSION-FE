@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Award,
   MapPin,
@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import { useAuthStore } from "../../store/useAuthStore";
-import { useProjectStore } from "../../store/useProjectStore";
+import api from "../../lib/axios";
 
 // --- Types ---
 interface CommunityActivity {
@@ -166,17 +166,11 @@ export default function ProfilePage() {
     applyExpert
   } = useAuthStore();
 
-  const { managingProjects, participatingProjects, fetchMyProjects } = useProjectStore();
-
   useEffect(() => {
     if (user?.userId) {
       fetchUserProfile(user.userId);
     }
   }, [user?.userId, fetchUserProfile]);
-
-  useEffect(() => {
-    fetchMyProjects();
-  }, [fetchMyProjects]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -355,26 +349,57 @@ export default function ProfilePage() {
   };
 
   const [projects, setProjects] = useState<ProfileProject[]>([]);
-  const [showProjectVisibilityModal, setShowProjectVisibilityModal] =
-    useState(false);
-  const [draftProjects, setDraftProjects] =
-    useState<ProfileProject[]>([]);
+  const [showProjectVisibilityModal, setShowProjectVisibilityModal] = useState(false);
+  const [draftProjects, setDraftProjects] = useState<ProfileProject[]>([]);
+  
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasNext, setHasNext] = useState<boolean>(true);
+  const [isLoadingProjects, setIsLoadingProjects] = useState<boolean>(false);
+
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const isFetchingRef = useRef(false);
+
+  const fetchProfileProjects = useCallback(async (cursor?: string | null) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setIsLoadingProjects(true);
+    try {
+      const url = `/projects/me?size=6${cursor ? `&cursor=${cursor}` : ''}`;
+      const response = await api.get(url);
+      if (response.data.success) {
+        const { items, nextCursor: newCursor, hasNext: newHasNext, totalCount: newTotalCount } = response.data.data;
+        const mappedProjects: ProfileProject[] = items.map((p: any) => ({
+          id: p.projectId.toString(),
+          title: p.title,
+          role: p.role === "MANAGER" ? "관리자" : "멤버",
+          coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
+          isPublic: p.isPublic
+        }));
+
+        if (cursor) {
+          setProjects(prev => [...prev, ...mappedProjects]);
+          setDraftProjects(prev => [...prev, ...mappedProjects]);
+        } else {
+          setProjects(mappedProjects);
+          setDraftProjects(mappedProjects);
+        }
+        setNextCursor(newCursor);
+        setHasNext(newHasNext);
+        setTotalCount(newTotalCount);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile projects:", error);
+    } finally {
+      isFetchingRef.current = false;
+      setIsLoadingProjects(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const allProjects = [...managingProjects, ...participatingProjects];
-    const mappedProjects: ProfileProject[] = allProjects.map(p => ({
-      id: p.projectId.toString(),
-      title: p.title,
-      role: p.role === "LEADER" ? "관리자" : "멤버",
-      coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
-      isPublic: true
-    }));
-    setProjects(mappedProjects);
-    setDraftProjects(mappedProjects);
-  }, [managingProjects, participatingProjects]);
-  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(
-    null,
-  );
+    fetchProfileProjects();
+  }, [fetchProfileProjects]);
+
+  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const [showAllProjects, setShowAllProjects] = useState(false);
 
   const [communityActivities, setCommunityActivities] =
@@ -382,11 +407,7 @@ export default function ProfilePage() {
   const [isCommunityPublic, setIsCommunityPublic] = useState(true);
   const [visibleActivityCount, setVisibleActivityCount] = useState(5);
 
-  const publicProjects = projects.filter((project) => project.isPublic);
-  const displayedProjects = showAllProjects
-    ? publicProjects
-    : publicProjects.slice(0, 6);
-  const hasMoreProjects = publicProjects.length > 6;
+  const displayedProjects = projects.filter((project) => project.isPublic);
 
   const displayedActivities = communityActivities.slice(
     0,
@@ -418,10 +439,28 @@ export default function ProfilePage() {
     );
   };
 
-  const saveProjectVisibility = () => {
-    setProjects(draftProjects);
-    setShowProjectVisibilityModal(false);
-    setDraggingProjectId(null);
+  const saveProjectVisibility = async () => {
+    try {
+      const payload = {
+        items: draftProjects.map(p => ({
+          projectId: Number(p.id),
+          isPublic: p.isPublic
+        }))
+      };
+      // API 문서상 GET으로 표기되어 있으나 통상적인 업데이트 메서드인 PUT(또는 PATCH/POST)를 사용합니다.
+      const response = await api.put('/users/me/projects/visibility', payload);
+      
+      if (response.data.success) {
+        setProjects(draftProjects);
+        setShowProjectVisibilityModal(false);
+        setDraggingProjectId(null);
+      } else {
+        alert("공개 여부 변경에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Failed to update project visibility:", error);
+      alert("공개 여부 변경 중 오류가 발생했습니다.");
+    }
   };
 
   const handleProjectDragStart = (projectId: string) => {
@@ -799,14 +838,15 @@ export default function ProfilePage() {
             ))}
           </div>
 
-          {hasMoreProjects && (
+          {hasNext && (
             <button
-              onClick={() => setShowAllProjects((prev) => !prev)}
-              className="mt-4 w-full py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors"
+              onClick={() => fetchProfileProjects(nextCursor)}
+              disabled={isLoadingProjects}
+              className="mt-4 w-full py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors disabled:opacity-50"
             >
-              {showAllProjects
-                ? "접기"
-                : `${publicProjects.length - displayedProjects.length}개 더보기`}
+              {isLoadingProjects 
+                ? "불러오는 중..." 
+                : `${Math.max(0, totalCount - projects.length)}개 더보기`}
             </button>
           )}
         </section>

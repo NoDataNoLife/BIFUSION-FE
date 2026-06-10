@@ -44,11 +44,9 @@
 * `PATCH /api/v1/projects/{projectId}/members/{memberId}/role`: 팀원 권한 변경 (본인 권한 수정 방지 로직 적용 완료)
 * `POST /api/v1/projects/{projectId}/invitations`: 이메일 초대장 발송
 
-### ⚠️ 백엔드 DB 이슈로 인한 오류
-* `DELETE /api/v1/projects/{projectId}`: 프로젝트 삭제 자체는 연동했으나, 현재 백엔드 DB의 외래키 제약조건(`project_member` 참조 무결성) 오류로 인해 삭제 시도 시 500 에러 발생 중. (백엔드 DB CASCADE 설정 필요)
-
-### ❌ 보류 (백엔드 구조적 누락)
-* `PATCH /api/v1/projects/{projectId}/invitations/{invitationId}`: 초대 수락/거절 API는 있으나, **나에게 온 초대 목록을 조회하는 GET API**가 없어 화면(알림 센터)에서 `invitationId`를 알 수 없음. 연동 보류. (`BACKEND_PENDING_TODO.md` 기록 완료)
+### ❌ 보류 (백엔드 API 및 구조적 누락)
+* **프로젝트 삭제 (`DELETE /api/v1/projects/{projectId}`)**: 프로젝트 자체를 삭제하는 API가 백엔드에 **아예 존재하지 않습니다.** (팀원 추방 API만 있음). 따라서 DB에서 직접 삭제를 시도하실 경우 외래키 제약조건(`project_member` 참조 무결성) 에러가 발생합니다. (`BACKEND_PENDING_TODO.md` 5번 항목에 기록 완료)
+* **프로젝트 초대 수락/거절 (`PATCH /api/v1/projects/{projectId}/invitations/{invitationId}`)**: 초대 수락/거절 API는 있으나, **나에게 온 초대 목록을 조회하는 GET API**가 없어 화면(알림 센터)에서 `invitationId`를 알 수 없음. 연동 보류. (`BACKEND_PENDING_TODO.md` 4번 항목 기록 완료)
 
 ---
 

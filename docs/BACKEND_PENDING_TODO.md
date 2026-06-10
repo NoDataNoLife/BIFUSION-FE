@@ -23,9 +23,6 @@
 * **수정 대상 파일**: `src/store/useAuthStore.ts`
 * **작업 상세**:
   * `fetchUser` 및 `fetchUserProfile` API 응답 매핑 로직에서 넘겨받은 `profileImageUrl`을 가져와 Zustand 스토어의 `user.profileImage` 상태를 복구하도록 수정합니다.
-  * 관련 코드 위치:
-    * [useAuthStore.ts:fetchUser](file:///home/ysb/projects/BIFUSION/BIFUSION-FE/src/store/useAuthStore.ts#L225)
-    * [useAuthStore.ts:fetchUserProfile](file:///home/ysb/projects/BIFUSION/BIFUSION-FE/src/store/useAuthStore.ts#L248)
 
 ---
 
@@ -47,20 +44,6 @@
 * **작업 상세**:
   * `fetchUser` API 호출 성공 시 반환받은 `planType` 정보를 Zustand 스토어의 유저 상태에 바인딩합니다.
 
-  ```typescript
-  // src/store/useAuthStore.ts 내 fetchUser 예시
-  set({
-    user: {
-      ...currentUser,
-      ...userData,
-      planType: userData.planType || 'BASIC' // 이 부분을 추가 연동
-    }
-  });
-  ```
-
-  * 관련 코드 위치:
-    * [useAuthStore.ts:fetchUser](file:///home/ysb/projects/BIFUSION/BIFUSION-FE/src/store/useAuthStore.ts#L225)
-
 ---
 
 ## 3. 🛡️ 전문가 인증 신청 상태(expertStatus) 로그인 상태 연동
@@ -81,20 +64,6 @@
 * **작업 상세**:
   * `fetchUser` API 호출 결과 반환되는 `expertStatus` 필드를 Zustand 스토어 유저 객체에 맵핑합니다.
 
-  ```typescript
-  // src/store/useAuthStore.ts 내 fetchUser 예시
-  set({
-    user: {
-      ...currentUser,
-      ...userData,
-      expertStatus: userData.expertStatus || 'NONE' // 이 부분을 추가 연동
-    }
-  });
-  ```
-
-  * 관련 코드 위치:
-    * [useAuthStore.ts:fetchUser](file:///home/ysb/projects/BIFUSION/BIFUSION-FE/src/store/useAuthStore.ts#L225)
-
 ---
 
 ## 4. ✉️ 나에게 온 프로젝트 초대 목록 조회 (GET) 연동
@@ -111,9 +80,16 @@
 * 현재 로그인한 사용자가 받은 **대기 중(PENDING)인 프로젝트 초대 목록을 응답하는 GET API** 신규 개발 요청. (예: `GET /api/v1/users/me/invitations` 또는 `GET /api/v1/notifications`)
 * 해당 API의 응답 스펙에는 반드시 `projectId`, `projectName`, `invitationId`, `inviterName`, `createdAt` 등의 정보가 포함되어야 합니다.
 
-### 🛠️ 프론트엔드 후속 작업
+---
 
-* **수정 대상 파일**: `src/components/layout/NotificationCenter.tsx`, `src/store/useProjectStore.ts`
-* **작업 상세**:
-  * 백엔드 API가 배포되면, `NotificationCenter.tsx`가 열릴 때 해당 GET API를 호출해 내 초대 알림을 리스트업하도록 연동.
-  * 각 알림 카드 하단에 [수락] / [거절] 버튼을 추가하고, 클릭 시 `PATCH /api/v1/projects/{projectId}/invitations/{invitationId}` 요청(`useProjectStore`의 액션)을 날린 뒤 성공하면 리스트에서 지우는 로직 구현.
+## 5. 🗑️ 프로젝트 삭제 (DELETE) API 부재
+
+### 🔍 발생한 백엔드 이슈
+
+* 현재 백엔드의 `ProjectController`를 확인한 결과, **프로젝트 자체를 삭제하는 API (`DELETE /api/v1/projects/{projectId}`) 자체가 존재하지 않습니다.** (팀원 추방 API만 존재함)
+* 따라서 테스트 목적으로 생성된 프로젝트들을 지우기 위해 DB(PostgreSQL)에서 직접 `delete` 쿼리를 실행할 경우, `project_member` 등 연관 테이블의 참조 무결성(Foreign Key constraint)으로 인해 에러가 발생하고 있습니다.
+
+### 📝 백엔드 요청 사항
+
+* 프로젝트 삭제 기능 도입 여부 논의 및 **프로젝트 삭제 API (`DELETE /api/v1/projects/{projectId}`) 개발 요청**.
+* DB 스키마 수정 시 `project_member`, `project_invitation` 등의 연관 테이블에 `ON DELETE CASCADE` 옵션을 설정하여 프로젝트 삭제 시 관련된 멤버/초대 정보도 함께 삭제되도록 조치 요망.

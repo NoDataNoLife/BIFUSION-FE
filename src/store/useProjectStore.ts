@@ -50,6 +50,9 @@ interface ProjectState {
   fetchProjectDetail: (projectId: string) => Promise<boolean>;
   createProject: (data: any) => Promise<boolean>;
   updateProjectInfo: (projectId: string, data: any) => Promise<boolean>;
+  inviteMember: (projectId: string, email: string) => Promise<boolean>;
+  removeMember: (projectId: string, userId: number) => Promise<boolean>;
+  updateMemberRole: (projectId: string, userId: number, role: string) => Promise<boolean>;
 }
 
 export const useProjectStore = create<ProjectState>((set) => ({
@@ -147,12 +150,78 @@ export const useProjectStore = create<ProjectState>((set) => ({
           isLoading: false
         }));
         return true;
-      } else {
-        set({ error: 'Failed to update project', isLoading: false });
-        return false;
       }
+      return false;
     } catch (error: unknown) {
-      console.error('Failed to update project:', error);
+      console.error('Failed to update project detail:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      set({ error: errorMessage, isLoading: false });
+      return false;
+    }
+  },
+
+  inviteMember: async (projectId: string, email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.post(`/projects/${projectId}/invitations`, { email });
+      if (response.data.success) {
+        set({ isLoading: false });
+        return true;
+      }
+      return false;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      set({ error: errorMessage, isLoading: false });
+      return false;
+    }
+  },
+
+  removeMember: async (projectId: string, userId: number) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.delete(`/projects/${projectId}/members/${userId}`);
+      if (response.data.success) {
+        // 성공 시 로컬 상태에서 멤버 제거
+        set((state) => ({
+          currentProject: state.currentProject
+            ? {
+                ...state.currentProject,
+                members: state.currentProject.members.filter(m => m.userId !== userId)
+              }
+            : null,
+          isLoading: false
+        }));
+        return true;
+      }
+      return false;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      set({ error: errorMessage, isLoading: false });
+      return false;
+    }
+  },
+
+  updateMemberRole: async (projectId: string, userId: number, role: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.put(`/projects/${projectId}/members/${userId}`, { role });
+      if (response.data.success) {
+        // 성공 시 로컬 상태의 멤버 역할 업데이트
+        set((state) => ({
+          currentProject: state.currentProject
+            ? {
+                ...state.currentProject,
+                members: state.currentProject.members.map(m =>
+                  m.userId === userId ? { ...m, role: role } : m
+                )
+              }
+            : null,
+          isLoading: false
+        }));
+        return true;
+      }
+      return false;
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       set({ error: errorMessage, isLoading: false });
       return false;

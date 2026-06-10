@@ -16,8 +16,10 @@ import {
   MoreVertical,
   Activity,
   Play,
+  Check,
 } from "lucide-react";
 import { useProjectStore } from "../../store/useProjectStore";
+import { useAuthStore } from "../../store/useAuthStore";
 import { useEffect } from "react";
 
 // --- Types ---
@@ -111,7 +113,8 @@ export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
 
-  const { currentProject, fetchProjectDetail, updateProjectInfo } = useProjectStore();
+  const { user } = useAuthStore();
+  const { currentProject, fetchProjectDetail, updateProjectInfo, inviteMember, removeMember, updateMemberRole } = useProjectStore();
 
   useEffect(() => {
     if (projectId) {
@@ -125,10 +128,11 @@ export default function ProjectDetailPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  // Local state for modal edits
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [coverImage, setCoverImage] = useState("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
   useEffect(() => {
     if (currentProject) {
@@ -203,18 +207,6 @@ export default function ProjectDetailPage() {
     "Inference",
   ];
 
-  // Member functions will be implemented later
-  const [newMemberEmail, setNewMemberEmail] = useState("");
-  const handleRemoveMember = (memberId: number) => {
-    alert(`멤버(ID: ${memberId}) 삭제 기능은 준비 중입니다.`);
-  };
-
-  const handleAddMember = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMemberEmail.trim()) return;
-    alert("멤버 추가 기능은 준비 중입니다.");
-    setNewMemberEmail("");
-  };
 
   const handleSaveSettings = async () => {
     if (!projectId) return;
@@ -227,6 +219,38 @@ export default function ProjectDetailPage() {
       setIsSettingsOpen(false);
     } else {
       alert("설정 저장에 실패했습니다.");
+    }
+  };
+
+  const handleAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemberEmail || !projectId) return;
+    
+    const success = await inviteMember(projectId, newMemberEmail);
+    if (success) {
+      setNewMemberEmail("");
+    } else {
+      alert("초대에 실패했습니다.");
+    }
+  };
+
+  const handleRemoveMember = async (userId: number) => {
+    if (!projectId) return;
+    if (window.confirm("정말 이 멤버를 삭제하시겠습니까?")) {
+      const success = await removeMember(projectId, userId);
+      if (!success) {
+        alert("멤버 삭제에 실패했습니다.");
+      }
+    }
+  };
+
+  const handleRoleChange = async (userId: number, role: "MANAGER" | "MEMBER") => {
+    if (!projectId) return;
+    const success = await updateMemberRole(projectId, userId, role);
+    if (success) {
+      setOpenDropdownId(null);
+    } else {
+      alert("권한 변경에 실패했습니다.");
     }
   };
 
@@ -674,17 +698,47 @@ export default function ProjectDetailPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            member.role === "MANAGER"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {member.role === "MANAGER" ? "Manager" : "Member"}
-                        </span>
-                        {member.role !== "MANAGER" && (
+                      <div className="flex items-center gap-3 relative">
+                        {/* 권한 변경 Dropdown Container */}
+                        <div className="relative">
+                          <button
+                            onClick={() => {
+                              if (member.userId !== user?.userId) {
+                                setOpenDropdownId(openDropdownId === member.userId ? null : member.userId);
+                              }
+                            }}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                              member.userId === user?.userId ? 'cursor-default' : 'cursor-pointer'
+                            } ${
+                              member.role === "MANAGER"
+                                ? `bg-primary/10 text-primary ${member.userId !== user?.userId ? 'hover:bg-primary/20' : ''}`
+                                : `bg-blue-100 text-blue-700 ${member.userId !== user?.userId ? 'hover:bg-blue-200' : ''}`
+                            }`}
+                          >
+                            {member.role === "MANAGER" ? "Manager" : "Member"}
+                          </button>
+                          
+                          {openDropdownId === member.userId && member.userId !== user?.userId && (
+                            <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-100 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-10 py-1 overflow-hidden">
+                              <button
+                                onClick={() => handleRoleChange(member.userId, "MANAGER")}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors flex items-center justify-between"
+                              >
+                                Manager
+                                {member.role === "MANAGER" && <Check className="w-4 h-4 text-primary" />}
+                              </button>
+                              <button
+                                onClick={() => handleRoleChange(member.userId, "MEMBER")}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors flex items-center justify-between"
+                              >
+                                Member
+                                {member.role === "MEMBER" && <Check className="w-4 h-4 text-primary" />}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {member.role !== "MANAGER" && member.userId !== user?.userId && (
                           <button
                             onClick={() => handleRemoveMember(member.userId)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

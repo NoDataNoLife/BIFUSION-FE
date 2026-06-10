@@ -94,3 +94,26 @@
 
   * 관련 코드 위치:
     * [useAuthStore.ts:fetchUser](file:///home/ysb/projects/BIFUSION/BIFUSION-FE/src/store/useAuthStore.ts#L225)
+
+---
+
+## 4. ✉️ 나에게 온 프로젝트 초대 목록 조회 (GET) 연동
+
+### 🔍 발생한 백엔드 이슈
+
+* 프로젝트 초대 메일(`MailServiceImpl.sendInvitationMail`)이 발송될 때 본문은 단순 텍스트로 구성되며 `invitationId` 정보나 수락 URL을 포함하지 않습니다. (단순히 "로그인하여 확인하라"고 안내)
+* 따라서 사용자가 웹에 로그인하면 **알림 센터**나 **내 프로젝트 목록** 화면 등에서 나에게 온(Pending 상태인) **초대 목록을 조회해오는 GET API**가 필요합니다.
+* 하지만 현재 백엔드에는 알림 관련 엔드포인트(`NotificationController`)나, 내가 받은 초대를 조회하는 API(`GET /api/v1/users/me/invitations` 등)가 아예 없습니다.
+* 그 결과, 초대 수락/거절 API(`PATCH /api/v1/projects/{projectId}/invitations/{invitationId}`)가 만들어져 있음에도 프론트엔드에서 `projectId`와 `invitationId`를 알 방법이 없어 버튼을 구현할 수 없습니다.
+
+### 📝 백엔드 요청 사항
+
+* 현재 로그인한 사용자가 받은 **대기 중(PENDING)인 프로젝트 초대 목록을 응답하는 GET API** 신규 개발 요청. (예: `GET /api/v1/users/me/invitations` 또는 `GET /api/v1/notifications`)
+* 해당 API의 응답 스펙에는 반드시 `projectId`, `projectName`, `invitationId`, `inviterName`, `createdAt` 등의 정보가 포함되어야 합니다.
+
+### 🛠️ 프론트엔드 후속 작업
+
+* **수정 대상 파일**: `src/components/layout/NotificationCenter.tsx`, `src/store/useProjectStore.ts`
+* **작업 상세**:
+  * 백엔드 API가 배포되면, `NotificationCenter.tsx`가 열릴 때 해당 GET API를 호출해 내 초대 알림을 리스트업하도록 연동.
+  * 각 알림 카드 하단에 [수락] / [거절] 버튼을 추가하고, 클릭 시 `PATCH /api/v1/projects/{projectId}/invitations/{invitationId}` 요청(`useProjectStore`의 액션)을 날린 뒤 성공하면 리스트에서 지우는 로직 구현.

@@ -351,6 +351,7 @@ export default function ProfilePage() {
   const [projects, setProjects] = useState<ProfileProject[]>([]);
   const [showProjectVisibilityModal, setShowProjectVisibilityModal] = useState(false);
   const [draftProjects, setDraftProjects] = useState<ProfileProject[]>([]);
+  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNext, setHasNext] = useState<boolean>(true);

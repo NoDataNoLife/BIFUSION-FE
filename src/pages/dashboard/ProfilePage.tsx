@@ -364,7 +364,7 @@ export default function ProfilePage() {
     isFetchingRef.current = true;
     setIsLoadingProjects(true);
     try {
-      const url = `/projects/me?size=6${cursor ? `&cursor=${cursor}` : ''}`;
+      const url = `/projects/me?size=6&isPublic=true${cursor ? `&cursor=${cursor}` : ''}`;
       const response = await api.get(url);
       if (response.data.success) {
         const { items, nextCursor: newCursor, hasNext: newHasNext, totalCount: newTotalCount } = response.data.data;
@@ -421,9 +421,26 @@ export default function ProfilePage() {
     { id: "account", label: "계정 보안", icon: UserX },
   ];
 
-  const openProjectVisibilityModal = () => {
-    setDraftProjects(projects);
-    setShowProjectVisibilityModal(true);
+  const openProjectVisibilityModal = async () => {
+    try {
+      const response = await api.get('/projects/me?size=100');
+      if (response.data.success) {
+        const allProjects = response.data.data.items.map((p: any) => ({
+          id: p.projectId.toString(),
+          title: p.title,
+          role: p.role === "MANAGER" ? "관리자" : "멤버",
+          coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&q=80",
+          isPublic: p.isPublic
+        }));
+        setDraftProjects(allProjects);
+        setShowProjectVisibilityModal(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch all projects for visibility modal", error);
+      // Fallback
+      setDraftProjects(projects);
+      setShowProjectVisibilityModal(true);
+    }
   };
 
   const toggleDraftProjectVisibility = (projectId: string) => {

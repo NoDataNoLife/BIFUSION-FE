@@ -6,7 +6,10 @@ import QnaDetail from '../../components/dashboard/QnaDetail';
 import RecruitmentDetail from '../../components/dashboard/RecruitmentDetail';
 import CommunityDatasetDetail from '../../components/dashboard/CommunityDatasetDetail';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useCommunityStore } from '../../store/useCommunityStore';
 import { ALL_RECIPES, type Recipe } from '../../store/mockData';
+import CreatePostModal from '../../components/community/CreatePostModal';
+import { useEffect } from 'react';
 
 // --- Types ---
 interface ShowcasePost extends Recipe {
@@ -53,7 +56,17 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'showcase' | 'qa' | 'recruitment' | 'datasets'>('showcase');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { user } = useAuthStore();
+  const { qnaList, datasetList, fetchQnaList, fetchDatasetList, isLoadingQna, isLoadingDataset } = useCommunityStore();
+
+  useEffect(() => {
+    if (activeTab === 'qa') {
+      fetchQnaList();
+    } else if (activeTab === 'datasets') {
+      fetchDatasetList();
+    }
+  }, [activeTab, fetchQnaList, fetchDatasetList]);
 
   // --- Sub-page Rendering Logic ---
   if (selectedId) {
@@ -84,7 +97,10 @@ export default function CommunityPage() {
             <h1 className="text-4xl font-black text-gray-900 tracking-tight">Research Hub</h1>
             <p className="text-gray-500 font-medium">전 세계 연구자들과 지식과 자산을 공유하세요</p>
           </div>
-          <button className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-[1.5rem] font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95">
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-[1.5rem] font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95"
+          >
             <Plus size={20} /> 새로운 게시글 작성
           </button>
         </div>
@@ -162,32 +178,38 @@ export default function CommunityPage() {
 
         {activeTab === 'qa' && (
           <div className="space-y-4">
-            {mockQAPosts.map(post => (
-              <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-white rounded-[2rem] border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer">
+            {isLoadingQna ? (
+              <div className="text-center py-10 font-bold text-gray-500">불러오는 중...</div>
+            ) : qnaList.length === 0 ? (
+              <div className="text-center py-10 font-bold text-gray-500">등록된 전문가 Q&A가 없습니다.</div>
+            ) : qnaList.map(post => (
+              <div key={post.qnaId} onClick={() => setSelectedId(post.qnaId.toString())} className="group bg-white rounded-[2rem] border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-4 flex-1">
                     <div className="flex items-center gap-3">
                       <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                        post.status === 'Solved' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                        post.status === 'SOLVED' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
                       }`}>{post.status}</span>
-                      {post.hasExpertReply && <span className="flex items-center gap-1 text-primary text-[10px] font-black uppercase tracking-widest"><CheckCircle size={14} /> Expert Answer</span>}
+                      {post.isExpertAnswered && <span className="flex items-center gap-1 text-primary text-[10px] font-black uppercase tracking-widest"><CheckCircle size={14} /> Expert Answer</span>}
                     </div>
                     <h3 className="text-xl font-black text-gray-900 group-hover:text-primary transition-colors">{post.title}</h3>
                     <div className="flex gap-2">
-                      {post.tags.map(tag => <span key={tag} className="text-xs font-bold text-gray-400">#{tag.replace('#','')}</span>)}
+                      {post.tags?.map(tag => <span key={tag} className="text-xs font-bold text-gray-400">#{tag.replace('#','')}</span>)}
                     </div>
                   </div>
                   <div className="flex items-center gap-8 px-8 py-4 bg-gray-50 rounded-2xl border border-gray-100">
                     <div className="text-center">
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Answers</p>
-                      <p className="text-lg font-black text-gray-900">{post.commentCount}</p>
+                      <p className="text-lg font-black text-gray-900">{post.answerCount || 0}</p>
                     </div>
                     <div className="w-px h-8 bg-gray-200" />
                     <div className="flex items-center gap-3">
-                      <img src={post.authorAvatar} alt={post.author} className="w-10 h-10 rounded-xl" />
+                      <img src={post.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={post.author?.nickname || 'Unknown'} className="w-10 h-10 rounded-xl" />
                       <div className="text-left">
-                        <p className="font-bold text-gray-900 text-sm">{post.author}</p>
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">2h ago</p>
+                        <p className="font-bold text-gray-900 text-sm">{post.author?.nickname || 'Unknown'}</p>
+                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -227,8 +249,12 @@ export default function CommunityPage() {
 
         {activeTab === 'datasets' && (
           <div className="space-y-4">
-            {mockDatasetPosts.map(dataset => (
-              <div key={dataset.id} onClick={() => setSelectedId(dataset.id)} className="bg-white rounded-[2rem] border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group">
+            {isLoadingDataset ? (
+              <div className="text-center py-10 font-bold text-gray-500">불러오는 중...</div>
+            ) : datasetList.length === 0 ? (
+              <div className="text-center py-10 font-bold text-gray-500">등록된 데이터셋이 없습니다.</div>
+            ) : datasetList.map(dataset => (
+              <div key={dataset.datasetId} onClick={() => setSelectedId(dataset.datasetId.toString())} className="bg-white rounded-[2rem] border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group">
                 <div className="flex flex-col md:flex-row gap-8">
                   <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:rotate-3 transition-transform">
                     <Database size={32} className="text-purple-600" />
@@ -240,19 +266,17 @@ export default function CommunityPage() {
                     </div>
                     <p className="text-gray-500 font-medium text-sm line-clamp-1">{dataset.description}</p>
                     <div className="flex flex-wrap gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">
-                      <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-lg"><HardDrive size={12} /> {dataset.fileSize}</span>
-                      <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-lg"><Download size={12} /> {dataset.downloadCount}</span>
-                      <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-lg text-primary"><Trophy size={12} /> {dataset.upvotes}</span>
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-lg"><HardDrive size={12} /> {dataset.fileSize || 'N/A'}</span>
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-lg"><Download size={12} /> {dataset.downloadCount || 0}</span>
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-lg text-primary"><Database size={12} /> {dataset.fileCount || 0} Files</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 self-end md:self-center pt-4 md:pt-0">
-                    <div className="flex items-center gap-2">
-                      <img src={dataset.authorAvatar} alt={dataset.author} className="w-8 h-8 rounded-full border border-gray-100" />
-                      <span className="text-sm font-bold text-gray-600">{dataset.author}</span>
+                  <div className="flex items-center gap-4 border-l border-gray-100 pl-8">
+                    <img src={dataset.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={dataset.author?.nickname || 'Unknown'} className="w-12 h-12 rounded-xl" />
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">{dataset.author?.nickname || 'Unknown'}</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{dataset.license || 'Custom License'}</p>
                     </div>
-                    <button className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-primary hover:text-white transition-all shadow-sm">
-                      <Download size={20} />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -260,6 +284,11 @@ export default function CommunityPage() {
           </div>
         )}
       </div>
+      
+      <CreatePostModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
     </div>
   );
 }

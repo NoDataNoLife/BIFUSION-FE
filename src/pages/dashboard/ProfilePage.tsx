@@ -830,28 +830,38 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {displayedProjects.map((project) => (
-              <div
-                key={project.id}
-                className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50/40"
-              >
-                <img
-                  src={project.coverImage}
-                  alt={project.title}
-                  className="w-full h-28 object-cover"
-                />
-                <div className="p-3">
-                  <h3 className="text-lg font-black text-gray-900 leading-tight line-clamp-1">
-                    {project.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {project.role}
-                  </p>
-                </div>
+          {displayedProjects.length === 0 ? (
+            <div className="py-12 flex flex-col items-center justify-center text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+              <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-gray-300" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-gray-900 font-bold mb-1">공개된 프로젝트가 없습니다.</h3>
+              <p className="text-gray-500 text-sm">현재 모두 비공개 상태이거나, 아직 참여 중인 프로젝트가 없습니다.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {displayedProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50/40"
+                >
+                  <img
+                    src={project.coverImage}
+                    alt={project.title}
+                    className="w-full h-28 object-cover"
+                  />
+                  <div className="p-3">
+                    <h3 className="text-lg font-black text-gray-900 leading-tight line-clamp-1">
+                      {project.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {project.role}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {hasNext && (
             <button

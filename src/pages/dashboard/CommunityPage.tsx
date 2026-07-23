@@ -37,7 +37,7 @@ const mockQAPosts: QAPost[] = [
 ];
 
 const mockRecruitmentPosts: RecruitmentPost[] = [
-  { id: 'RC-001', title: '심혈관 질환 AI 연구 팀원 모집', organization: '서울대학교병원', tags: ['#Cardiology', '#Research'], memberCount: '3/5', deadline: '2026-02-15' },
+  { id: '1', title: '심혈관 질환 AI 연구 팀원 모집', organization: '서울대학교병원', tags: ['#Cardiology', '#Research'], memberCount: '3/5', deadline: '2026-02-15' },
 ];
 
 
@@ -167,6 +167,42 @@ export default function CommunityPage() {
 
         {activeTab === 'qa' && (
           <div className="space-y-4">
+            {/* UI 테스트용 Mock 데이터 */}
+            {mockQAPosts.map(post => (
+              <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 p-8 hover:shadow-xl hover:border-blue-300 transition-all cursor-pointer relative overflow-hidden">
+                <div className="absolute top-0 right-0 px-4 py-1 bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-bl-xl">UI Test Mock</div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="space-y-4 flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-green-100 text-green-600`}>
+                        {post.status}
+                      </span>
+                      {post.hasExpertReply && <span className="flex items-center gap-1 text-primary text-[10px] font-black uppercase tracking-widest"><CheckCircle size={14} /> Expert Answer</span>}
+                    </div>
+                    <h3 className="text-xl font-black text-gray-900 group-hover:text-primary transition-colors">{post.title}</h3>
+                    <div className="flex gap-2">
+                      {post.tags?.map(tag => <span key={tag} className="text-xs font-bold text-gray-400">{tag}</span>)}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-8 px-8 py-4 bg-white rounded-2xl border border-blue-100">
+                    <div className="text-center">
+                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Answers</p>
+                      <p className="text-lg font-black text-blue-600">{post.commentCount}</p>
+                    </div>
+                    <div className="w-px h-8 bg-blue-100" />
+                    <div className="flex items-center gap-3">
+                      <img src={post.authorAvatar} alt={post.author} className="w-10 h-10 rounded-xl bg-blue-50" />
+                      <div className="text-left">
+                        <p className="font-bold text-gray-900 text-sm">{post.author}</p>
+                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Mock User</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* 실제 백엔드 API 데이터 */}
             {isLoadingQna ? (
               <div className="text-center py-10 font-bold text-gray-500">불러오는 중...</div>
             ) : qnaList.length === 0 ? (

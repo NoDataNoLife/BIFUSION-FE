@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Users, MapPin, Briefcase, Clock, CheckCircle, Send, Calendar } from 'lucide-react';
+import api from '../../lib/axios';
 
 interface RecruitmentDetailProps {
   recruitmentPost: {
@@ -17,12 +18,28 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
   const [applicationName, setApplicationName] = useState('');
   const [applicationEmail, setApplicationEmail] = useState('');
   const [applicationMessage, setApplicationMessage] = useState('');
+  const [resumeUrl, setResumeUrl] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitApplication = (e: React.FormEvent) => {
+  const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (applicationName && applicationEmail && applicationMessage) {
+    if (!applicationName || !applicationEmail || !applicationMessage) return;
+
+    setIsSubmitting(true);
+    try {
+      await api.post(`/community/recruitments/${recruitmentPost.id}/apply`, {
+        fullName: applicationName,
+        email: applicationEmail,
+        resumeUrl: resumeUrl || null,
+        motivation: applicationMessage,
+      });
       setIsSubmitted(true);
+    } catch (error) {
+      console.error('지원 실패:', error);
+      alert('지원에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -181,13 +198,24 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
               />
             </div>
 
+            <div className="space-y-3">
+              <label className="text-sm font-black text-gray-400 uppercase tracking-widest ml-2">이력서 URL <span className="text-gray-600 normal-case tracking-normal">(선택)</span></label>
+              <input
+                type="url"
+                value={resumeUrl}
+                onChange={(e) => setResumeUrl(e.target.value)}
+                placeholder="https://drive.google.com/..."
+                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+              />
+            </div>
+
             <div className="flex justify-end pt-4 border-t border-white/10">
               <button
                 type="submit"
-                disabled={!applicationName || !applicationEmail || !applicationMessage}
+                disabled={isSubmitting || !applicationName || !applicationEmail || !applicationMessage}
                 className="flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-[2rem] font-black text-lg hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
               >
-                <Send size={24} /> 지원서 제출하기
+                <Send size={24} /> {isSubmitting ? '제출 중...' : '지원서 제출하기'}
               </button>
             </div>
           </form>

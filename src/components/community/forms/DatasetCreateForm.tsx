@@ -53,7 +53,7 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
       const formData = new FormData();
       formData.append('files', selectedFile);
 
-      const uploadRes = await api.post('/api/v1/files/temp', formData, {
+      const uploadRes = await api.post('/files/temp', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -67,7 +67,7 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
       const fileId = uploadedFiles[0].fileId;
 
       // 2. Create Dataset
-      await api.post('/api/v1/community/datasets', {
+      await api.post('/community/datasets', {
         title,
         description,
         category,

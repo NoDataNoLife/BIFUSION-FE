@@ -50,7 +50,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
 
     setIsSubmitting(true);
     try {
-      await api.post('/api/v1/community/recruitments', {
+      await api.post('/community/recruitments', {
         jobTitle,
         organization,
         description,

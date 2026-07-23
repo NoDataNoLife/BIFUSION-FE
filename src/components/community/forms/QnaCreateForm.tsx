@@ -30,7 +30,7 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
 
     setIsSubmitting(true);
     try {
-      await api.post('/api/v1/community/qna', {
+      await api.post('/community/qna', {
         title,
         content,
         tags

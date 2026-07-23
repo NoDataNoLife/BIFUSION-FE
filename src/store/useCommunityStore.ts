@@ -84,7 +84,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   fetchQnaList: async (page = 0, size = 10, sort = 'LATEST') => {
     set({ isLoadingQna: true, error: null });
     try {
-      const response = await api.get<{ data: PageResponse<ExpertQnAListResponse> }>('/api/v1/community/qna', {
+      const response = await api.get<{ data: PageResponse<ExpertQnAListResponse> }>('/community/qna', {
         params: { page, size, sort }
       });
       set({ qnaList: response.data.data.content, isLoadingQna: false });
@@ -96,7 +96,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   fetchRecruitmentList: async (page = 0, size = 10, sort = 'LATEST') => {
     set({ isLoadingRecruitment: true, error: null });
     try {
-      const response = await api.get<{ data: PageResponse<RecruitmentResponse> }>('/api/v1/community/recruitments', {
+      const response = await api.get<{ data: PageResponse<RecruitmentResponse> }>('/community/recruitments', {
         params: { page, size, sort }
       });
       set({ recruitmentList: response.data.data.content, isLoadingRecruitment: false });
@@ -108,7 +108,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   fetchDatasetList: async (page = 0, size = 10, sort = 'LATEST') => {
     set({ isLoadingDataset: true, error: null });
     try {
-      const response = await api.get<{ data: PageResponse<DatasetListResponse> }>('/api/v1/community/datasets', {
+      const response = await api.get<{ data: PageResponse<DatasetListResponse> }>('/community/datasets', {
         params: { page, size, sort }
       });
       set({ datasetList: response.data.data.content, isLoadingDataset: false });

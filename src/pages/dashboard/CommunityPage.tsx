@@ -26,13 +26,7 @@ interface RecruitmentPost {
   memberCount: string; deadline: string;
 }
 
-interface DatasetPost {
-  id: string; title: string; description: string; author: string; authorAvatar: string;
-  tags: string[]; fileSize: string; fileCount: number; downloadCount: number;
-  upvotes: number; uploadDate: string; license: string; isExpertVerified?: boolean;
-}
-
-// --- Mock Data ---
+// --- Mock Data (데이터셋 제외 - 실제 API 연동 완료) ---
 const mockShowcasePosts: ShowcasePost[] = ALL_RECIPES.map(r => ({
   ...r,
   likeCount: r.forkedCount * 3
@@ -40,17 +34,12 @@ const mockShowcasePosts: ShowcasePost[] = ALL_RECIPES.map(r => ({
 
 const mockQAPosts: QAPost[] = [
   { id: 'QA-001', title: 'Diffusion 모델 학습 시 메모리 부족 오류 해결 방법은?', author: '연구자A', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=userA', status: 'Solved', tags: ['#Error', '#Diffusion'], commentCount: 12, hasExpertReply: true },
-  { id: 'QA-002', title: 'HIPAA 규정 준수를 위한 데이터 익명화 베스트 프랙티스', author: '연구자B', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=userB', status: 'Expert Answered', tags: ['#HIPAA', '#Privacy'], commentCount: 8, hasExpertReply: true },
 ];
 
 const mockRecruitmentPosts: RecruitmentPost[] = [
   { id: 'RC-001', title: '심혈관 질환 AI 연구 팀원 모집', organization: '서울대학교병원', tags: ['#Cardiology', '#Research'], memberCount: '3/5', deadline: '2026-02-15' },
-  { id: 'RC-002', title: '병리학 이미지 분석 프로젝트 참여자 모집', organization: '연세대학교 의과대학', tags: ['#Pathology', '#ImageAnalysis'], memberCount: '2/4', deadline: '2026-02-20' },
 ];
 
-const mockDatasetPosts: DatasetPost[] = [
-  { id: 'DS-001', title: 'Chest X-Ray Images (Pneumonia)', description: '폐렴 진단을 위한 고해상도 흉부 X-Ray 이미지 데이터셋.', author: '김성한', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim', tags: ['X-Ray', 'Pneumonia'], fileSize: '2.3 GB', fileCount: 5856, downloadCount: 1243, upvotes: 567, uploadDate: '2026-01-10', license: 'CC BY 4.0', isExpertVerified: true },
-];
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'showcase' | 'qa' | 'recruitment' | 'datasets'>('showcase');
@@ -83,7 +72,7 @@ export default function CommunityPage() {
       if (post) return <RecruitmentDetail recruitmentPost={post} onBack={() => setSelectedId(null)} />;
     }
     if (activeTab === 'datasets') {
-      const post = mockDatasetPosts.find(p => p.id === selectedId);
+      const post = datasetList.find(p => p.datasetId.toString() === selectedId);
       if (post) return <CommunityDatasetDetail datasetPost={post} onBack={() => setSelectedId(null)} />;
     }
   }

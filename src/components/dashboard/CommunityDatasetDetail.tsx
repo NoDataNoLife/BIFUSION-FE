@@ -4,18 +4,21 @@ import ImageWithFallback from '../common/ImageWithFallback';
 
 interface CommunityDatasetDetailProps {
   datasetPost: {
-    id: string;
+    datasetId: number;
     title: string;
     description: string;
-    author: string;
-    authorAvatar: string;
+    author: {
+      userId: number;
+      nickname: string;
+      profileImageUrl: string;
+    };
     tags: string[];
     fileSize: string;
     fileCount: number;
     downloadCount: number;
-    upvotes: number;
-    uploadDate: string;
+    isExpertVerified?: boolean;
     license: string;
+    createdAt: string;
   };
   onBack: () => void;
 }
@@ -101,7 +104,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
             <div className="space-y-1">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">추천 수</p>
               <p className="text-xl font-black text-primary flex items-center justify-center gap-1">
-                <Heart size={20} fill="currentColor" /> {datasetPost.upvotes}
+                <Heart size={20} fill="currentColor" /> {datasetPost.downloadCount}
               </p>
             </div>
           </div>
@@ -141,7 +144,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
               </h2>
               <div className="bg-black/30 rounded-2xl p-6 font-mono text-sm text-primary/90 overflow-x-auto">
                 <pre>
-                  <code>{`import biffusion\n\n# 데이터셋 불러오기\ndataset = biffusion.load_dataset('${datasetPost.id}')\n\n# 증강 파이프라인 구성\naugmented = dataset.augment(\n    method='adaptive_diffusion',\n    count=5000\n)\n\n# 학습 데이터로 활용\nprint(f"Dataset ready: {len(augmented)} samples")`}</code>
+                  <code>{`import biffusion\n\n# 데이터셋 불러오기\ndataset = biffusion.load_dataset('${datasetPost.datasetId}')\n\n# 증강 파이프라인 구성\naugmented = dataset.augment(\n    method='adaptive_diffusion',\n    count=5000\n)\n\n# 학습 데이터로 활용\nprint(f"Dataset ready: {len(augmented)} samples")`}</code>
                 </pre>
               </div>
             </div>
@@ -160,13 +163,13 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">업로드 날짜</span>
-                  <span className="font-bold text-gray-900">{datasetPost.uploadDate}</span>
+                  <span className="font-bold text-gray-900">{datasetPost.createdAt?.split('T')[0] || '-'}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm pt-4 border-t border-gray-50">
                   <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">작성자</span>
                   <div className="flex items-center gap-2">
-                    <img src={datasetPost.authorAvatar} alt={datasetPost.author} className="w-6 h-6 rounded-full" />
-                    <span className="font-bold text-gray-900">{datasetPost.author}</span>
+                    <img src={datasetPost.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={datasetPost.author?.nickname || 'Unknown'} className="w-6 h-6 rounded-full" />
+                    <span className="font-bold text-gray-900">{datasetPost.author?.nickname || 'Unknown'}</span>
                   </div>
                 </div>
               </div>

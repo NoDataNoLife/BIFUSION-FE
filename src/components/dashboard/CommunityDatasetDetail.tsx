@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { ArrowLeft, Database, Download, Heart, FileText, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 
 
 interface CommunityDatasetDetailProps {
@@ -18,6 +21,7 @@ interface CommunityDatasetDetailProps {
     downloadCount: number;
     isExpertVerified?: boolean;
     license: string;
+    usageExample?: string;
     createdAt: string;
   };
   onBack: () => void;
@@ -139,12 +143,16 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
             {/* Usage Example */}
             <div className="bg-gray-900 rounded-[2.5rem] p-10 shadow-2xl space-y-6">
               <h2 className="text-xl font-black text-white flex items-center gap-3">
-                <Code className="text-primary" /> Python API 사용 가이드
+                <Code className="text-primary" /> 작성자 활용 가이드
               </h2>
-              <div className="bg-black/30 rounded-2xl p-6 font-mono text-sm text-primary/90 overflow-x-auto">
-                <pre>
-                  <code>{`import biffusion\n\n# 데이터셋 불러오기\ndataset = biffusion.load_dataset('${datasetPost.datasetId}')\n\n# 증강 파이프라인 구성\naugmented = dataset.augment(\n    method='adaptive_diffusion',\n    count=5000\n)\n\n# 학습 데이터로 활용\nprint(f"Dataset ready: {len(augmented)} samples")`}</code>
-                </pre>
+              <div className="bg-black/30 rounded-2xl p-6 font-mono text-sm text-gray-300 overflow-x-auto whitespace-pre-wrap leading-relaxed prose prose-invert prose-pre:bg-transparent prose-pre:p-0 max-w-none">
+                {datasetPost.usageExample ? (
+                  <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                    {datasetPost.usageExample}
+                  </ReactMarkdown>
+                ) : (
+                  <span className="text-gray-500 italic">작성자가 등록한 활용 가이드가 없습니다.</span>
+                )}
               </div>
             </div>
           </div>

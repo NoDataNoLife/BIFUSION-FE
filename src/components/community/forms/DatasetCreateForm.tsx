@@ -161,8 +161,16 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">사용 예시 (선택)</label>
-          <input type="text" value={usageExample} onChange={(e) => setUsageExample(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: PyTorch DataLoader 예제 코드 등" />
+          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center justify-between">
+            <span>사용 예시 / 파이썬 코드 (선택)</span>
+            <span className="text-xs text-gray-400 font-normal bg-gray-100 px-2 py-1 rounded-md">Markdown 지원</span>
+          </label>
+          <textarea 
+            value={usageExample} 
+            onChange={(e) => setUsageExample(e.target.value)} 
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm bg-gray-50 h-32" 
+            placeholder={"```python\nimport biffusion\ndataset = biffusion.load_dataset('...')\n```"} 
+          />
         </div>
 
         <div>

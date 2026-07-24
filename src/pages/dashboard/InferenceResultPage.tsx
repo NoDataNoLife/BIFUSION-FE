@@ -100,19 +100,19 @@ export default function InferenceResultPage() {
       <div className="max-w-6xl mx-auto px-8 py-8 space-y-10">
         {/* Metrics Overview (Prototype structure) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-[2rem] p-8 border-2 border-green-500 bg-green-50 text-center">
+          <div className="bg-white rounded-4xl p-8 border-2 border-green-500 bg-green-50 text-center">
             <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">정확도</p>
             <p className="text-4xl font-black text-green-700 italic">88%</p>
           </div>
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm text-center">
+          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Normal 예측</p>
             <p className="text-4xl font-black text-gray-900 italic">32장</p>
           </div>
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm text-center">
+          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Anomaly 예측</p>
             <p className="text-4xl font-black text-gray-900 italic">18장</p>
           </div>
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm text-center">
+          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">평균 Confidence</p>
             <p className="text-4xl font-black text-gray-900 italic">0.84</p>
           </div>
@@ -223,7 +223,7 @@ export default function InferenceResultPage() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="추론 결과에 대한 분석 의견을 남겨주세요..."
-              className="w-full p-6 bg-gray-50 border border-transparent rounded-[2rem] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-gray-700 min-h-[120px]"
+              className="w-full p-6 bg-gray-50 border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-gray-700 min-h-[120px]"
             />
             <button 
               onClick={handlePostComment}
@@ -239,7 +239,7 @@ export default function InferenceResultPage() {
           <div className="space-y-8 pt-4">
             {comments.map((c) => (
               <div key={c.id} className="flex gap-5 group">
-                <img src={c.avatar} alt={c.user} className="w-12 h-12 rounded-2xl bg-gray-100 ring-4 ring-gray-50 flex-shrink-0" />
+                <img src={c.avatar} alt={c.user} className="w-12 h-12 rounded-2xl bg-gray-100 ring-4 ring-gray-50 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">

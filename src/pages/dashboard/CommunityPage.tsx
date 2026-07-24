@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, GitFork, MessageCircle, Trophy, Users, Database, ArrowUpDown, Plus, LayoutGrid, List, Award, Heart, CheckCircle, Clock, Building2, Download, Filter, HardDrive } from 'lucide-react';
+import { Search, GitFork, Users, Database, ArrowUpDown, Plus, Award, Heart, CheckCircle, Clock, Building2, Download, Filter, HardDrive } from 'lucide-react';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import QnaDetail from '../../components/dashboard/QnaDetail';
@@ -88,7 +88,7 @@ export default function CommunityPage() {
           </div>
           <button 
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-[1.5rem] font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95"
+            className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-3xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95"
           >
             <Plus size={20} /> 새로운 게시글 작성
           </button>
@@ -101,7 +101,7 @@ export default function CommunityPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="레시피, 질문, 데이터셋, 팀 모집 공고를 검색하세요..."
-            className="w-full pl-16 pr-6 py-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm text-lg focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all font-medium"
+            className="w-full pl-16 pr-6 py-6 bg-white border border-gray-100 rounded-4xl shadow-sm text-lg focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all font-medium"
           />
         </div>
       </div>
@@ -134,12 +134,12 @@ export default function CommunityPage() {
       </div>
 
       {/* Content Grid */}
-      <div className="min-h-[400px]">
+      <div className="min-h-100">
         {activeTab === 'showcase' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {mockShowcasePosts.map(post => (
               <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative">
-                <div className="aspect-[4/3] overflow-hidden bg-gray-50">
+                <div className="aspect-4/3 overflow-hidden bg-gray-50">
                   <ImageWithFallback src={post.thumbnailUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   {post.isExpertVerified && (
                     <div className="absolute top-6 right-6 px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
@@ -169,7 +169,7 @@ export default function CommunityPage() {
           <div className="space-y-4">
             {/* UI 테스트용 Mock 데이터 */}
             {mockQAPosts.map(post => (
-              <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-blue-50/50 rounded-[2rem] border-2 border-blue-100 p-8 hover:shadow-xl hover:border-blue-300 transition-all cursor-pointer relative overflow-hidden">
+              <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-blue-50/50 rounded-4xl border-2 border-blue-100 p-8 hover:shadow-xl hover:border-blue-300 transition-all cursor-pointer relative overflow-hidden">
                 <div className="absolute top-0 right-0 px-4 py-1 bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest rounded-bl-xl">UI Test Mock</div>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-4 flex-1">
@@ -208,7 +208,7 @@ export default function CommunityPage() {
             ) : qnaList.length === 0 ? (
               <div className="text-center py-10 font-bold text-gray-500">등록된 전문가 Q&A가 없습니다.</div>
             ) : qnaList.map(post => (
-              <div key={post.qnaId} onClick={() => setSelectedId(post.qnaId.toString())} className="group bg-white rounded-[2rem] border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer">
+              <div key={post.qnaId} onClick={() => setSelectedId(post.qnaId.toString())} className="group bg-white rounded-4xl border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-4 flex-1">
                     <div className="flex items-center gap-3">
@@ -247,9 +247,9 @@ export default function CommunityPage() {
         {activeTab === 'recruitment' && (
           <div className="space-y-4">
             {mockRecruitmentPosts.map(post => (
-              <div key={post.id} onClick={() => setSelectedId(post.id)} className="bg-white rounded-[2rem] border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group">
+              <div key={post.id} onClick={() => setSelectedId(post.id)} className="bg-white rounded-4xl border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group">
                 <div className="flex flex-col md:flex-row md:items-center gap-8">
-                  <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                     <Users size={32} className="text-primary" />
                   </div>
                   <div className="flex-1 space-y-2">
@@ -279,9 +279,9 @@ export default function CommunityPage() {
             ) : datasetList.length === 0 ? (
               <div className="text-center py-10 font-bold text-gray-500">등록된 데이터셋이 없습니다.</div>
             ) : datasetList.map(dataset => (
-              <div key={dataset.datasetId} onClick={() => setSelectedId(dataset.datasetId.toString())} className="bg-white rounded-[2rem] border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group">
+              <div key={dataset.datasetId} onClick={() => setSelectedId(dataset.datasetId.toString())} className="bg-white rounded-4xl border border-gray-100 p-8 hover:shadow-xl hover:border-primary/20 transition-all cursor-pointer group">
                 <div className="flex flex-col md:flex-row gap-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:rotate-3 transition-transform">
+                  <div className="w-20 h-20 bg-linear-to-br from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-3 transition-transform">
                     <Database size={32} className="text-purple-600" />
                   </div>
                   <div className="flex-1 space-y-3">

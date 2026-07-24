@@ -143,7 +143,7 @@ export default function AugmentProgressPage() {
 
           {/* Helper Tips */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-start gap-4 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+            <div className="flex items-start gap-4 p-6 bg-white rounded-4xl border border-gray-100 shadow-sm">
               <div className="p-2 bg-primary/10 text-primary rounded-xl">
                 <Zap className="w-5 h-5" />
               </div>
@@ -152,7 +152,7 @@ export default function AugmentProgressPage() {
                 <p className="text-xs text-gray-400 font-medium leading-relaxed">작업의 속도를 위해 BIFUSION의 전용 GPU 가속 서버가 현재 작업을 처리 중입니다.</p>
               </div>
             </div>
-            <div className="flex items-start gap-4 p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+            <div className="flex items-start gap-4 p-6 bg-white rounded-4xl border border-gray-100 shadow-sm">
               <div className="p-2 bg-green-50 text-green-600 rounded-xl">
                 <Activity className="w-5 h-5" />
               </div>

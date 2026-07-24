@@ -290,7 +290,7 @@ function ProjectCard({
   return (
     <div
       onClick={onOpen}
-      className="flex-shrink-0 w-85 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-gray-200/50 transition-all cursor-pointer relative group"
+      className="shrink-0 w-85 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-gray-200/50 transition-all cursor-pointer relative group"
     >
       <button
         onClick={(e) => onToggleFavorite(project.id, e)}

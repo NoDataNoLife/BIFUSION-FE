@@ -102,7 +102,7 @@ export default function DashboardHome() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <button
           onClick={() => navigate("/dashboard/projects")}
-          className="flex items-center gap-5 p-6 bg-gradient-to-br from-primary to-accent text-white rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all text-left"
+          className="flex items-center gap-5 p-6 bg-linear-to-br from-primary to-accent text-white rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all text-left"
         >
           <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
             <Plus className="w-7 h-7" />
@@ -294,7 +294,7 @@ export default function DashboardHome() {
             <div className="space-y-6">
               {recentActivities.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-4 group">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-gray-50 dark:ring-border">
+                  <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-50 dark:ring-border">
                     <img
                       src={activity.avatar}
                       alt={activity.user}

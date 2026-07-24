@@ -111,7 +111,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               `}
               title={isCollapsed ? item.label : ""}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
+              <Icon className="w-5 h-5 shrink-0" />
               {!isCollapsed && (
                 <span className="text-sm font-medium">{item.label}</span>
               )}
@@ -134,10 +134,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <ImageWithFallback
               src={user.profileImage}
               alt={user.name || "사용자"}
-              className="w-10 h-10 rounded-full flex-shrink-0 object-cover ring-2 ring-white dark:ring-background"
+              className="w-10 h-10 rounded-full shrink-0 object-cover ring-2 ring-white dark:ring-background"
             />
           ) : (
-            <div className="w-10 h-10 bg-primary/10 dark:bg-primary/15 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-primary/10 dark:bg-primary/15 rounded-full flex items-center justify-center shrink-0">
               <User className="w-5 h-5 text-primary" />
             </div>
           )}

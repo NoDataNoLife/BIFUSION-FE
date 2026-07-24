@@ -112,7 +112,7 @@ export default function AugmentResultPage() {
             { label: '총 소요 시간', value: stats.duration, sub: 'GPU 가속 모드 사용', icon: Clock, color: 'purple' },
             { label: '데이터셋 크기', value: stats.fileSize, sub: '압축된 NPZ 포맷', icon: HardDrive, color: 'green' },
           ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
+            <div key={i} className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
               <div className={`absolute top-0 right-0 w-32 h-32 bg-${stat.color}-50 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-${stat.color}-100 transition-colors duration-500`} />
               <div className="relative z-10">
                 <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center mb-6`}>
@@ -205,7 +205,7 @@ export default function AugmentResultPage() {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="결과에 대한 의견을 남겨주세요..."
-                className="w-full p-6 bg-gray-50 border border-transparent rounded-[2rem] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-gray-700 min-h-[120px]"
+                className="w-full p-6 bg-gray-50 border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-gray-700 min-h-[120px]"
               />
               <button 
                 onClick={handlePostComment}
@@ -222,7 +222,7 @@ export default function AugmentResultPage() {
             <div className="space-y-6 pt-4">
               {comments.map((comment) => (
                 <div key={comment.id} className="flex gap-4 group">
-                  <img src={comment.avatar} alt={comment.user} className="w-12 h-12 rounded-2xl bg-gray-100 ring-4 ring-gray-50 flex-shrink-0" />
+                  <img src={comment.avatar} alt={comment.user} className="w-12 h-12 rounded-2xl bg-gray-100 ring-4 ring-gray-50 shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

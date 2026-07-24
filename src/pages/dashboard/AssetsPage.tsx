@@ -125,7 +125,7 @@ export default function AssetsPage() {
               <div 
                 key={recipe.id}
                 onClick={() => setSelectedRecipe(recipe)}
-                className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
+                className="group bg-white rounded-4xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
               >
                 <div className="aspect-video relative overflow-hidden bg-gray-50">
                   <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -161,7 +161,7 @@ export default function AssetsPage() {
             <div 
               key={dataset.id}
               onClick={() => setSelectedDataset(dataset)}
-              className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer"
+              className="group bg-white rounded-4xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer"
             >
               <div className="aspect-video relative overflow-hidden bg-gray-50 p-4 flex items-center justify-center">
                 <img src={dataset.thumbnail} alt={dataset.name} className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500" />

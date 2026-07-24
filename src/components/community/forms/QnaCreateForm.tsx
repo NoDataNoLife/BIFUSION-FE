@@ -77,7 +77,7 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
 
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">태그</label>
-          <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-[52px]">
+          <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
             {tags.map(tag => (
               <span key={tag} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                 {tag}
@@ -91,7 +91,7 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={handleAddTag}
-              className="flex-1 min-w-[120px] outline-none font-medium text-sm bg-transparent"
+              className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent"
               placeholder={tags.length === 0 ? "태그 입력 후 엔터..." : ""}
             />
           </div>

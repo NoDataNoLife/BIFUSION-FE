@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Database, Download, Heart, HardDrive, FileText, Calendar, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
-import ImageWithFallback from '../common/ImageWithFallback';
+import { ArrowLeft, Database, Download, Heart, FileText, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
+
 
 interface CommunityDatasetDetailProps {
   datasetPost: {
@@ -31,7 +31,6 @@ interface FileItem {
 
 export default function CommunityDatasetDetail({ datasetPost, onBack }: CommunityDatasetDetailProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   const sampleFiles: FileItem[] = [
     { name: 'train_images.zip', size: '2.3 GB', type: 'Archive' },
@@ -71,7 +70,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
         {/* Dataset Header Card */}
         <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm space-y-8">
           <div className="flex flex-col md:flex-row gap-10">
-            <div className="w-32 h-32 bg-primary/10 rounded-[2.5rem] flex items-center justify-center flex-shrink-0">
+            <div className="w-32 h-32 bg-primary/10 rounded-[2.5rem] flex items-center justify-center shrink-0">
               <Database className="w-16 h-16 text-primary" />
             </div>
             <div className="flex-1 space-y-4">
@@ -152,7 +151,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
 
           {/* Sidebar */}
           <div className="space-y-8">
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm space-y-6">
+            <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm space-y-6">
               <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
                 <Info size={18} className="text-primary" /> 상세 정보
               </h3>
@@ -175,7 +174,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-[2rem] p-8 border border-blue-100 space-y-4">
+            <div className="bg-blue-50 rounded-4xl p-8 border border-blue-100 space-y-4">
               <h3 className="text-lg font-black text-blue-900 flex items-center gap-2">
                 <CheckCircle size={20} /> 활용 가이드
               </h3>

@@ -15,7 +15,7 @@ export default function DashboardHeader() {
   const userInitial = user?.name ? user.name.slice(0, 2).toUpperCase() : "??";
 
   return (
-    <header className="h-20 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-100 dark:border-border flex items-center justify-end px-10 flex-shrink-0 z-40 transition-colors">
+    <header className="h-20 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-100 dark:border-border flex items-center justify-end px-10 shrink-0 z-40 transition-colors">
       <div className="flex items-center gap-6 ml-auto">
         <button
           onClick={toggleTheme}

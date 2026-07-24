@@ -84,9 +84,10 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
       alert('데이터셋이 성공적으로 업로드되었습니다!');
       fetchDatasetList();
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      alert('업로드에 실패했습니다: ' + (error.response?.data?.message || error.message));
+      const err = error as { response?: { data?: { message?: string } }, message?: string };
+      alert('업로드에 실패했습니다: ' + (err.response?.data?.message || err.message));
     } finally {
       setIsSubmitting(false);
     }
@@ -166,14 +167,14 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
 
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">태그 (엔터로 추가)</label>
-          <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-[52px]">
+          <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
             {tags.map(item => (
               <span key={item} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                 {item}
                 <button type="button" onClick={() => handleRemoveTag(item)} className="hover:text-primary/70">&times;</button>
               </span>
             ))}
-            <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleAddTag} className="flex-1 min-w-[120px] outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: X-Ray" : ""} />
+            <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleAddTag} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: X-Ray" : ""} />
           </div>
         </div>
 

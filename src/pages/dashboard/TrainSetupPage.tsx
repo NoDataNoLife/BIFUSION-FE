@@ -106,7 +106,7 @@ export default function TrainSetupPage() {
               Query 이미지 업로드 <span className="text-red-500">*</span>
             </label>
             <label className="block group">
-              <div className={`border-2 border-dashed rounded-[2rem] p-12 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
+              <div className={`border-2 border-dashed rounded-4xl p-12 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
                 queryFiles.length > 0 ? 'border-primary/50 bg-primary/5' : 'border-gray-200 bg-gray-50 hover:border-primary/50 hover:bg-primary/5'
               }`}>
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
@@ -125,7 +125,7 @@ export default function TrainSetupPage() {
           </div>
 
           {/* Query Label Option (Yellow Box from prototype) */}
-          <div className="bg-yellow-50/50 border border-yellow-100 rounded-[2rem] p-8">
+          <div className="bg-yellow-50/50 border border-yellow-100 rounded-4xl p-8">
             <label className="flex items-start gap-4 cursor-pointer group">
               <div className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                 includeQueryLabel ? 'bg-primary border-primary' : 'bg-white border-gray-200'

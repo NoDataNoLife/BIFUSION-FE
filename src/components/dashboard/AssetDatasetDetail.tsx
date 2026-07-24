@@ -125,8 +125,8 @@ export default function AssetDatasetDetail({
 
       <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
         {/* Main Info Card */}
-        <div className="bg-white rounded-[2rem] p-10 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-10">
-          <div className="w-full md:w-64 h-64 rounded-3xl overflow-hidden shadow-inner flex-shrink-0">
+        <div className="bg-white rounded-4xl p-10 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-10">
+          <div className="w-full md:w-64 h-64 rounded-3xl overflow-hidden shadow-inner shrink-0">
             <img
               src={dataset.thumbnail}
               alt={dataset.name}
@@ -192,7 +192,7 @@ export default function AssetDatasetDetail({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* File List */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
                   <FileText className="text-primary" /> 데이터셋 파일 목록
@@ -225,7 +225,7 @@ export default function AssetDatasetDetail({
             </div>
 
             {/* Usage Code Area */}
-            <div className="bg-gray-900 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
+            <div className="bg-gray-900 rounded-4xl p-8 shadow-2xl relative overflow-hidden">
               <Code className="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />
               <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
                 <Terminal size={20} className="text-primary" /> Python API 사용
@@ -241,7 +241,7 @@ export default function AssetDatasetDetail({
 
           {/* Sidebar / Stats */}
           <div className="space-y-8">
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+            <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
               <h3 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
                 <Info size={18} className="text-primary" /> 상세 명세
               </h3>
@@ -272,7 +272,7 @@ export default function AssetDatasetDetail({
             </div>
 
             {/* Expert Section */}
-            <div className="bg-primary rounded-[2rem] p-8 text-white shadow-xl shadow-primary/20">
+            <div className="bg-primary rounded-4xl p-8 text-white shadow-xl shadow-primary/20">
               <h3 className="text-lg font-black mb-4 flex items-center gap-2">
                 <Award size={20} /> 전문가 검증
               </h3>

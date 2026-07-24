@@ -140,53 +140,53 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">자격 요건 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-[52px]">
+            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {requirements.map(item => (
                 <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
                   <button type="button" onClick={() => handleRemoveFromList(item, requirements, setRequirements)} className="hover:text-gray-900">&times;</button>
                 </span>
               ))}
-              <input type="text" value={reqInput} onChange={(e) => setReqInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, reqInput, setReqInput, requirements, setRequirements)} className="flex-1 min-w-[120px] outline-none font-medium text-sm bg-transparent" placeholder={requirements.length === 0 ? "예: PyTorch 능숙자" : ""} />
+              <input type="text" value={reqInput} onChange={(e) => setReqInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, reqInput, setReqInput, requirements, setRequirements)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={requirements.length === 0 ? "예: PyTorch 능숙자" : ""} />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">주요 업무 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-[52px]">
+            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {responsibilities.map(item => (
                 <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
                   <button type="button" onClick={() => handleRemoveFromList(item, responsibilities, setResponsibilities)} className="hover:text-gray-900">&times;</button>
                 </span>
               ))}
-              <input type="text" value={respInput} onChange={(e) => setRespInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, respInput, setRespInput, responsibilities, setResponsibilities)} className="flex-1 min-w-[120px] outline-none font-medium text-sm bg-transparent" placeholder={responsibilities.length === 0 ? "예: 데이터 전처리" : ""} />
+              <input type="text" value={respInput} onChange={(e) => setRespInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, respInput, setRespInput, responsibilities, setResponsibilities)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={responsibilities.length === 0 ? "예: 데이터 전처리" : ""} />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">제공 혜택 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-[52px]">
+            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {benefits.map(item => (
                 <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
                   <button type="button" onClick={() => handleRemoveFromList(item, benefits, setBenefits)} className="hover:text-gray-900">&times;</button>
                 </span>
               ))}
-              <input type="text" value={benInput} onChange={(e) => setBenInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, benInput, setBenInput, benefits, setBenefits)} className="flex-1 min-w-[120px] outline-none font-medium text-sm bg-transparent" placeholder={benefits.length === 0 ? "예: 논문 공저자 등재" : ""} />
+              <input type="text" value={benInput} onChange={(e) => setBenInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, benInput, setBenInput, benefits, setBenefits)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={benefits.length === 0 ? "예: 논문 공저자 등재" : ""} />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">태그 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-[52px]">
+            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {tags.map(item => (
                 <span key={item} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
                   <button type="button" onClick={() => handleRemoveFromList(item, tags, setTags)} className="hover:text-primary/70">&times;</button>
                 </span>
               ))}
-              <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, tagInput, setTagInput, tags, setTags)} className="flex-1 min-w-[120px] outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: 의료AI" : ""} />
+              <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, tagInput, setTagInput, tags, setTags)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: 의료AI" : ""} />
             </div>
           </div>
         </div>

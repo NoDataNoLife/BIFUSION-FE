@@ -96,7 +96,7 @@ export default function InferenceSetupPage() {
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); if(e.dataTransfer.files) setUploadedFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]); }}
-              className={`border-2 border-dashed rounded-[2rem] p-16 text-center transition-all cursor-pointer group ${
+              className={`border-2 border-dashed rounded-4xl p-16 text-center transition-all cursor-pointer group ${
                 isDragging ? 'border-primary bg-primary/5' : 'border-gray-200 bg-gray-50 hover:border-primary/50'
               }`}
             >
@@ -151,7 +151,7 @@ export default function InferenceSetupPage() {
           </div>
 
           {/* Optional: Include Labels (Blue Box) */}
-          <div className="p-8 bg-blue-50/50 border border-blue-100 rounded-[2rem]">
+          <div className="p-8 bg-blue-50/50 border border-blue-100 rounded-4xl">
             <label className="flex items-start gap-4 cursor-pointer group">
               <div className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                 includeLabels ? 'bg-blue-600 border-blue-600' : 'bg-white border-blue-200'

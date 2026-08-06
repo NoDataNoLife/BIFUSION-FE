@@ -15,6 +15,7 @@
 3. **API 호출**: Axios를 통해 백엔드 주소로 데이터를 `POST` 전송합니다.
 
 **[코드 예시: `QnaCreateForm.tsx`]**
+
 ```tsx
 import { useState } from 'react';
 import api from '../../lib/axios';
@@ -59,6 +60,7 @@ export default function QnaCreateForm() {
 초기 연동 시 가장 많이 겪는 에러는 `404 Not Found`입니다. 백엔드 주소를 정확히 입력했는데 왜 못 찾는다고 할까요?
 
 ### 💡 범인은 전역 설정(baseURL)
+
 우리 프로젝트는 `src/lib/axios.ts` 파일에서 "앞으로 모든 요청 앞에는 무조건 `/api/v1`을 붙여!"라고 설정해 두었습니다.
 그런데 컴포넌트에서 호출할 때 습관적으로 `api.post('/api/v1/community/qna')`라고 적어버리면, 브라우저는 이 둘을 합쳐서 `/api/v1/api/v1/community/qna`라는 이상한 곳으로 데이터를 보내게 됩니다.
 

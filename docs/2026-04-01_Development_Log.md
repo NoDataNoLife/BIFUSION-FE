@@ -9,9 +9,11 @@
 프론트엔드 애플리케이션을 튼튼하게 만들기 위해 크게 4가지 핵심 도구를 선택했습니다.
 
 ### 1) 전역 상태 관리: Zustand
+
 리액트에서 여러 컴포넌트가 공통으로 써야 하는 데이터(예: 로그인한 유저 정보)를 관리할 때 씁니다. Redux보다 설정이 훨씬 간단해서 채택했습니다.
 
 **[실제 사용 예시: `useAuthStore.ts`]**
+
 ```typescript
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -41,13 +43,16 @@ export const useAuthStore = create<AuthState>()(
 ```
 
 ### 2) 서버 상태 관리: TanStack Query (React Query)
+
 서버에서 데이터를 가져오고(GET), 캐싱하고, 로딩 상태나 에러 처리를 획기적으로 줄여주는 도구입니다. 서버와의 통신은 무조건 이 친구를 거치게 됩니다.
 
 ### 3) 라우팅: React Router Dom
+
 웹 브라우저의 주소창(URL)에 따라 알맞은 화면을 띄워주는 역할을 합니다.
 
 **[실제 적용된 중첩 라우팅 구조]**
 우리는 화면의 "틀(Layout)"과 "알맹이(Page)"를 분리하는 중첩 라우팅을 사용했습니다.
+
 ```tsx
 <Routes>
   {/* 대시보드 레이아웃: 좌측 메뉴바와 상단 헤더는 고정됩니다. */}
@@ -60,6 +65,7 @@ export const useAuthStore = create<AuthState>()(
 ```
 
 ### 4) 스타일링: Tailwind CSS v4
+
 CSS 파일을 따로 만들지 않고 HTML 클래스 이름만으로 디자인을 입히는 도구입니다. `text-primary`처럼 프로젝트만의 색상 테마를 정의해서 사용하고 있습니다.
 
 ---
@@ -82,6 +88,7 @@ CSS 파일을 따로 만들지 않고 HTML 클래스 이름만으로 디자인�
 코딩을 하다 보면 겪게 되는 흔한 에러들과 방어 코드 작성법입니다.
 
 ### 💡 데이터가 아직 안 왔을 때 뻗는 에러 (Optional Chaining)
+
 서버에서 유저 정보를 받아오기도 전에 화면을 그리려고 하면 에러가 납니다. 이럴 때는 `?.` (옵셔널 체이닝)을 적극 활용합니다.
 
 ```tsx
@@ -93,4 +100,5 @@ CSS 파일을 따로 만들지 않고 HTML 클래스 이름만으로 디자인�
 ```
 
 ### 💡 아이콘 임포트 누락 에러
+
 `lucide-react` 같은 라이브러리에서 아이콘을 쓸 때, 반드시 상단에 `import { 아이콘이름 } from 'lucide-react'`가 있는지 확인해야 합니다. 임포트 없이 쓰면 하얀 화면(Runtime Error)만 뜨게 됩니다.

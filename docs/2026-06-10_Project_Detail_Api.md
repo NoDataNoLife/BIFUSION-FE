@@ -29,14 +29,18 @@ export default function ProjectDetailPage() {
 이를 위해 상태를 2개(진짜 상태, 임시 상태)로 쪼개서 관리합니다.
 
 ### 💡 1번 트랙: 진짜 상태 (Zustand 전역 저장소)
+
 백엔드에서 받아온 '진짜' 프로젝트 정보입니다. 서버에 저장을 눌러 성공했을 때만 바뀝니다.
+
 ```typescript
 const { currentProject } = useProjectStore(); 
 // currentProject = { title: "원래 제목", description: "원래 설명" }
 ```
 
 ### 💡 2번 트랙: 임시 상태 (컴포넌트 지역 `useState`)
+
 모달창의 텍스트박스에 연결될 임시 변수입니다. 유저가 키보드를 칠 때마다 바뀝니다.
+
 ```tsx
 const [editTitle, setEditTitle] = useState("");
 
@@ -49,6 +53,7 @@ useEffect(() => {
 ```
 
 ### 💡 유저가 "저장" 버튼을 눌렀을 때
+
 그제서야 임시 변수에 든 값(`editTitle`)을 백엔드에 쏘아 올립니다(`PUT /projects/15`).
 그리고 백엔드에서 "성공!"이라고 답변이 오면, 그때서야 진짜 상태(1번 트랙)를 업데이트하여 화면 전체를 깔끔하게 갱신합니다.
 
@@ -69,4 +74,5 @@ set((state) => ({
   }
 }));
 ```
+
 이렇게 하면 백엔드 통신 없이도 프론트엔드 화면이 눈 깜짝할 사이에 갱신되는 마법(Optimistic Update와 유사)을 경험할 수 있습니다!

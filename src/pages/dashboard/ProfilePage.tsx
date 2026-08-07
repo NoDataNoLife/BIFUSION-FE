@@ -673,7 +673,7 @@ export default function ProfilePage() {
                 <textarea
                   value={newBio}
                   onChange={(e) => setNewBio(e.target.value)}
-                  className="w-full text-sm text-gray-600 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl p-3 outline-none focus:border-primary/30 min-h-[100px] resize-none"
+                  className="w-full text-sm text-gray-600 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl p-3 outline-none focus:border-primary/30 min-h-25 resize-none"
                   placeholder="자기소개를 입력해주세요."
                   autoFocus
                 />
@@ -816,7 +816,7 @@ export default function ProfilePage() {
       {/* --- Right Column: Content (Based on Prototype Structure) --- */}
       <div className="flex-1 space-y-8">
         {/* My Projects */}
-        <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
+        <section className="bg-white rounded-4xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
               <AlertTriangle size={20} className="text-primary" /> 나의 개미집
@@ -830,28 +830,38 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {displayedProjects.map((project) => (
-              <div
-                key={project.id}
-                className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50/40"
-              >
-                <img
-                  src={project.coverImage}
-                  alt={project.title}
-                  className="w-full h-28 object-cover"
-                />
-                <div className="p-3">
-                  <h3 className="text-lg font-black text-gray-900 leading-tight line-clamp-1">
-                    {project.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {project.role}
-                  </p>
-                </div>
+          {displayedProjects.length === 0 ? (
+            <div className="py-12 flex flex-col items-center justify-center text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+              <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-gray-300" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-gray-900 font-bold mb-1">공개된 프로젝트가 없습니다.</h3>
+              <p className="text-gray-500 text-sm">현재 모두 비공개 상태이거나, 아직 참여 중인 프로젝트가 없습니다.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {displayedProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50/40"
+                >
+                  <img
+                    src={project.coverImage}
+                    alt={project.title}
+                    className="w-full h-28 object-cover"
+                  />
+                  <div className="p-3">
+                    <h3 className="text-lg font-black text-gray-900 leading-tight line-clamp-1">
+                      {project.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {project.role}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {hasNext && (
             <button
@@ -867,7 +877,7 @@ export default function ProfilePage() {
         </section>
 
         {/* Community Activities */}
-        <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6">
+        <section className="bg-white rounded-4xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
               <TrendingUp size={20} className="text-primary" /> 집단 활동
@@ -887,7 +897,7 @@ export default function ProfilePage() {
           </div>
 
           <div
-            className={`max-h-[680px] overflow-y-auto pr-2 space-y-3 custom-scrollbar transition-opacity ${
+            className={`max-h-170 overflow-y-auto pr-2 space-y-3 custom-scrollbar transition-opacity ${
               isCommunityPublic ? "opacity-100" : "opacity-70"
             }`}
             onScroll={handleActivityScroll}
@@ -1013,7 +1023,7 @@ export default function ProfilePage() {
       {/* Project Visibility Modal */}
       {showProjectVisibilityModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-4xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center">
               <h2 className="text-2xl font-black text-gray-900 tracking-tight">
                 프로젝트 공개 설정
@@ -1054,7 +1064,7 @@ export default function ProfilePage() {
                     <img
                       src={project.coverImage}
                       alt={project.title}
-                      className="w-[72px] h-12 rounded-lg object-cover"
+                      className="w-18 h-12 rounded-lg object-cover"
                     />
 
                     <div className="flex-1 min-w-0">
@@ -1163,30 +1173,30 @@ export default function ProfilePage() {
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">플랜 제한사항</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 월 {user?.planType === "PRO" ? "무제한" : "100개"} 데이터 증강 작업
+                            <Check size={18} className="text-primary shrink-0" /> 월 {user?.planType === "PRO" ? "무제한" : "100개"} 데이터 증강 작업
                           </div>
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> 프로젝트 {user?.planType === "PRO" ? "무제한" : "3개까지"} 생성 가능
+                            <Check size={18} className="text-primary shrink-0" /> 프로젝트 {user?.planType === "PRO" ? "무제한" : "3개까지"} 생성 가능
                           </div>
                           <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                            <Check size={18} className="text-primary flex-shrink-0" /> {user?.planType === "PRO" ? "고급 AI 모델 및 커스텀 설정" : "기본 AI 모델 사용"}
+                            <Check size={18} className="text-primary shrink-0" /> {user?.planType === "PRO" ? "고급 AI 모델 및 커스텀 설정" : "기본 AI 모델 사용"}
                           </div>
                           {user?.planType === "PRO" ? (
                             <>
                               <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                                <Check size={18} className="text-primary flex-shrink-0" /> 우선 지원 및 전용 서버
+                                <Check size={18} className="text-primary shrink-0" /> 우선 지원 및 전용 서버
                               </div>
                               <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
-                                <Check size={18} className="text-primary flex-shrink-0" /> 팀 협업 기능 제공
+                                <Check size={18} className="text-primary shrink-0" /> 팀 협업 기능 제공
                               </div>
                             </>
                           ) : (
                             <>
                               <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                                <X size={18} className="text-gray-300 flex-shrink-0" /> 고급 AI 모델 및 커스텀 설정
+                                <X size={18} className="text-gray-300 shrink-0" /> 고급 AI 모델 및 커스텀 설정
                               </div>
                               <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                                <X size={18} className="text-gray-300 flex-shrink-0" /> 우선 지원 및 전용 서버
+                                <X size={18} className="text-gray-300 shrink-0" /> 우선 지원 및 전용 서버
                               </div>
                             </>
                           )}
@@ -1345,7 +1355,7 @@ export default function ProfilePage() {
 
               {settingsTab === "account" && (
                 <div className="space-y-8 text-center pt-4">
-                  <div className="p-8 bg-gray-50 rounded-3xl border border-gray-100 inline-block mx-auto min-w-[250px]">
+                  <div className="p-8 bg-gray-50 rounded-3xl border border-gray-100 inline-block mx-auto min-w-62.5">
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-widest">
                       연동된 이메일
                     </p>

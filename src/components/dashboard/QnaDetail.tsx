@@ -145,7 +145,7 @@ export default function QnaDetail({ qaPost, onBack }: QnaDetailProps) {
 
           <div className="space-y-4">
             {comments.map((comment) => (
-              <div key={comment.id} className={`p-8 bg-white rounded-[2rem] border ${comment.isExpert ? 'border-primary/20 shadow-lg shadow-primary/5' : 'border-gray-100 shadow-sm'} space-y-6`}>
+              <div key={comment.id} className={`p-8 bg-white rounded-4xl border ${comment.isExpert ? 'border-primary/20 shadow-lg shadow-primary/5' : 'border-gray-100 shadow-sm'} space-y-6`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
                     <ImageWithFallback src={comment.authorAvatar} alt={comment.author} className="w-12 h-12 rounded-2xl shadow-sm" />

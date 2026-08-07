@@ -1,9 +1,12 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
+// 환경 변수(Vercel 등)에서 백엔드 주소를 주입받습니다. 로컬(undefined)일 경우 빈 문자열을 써서 vite proxy(/api/v1)를 태웁니다.
+const SERVER_URL = import.meta.env.VITE_API_URL || '';
+
 // 1. Auth 관련 인스턴스 먼저 선언 (참조 에러 방지)
 export const authApi = axios.create({
-  baseURL: '/auth',
+  baseURL: `${SERVER_URL}/auth`,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -12,7 +15,7 @@ export const authApi = axios.create({
 
 // 2. 기본 API 인스턴스
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: `${SERVER_URL}/api/v1`,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

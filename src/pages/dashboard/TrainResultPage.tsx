@@ -92,21 +92,21 @@ export default function TrainResultPage() {
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-10">
         {/* Metrics Grid (Prototype structure) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
               <Target size={24} />
             </div>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Accuracy</p>
             <p className="text-3xl font-black text-gray-900 italic">94.2%</p>
           </div>
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-6">
               <TrendingUp size={24} />
             </div>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">AUROC</p>
             <p className="text-3xl font-black text-gray-900 italic">0.982</p>
           </div>
-          <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6">
               <Activity size={24} />
             </div>
@@ -130,7 +130,7 @@ export default function TrainResultPage() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="학습 결과에 대한 의견을 공유하세요..."
-              className="w-full p-6 bg-gray-50 border border-transparent rounded-[2rem] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-gray-700 min-h-[120px]"
+              className="w-full p-6 bg-gray-50 border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-gray-700 min-h-[120px]"
             />
             <button 
               onClick={handlePostComment}
@@ -147,7 +147,7 @@ export default function TrainResultPage() {
           <div className="space-y-6 pt-4">
             {comments.map((comment) => (
               <div key={comment.id} className="flex gap-4 group">
-                <img src={comment.avatar} alt={comment.user} className="w-12 h-12 rounded-2xl bg-gray-100 ring-4 ring-gray-50 flex-shrink-0" />
+                <img src={comment.avatar} alt={comment.user} className="w-12 h-12 rounded-2xl bg-gray-100 ring-4 ring-gray-50 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

@@ -4,7 +4,7 @@ import api, { authApi } from '../lib/axios';
 
 const safeEncodeUrl = (url?: string): string => {
   if (!url) return '';
-  if (url.startsWith('/') || url.startsWith('data:')) return url;
+  if (url.startsWith('/') || url.startsWith('data:') || url.includes('X-Amz-Signature')) return url;
   try {
     return encodeURI(decodeURI(url));
   } catch {

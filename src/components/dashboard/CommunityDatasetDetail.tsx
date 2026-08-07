@@ -1,21 +1,28 @@
 import { useState } from 'react';
-import { ArrowLeft, Database, Download, Heart, HardDrive, FileText, Calendar, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
-import ImageWithFallback from '../common/ImageWithFallback';
+import { ArrowLeft, Database, Download, Heart, FileText, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
+
 
 interface CommunityDatasetDetailProps {
   datasetPost: {
-    id: string;
+    datasetId: number;
     title: string;
     description: string;
-    author: string;
-    authorAvatar: string;
+    author: {
+      userId: number;
+      nickname: string;
+      profileImageUrl: string;
+    };
     tags: string[];
     fileSize: string;
     fileCount: number;
     downloadCount: number;
-    upvotes: number;
-    uploadDate: string;
+    isExpertVerified?: boolean;
     license: string;
+    usageExample?: string;
+    createdAt: string;
   };
   onBack: () => void;
 }
@@ -28,7 +35,6 @@ interface FileItem {
 
 export default function CommunityDatasetDetail({ datasetPost, onBack }: CommunityDatasetDetailProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   const sampleFiles: FileItem[] = [
     { name: 'train_images.zip', size: '2.3 GB', type: 'Archive' },
@@ -68,7 +74,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
         {/* Dataset Header Card */}
         <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm space-y-8">
           <div className="flex flex-col md:flex-row gap-10">
-            <div className="w-32 h-32 bg-primary/10 rounded-[2.5rem] flex items-center justify-center flex-shrink-0">
+            <div className="w-32 h-32 bg-primary/10 rounded-[2.5rem] flex items-center justify-center shrink-0">
               <Database className="w-16 h-16 text-primary" />
             </div>
             <div className="flex-1 space-y-4">
@@ -101,7 +107,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
             <div className="space-y-1">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">추천 수</p>
               <p className="text-xl font-black text-primary flex items-center justify-center gap-1">
-                <Heart size={20} fill="currentColor" /> {datasetPost.upvotes}
+                <Heart size={20} fill="currentColor" /> {datasetPost.downloadCount}
               </p>
             </div>
           </div>
@@ -137,19 +143,23 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
             {/* Usage Example */}
             <div className="bg-gray-900 rounded-[2.5rem] p-10 shadow-2xl space-y-6">
               <h2 className="text-xl font-black text-white flex items-center gap-3">
-                <Code className="text-primary" /> Python API 사용 가이드
+                <Code className="text-primary" /> 작성자 활용 가이드
               </h2>
-              <div className="bg-black/30 rounded-2xl p-6 font-mono text-sm text-primary/90 overflow-x-auto">
-                <pre>
-                  <code>{`import biffusion\n\n# 데이터셋 불러오기\ndataset = biffusion.load_dataset('${datasetPost.id}')\n\n# 증강 파이프라인 구성\naugmented = dataset.augment(\n    method='adaptive_diffusion',\n    count=5000\n)\n\n# 학습 데이터로 활용\nprint(f"Dataset ready: {len(augmented)} samples")`}</code>
-                </pre>
+              <div className="bg-black/30 rounded-2xl p-6 font-mono text-sm text-gray-300 overflow-x-auto whitespace-pre-wrap leading-relaxed prose prose-invert prose-pre:bg-transparent prose-pre:p-0 max-w-none">
+                {datasetPost.usageExample ? (
+                  <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                    {datasetPost.usageExample}
+                  </ReactMarkdown>
+                ) : (
+                  <span className="text-gray-500 italic">작성자가 등록한 활용 가이드가 없습니다.</span>
+                )}
               </div>
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm space-y-6">
+            <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm space-y-6">
               <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
                 <Info size={18} className="text-primary" /> 상세 정보
               </h3>
@@ -160,19 +170,19 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">업로드 날짜</span>
-                  <span className="font-bold text-gray-900">{datasetPost.uploadDate}</span>
+                  <span className="font-bold text-gray-900">{datasetPost.createdAt?.split('T')[0] || '-'}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm pt-4 border-t border-gray-50">
                   <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">작성자</span>
                   <div className="flex items-center gap-2">
-                    <img src={datasetPost.authorAvatar} alt={datasetPost.author} className="w-6 h-6 rounded-full" />
-                    <span className="font-bold text-gray-900">{datasetPost.author}</span>
+                    <img src={datasetPost.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={datasetPost.author?.nickname || 'Unknown'} className="w-6 h-6 rounded-full" />
+                    <span className="font-bold text-gray-900">{datasetPost.author?.nickname || 'Unknown'}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-[2rem] p-8 border border-blue-100 space-y-4">
+            <div className="bg-blue-50 rounded-4xl p-8 border border-blue-100 space-y-4">
               <h3 className="text-lg font-black text-blue-900 flex items-center gap-2">
                 <CheckCircle size={20} /> 활용 가이드
               </h3>

@@ -100,7 +100,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-8 py-10 space-y-10">
-        <div className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm grid md:grid-cols-2">
+        <div className="bg-white rounded-4xl overflow-hidden border border-gray-100 shadow-sm grid md:grid-cols-2">
           <div className="aspect-video md:aspect-auto bg-gray-50">
             <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover" />
           </div>
@@ -145,7 +145,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
         </div>
 
         {/* Tab Content Area */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-8 pt-8 border-b border-gray-50 flex gap-8">
             {(['overview', 'config', 'reviews'] as const).map(tab => (
               <button
@@ -178,7 +178,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {recipe.overview.features.map((feature, i) => (
                           <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                            <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
                               <Check size={14} />
                             </div>
                             <span className="text-sm font-bold text-gray-700">{feature}</span>
@@ -189,12 +189,12 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                   </div>
 
                   <div className="space-y-6">
-                    <div className="p-8 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6">
+                    <div className="p-8 bg-primary/5 rounded-4xl border border-primary/10 space-y-6">
                       <h4 className="text-lg font-black text-primary">추천 활용 사례</h4>
                       <ul className="space-y-4">
                         {recipe.overview.recommendations.map((rec, i) => (
                           <li key={i} className="flex gap-3 text-sm font-bold text-gray-600">
-                            <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 flex-shrink-0" />
+                            <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 shrink-0" />
                             {rec}
                           </li>
                         ))}
@@ -204,7 +204,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                 </div>
 
                 {isAuthor && (
-                  <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-6">
+                  <div className="p-8 bg-gray-50 rounded-4xl border border-gray-100 space-y-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-black text-gray-900">작성자 관리 도구</h3>
                       <div className="px-4 py-1.5 bg-gray-200 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest">

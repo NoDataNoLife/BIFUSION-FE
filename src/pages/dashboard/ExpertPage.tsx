@@ -189,7 +189,7 @@ export default function ExpertDashboard() {
       </div>
 
       {/* Main List Section */}
-      <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Tabs */}
         <div className="px-8 pt-8 border-b border-gray-50 flex items-center justify-between">
           <div className="flex gap-8">

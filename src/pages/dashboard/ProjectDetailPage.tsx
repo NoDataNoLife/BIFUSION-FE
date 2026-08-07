@@ -265,7 +265,7 @@ export default function ProjectDetailPage() {
         );
       case "Processing":
         return (
-          <div className="flex flex-col gap-1.5 min-w-[120px]">
+          <div className="flex flex-col gap-1.5 min-w-30">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100 self-start">
               <Loader className="w-3 h-3 animate-spin" /> {progress}% 진행중
             </span>
@@ -384,7 +384,7 @@ export default function ProjectDetailPage() {
 
       <div className="max-w-7xl mx-auto px-8 py-8 space-y-8">
         {/* Cover Image */}
-        <section className="relative h-64 md:h-72 rounded-[2rem] overflow-hidden border border-gray-200 shadow-sm">
+        <section className="relative h-64 md:h-72 rounded-4xl overflow-hidden border border-gray-200 shadow-sm">
           <img
             src={coverImage}
             alt={currentProject?.title}

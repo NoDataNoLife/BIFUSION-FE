@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Users, MapPin, Briefcase, Clock, CheckCircle, Send, Calendar } from 'lucide-react';
+import api from '../../lib/axios';
 
 interface RecruitmentDetailProps {
   recruitmentPost: {
@@ -17,12 +18,28 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
   const [applicationName, setApplicationName] = useState('');
   const [applicationEmail, setApplicationEmail] = useState('');
   const [applicationMessage, setApplicationMessage] = useState('');
+  const [resumeUrl, setResumeUrl] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitApplication = (e: React.FormEvent) => {
+  const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (applicationName && applicationEmail && applicationMessage) {
+    if (!applicationName || !applicationEmail || !applicationMessage) return;
+
+    setIsSubmitting(true);
+    try {
+      await api.post(`/community/recruitments/${recruitmentPost.id}/apply`, {
+        fullName: applicationName,
+        email: applicationEmail,
+        resumeUrl: resumeUrl || null,
+        motivation: applicationMessage,
+      });
       setIsSubmitted(true);
+    } catch (error) {
+      console.error('지원 실패:', error);
+      alert('지원에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -30,7 +47,7 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8">
         <div className="max-w-xl w-full bg-white rounded-[3rem] p-12 text-center border border-gray-100 shadow-2xl space-y-8">
-          <div className="w-24 h-24 bg-green-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-24 h-24 bg-green-50 rounded-4xl flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle className="w-12 h-12 text-green-500" />
           </div>
           <div className="space-y-2">
@@ -67,7 +84,7 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
         {/* Job Header */}
         <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm space-y-8">
           <div className="flex flex-col md:flex-row md:items-center gap-8">
-            <div className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center flex-shrink-0">
+            <div className="w-24 h-24 bg-primary/10 rounded-4xl flex items-center justify-center shrink-0">
               <Users className="w-12 h-12 text-primary" />
             </div>
             <div className="space-y-4 flex-1">
@@ -101,19 +118,19 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-6">
+              <div className="p-8 bg-gray-50 rounded-4xl border border-gray-100 space-y-6">
                 <h3 className="text-lg font-black text-gray-900">핵심 자격 요건</h3>
                 <ul className="space-y-4">
                   {['의료 AI 또는 딥러닝 관련 기초 지식', '팀 협업 및 원활한 커뮤니케이션 능력', '새로운 기술에 대한 호기심과 학습 의지', '프로젝트 일정 준수 및 책임감'].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                       <span className="text-gray-600 font-medium text-sm leading-relaxed">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="p-8 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6">
+              <div className="p-8 bg-primary/5 rounded-4xl border border-primary/10 space-y-6">
                 <h3 className="text-lg font-black text-primary">팀 활동 혜택</h3>
                 <div className="grid grid-cols-1 gap-4">
                   {[
@@ -122,7 +139,7 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
                     { label: '논문 공동 저자', desc: '연구 성과에 따른 논문 참여 기회 제공' }
                   ].map((benefit, i) => (
                     <div key={i} className="flex gap-4">
-                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm shrink-0">
                         <Calendar size={20} />
                       </div>
                       <div>
@@ -181,13 +198,24 @@ export default function RecruitmentDetail({ recruitmentPost, onBack }: Recruitme
               />
             </div>
 
+            <div className="space-y-3">
+              <label className="text-sm font-black text-gray-400 uppercase tracking-widest ml-2">이력서 URL <span className="text-gray-600 normal-case tracking-normal">(선택)</span></label>
+              <input
+                type="url"
+                value={resumeUrl}
+                onChange={(e) => setResumeUrl(e.target.value)}
+                placeholder="https://drive.google.com/..."
+                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+              />
+            </div>
+
             <div className="flex justify-end pt-4 border-t border-white/10">
               <button
                 type="submit"
-                disabled={!applicationName || !applicationEmail || !applicationMessage}
-                className="flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-[2rem] font-black text-lg hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                disabled={isSubmitting || !applicationName || !applicationEmail || !applicationMessage}
+                className="flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-4xl font-black text-lg hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
               >
-                <Send size={24} /> 지원서 제출하기
+                <Send size={24} /> {isSubmitting ? '제출 중...' : '지원서 제출하기'}
               </button>
             </div>
           </form>

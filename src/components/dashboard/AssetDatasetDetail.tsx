@@ -75,7 +75,7 @@ export default function AssetDatasetDetail({
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const handleDeleteConfirm = () => {
-    onDelete?.(dataset.id);
+    onDelete?.();
     setShowDeleteConfirm(false);
   };
 
@@ -149,7 +149,6 @@ export default function AssetDatasetDetail({
               >
                 {dataset.type}
               </span>
-              {verificationStatus === "verified" && (
             </div>
 
             <div className="flex items-center gap-4">

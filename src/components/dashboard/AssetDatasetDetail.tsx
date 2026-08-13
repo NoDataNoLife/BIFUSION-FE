@@ -18,7 +18,9 @@ import {
   Award,
   CheckCircle,
   AlertCircle,
+  ShieldCheck,
 } from "lucide-react";
+import ExpertVerificationCard, { VerificationStatus } from "../community/ExpertVerificationCard";
 
 interface AssetDatasetDetailProps {
   dataset: {
@@ -37,7 +39,7 @@ interface AssetDatasetDetailProps {
     augmentationMethod?: string;
     generationTime?: string;
     generationJobId?: string;
-    verificationStatus?: "none" | "pending" | "verified";
+    verificationStatus?: VerificationStatus;
   };
   onBack: () => void;
   onDelete: () => void;
@@ -69,11 +71,11 @@ export default function AssetDatasetDetail({
     dataset.description || "",
   );
   const [newTags, setNewTags] = useState(dataset.tags || []);
-  const [verificationStatus] = useState(dataset.verificationStatus || "none");
+  const [verificationStatus] = useState<VerificationStatus>(dataset.verificationStatus || "NONE");
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const handleDeleteConfirm = () => {
-    onDelete?.(dataset.id);
+    onDelete?.();
     setShowDeleteConfirm(false);
   };
 
@@ -147,16 +149,19 @@ export default function AssetDatasetDetail({
               >
                 {dataset.type}
               </span>
-              {verificationStatus === "verified" && (
-                <span className="px-3 py-1 rounded-full text-[10px] font-black bg-primary/10 text-primary flex items-center gap-1 uppercase tracking-widest">
-                  <Award size={12} /> 전문가 검증됨
-                </span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <h1 className="text-4xl font-black text-foreground tracking-tight">
+                {dataset.name}
+              </h1>
+              {verificationStatus === 'COMPLETED' && (
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap">
+                  <ShieldCheck size={14} /> Expert Certified
+                </div>
               )}
             </div>
 
-            <h1 className="text-4xl font-black text-foreground tracking-tight">
-              {dataset.name}
-            </h1>
             <p className="text-muted-foreground font-medium leading-relaxed max-w-2xl">
               {dataset.description ||
                 (dataset.type === "augmented"
@@ -278,21 +283,11 @@ export default function AssetDatasetDetail({
             </div>
 
             {/* Expert Section */}
-            <div className="bg-primary rounded-4xl p-8 text-white shadow-xl shadow-primary/20">
-              <h3 className="text-lg font-black mb-4 flex items-center gap-2">
-                <Award size={20} /> 전문가 검증
-              </h3>
-              <p className="text-white/80 text-sm font-medium leading-relaxed mb-6">
-                품질이 검증된 데이터셋은 연구 신뢰도를 높여줍니다. 전문가에게
-                검증을 요청하세요.
-              </p>
-              <button 
-                onClick={() => setShowVerificationModal(true)}
-                className="w-full py-4 bg-card text-primary rounded-2xl font-black text-sm hover:bg-primary-foreground transition-all shadow-lg active:scale-95"
-              >
-                검증 신청하기
-              </button>
-            </div>
+            <ExpertVerificationCard 
+              status={verificationStatus}
+              onRequestVerification={() => setShowVerificationModal(true)}
+              onViewResults={() => alert('검증 결과 모달 오픈 (Mock)')}
+            />
           </div>
         </div>
       </div>

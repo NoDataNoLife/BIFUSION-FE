@@ -1,5 +1,6 @@
 import { X, Award, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useAuthStore } from '../../../store/useAuthStore';
 
 interface VerificationRequestModalProps {
   onClose: () => void;
@@ -10,10 +11,12 @@ interface VerificationRequestModalProps {
 export default function VerificationRequestModal({ onClose, onSubmit, assetTitle }: VerificationRequestModalProps) {
   const [reason, setReason] = useState('');
   const [reward, setReward] = useState<number>(500);
+  const { user } = useAuthStore();
+  const currentPoints = user?.points || 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reason.trim()) return;
+    if (!reason.trim() || reward > currentPoints) return;
     onSubmit(reason, reward);
   };
 
@@ -53,10 +56,10 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
           <form id="verification-form" onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground">
-                검증 요청 사항 (필수)
+                검증 요청 메모 (필수)
               </label>
               <p className="text-xs text-muted-foreground mb-2">
-                어떤 부분을 중점적으로 검토해야 하는지 구체적으로 적어주시면 더 정확한 피드백을 받을 수 있습니다.
+                전문가가 무엇을 중점적으로 검토해야 하는지 적어주세요.
               </p>
               <textarea
                 value={reason}
@@ -69,8 +72,10 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground flex justify-between items-end">
-                <span>희망 제공 리워드</span>
-                <span className="text-xs text-muted-foreground font-normal">보유 포인트: 1,500 P</span>
+                <span>리워드(포인트) 설정</span>
+                <span className={`text-xs font-bold ${reward > currentPoints ? 'text-red-500' : 'text-primary'}`}>
+                  내 보유 포인트: {currentPoints.toLocaleString()} P
+                </span>
               </label>
               <div className="relative">
                 <input
@@ -79,12 +84,15 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
                   onChange={(e) => setReward(Number(e.target.value))}
                   min={100}
                   step={100}
-                  className="w-full h-14 px-5 bg-background border border-border rounded-2xl text-foreground font-bold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className={`w-full h-14 px-5 bg-background border ${reward > currentPoints ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-primary'} rounded-2xl text-foreground font-bold focus:outline-none focus:ring-1 transition-all`}
                 />
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
-                  P
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold flex items-center gap-2">
+                  <span>P</span>
                 </div>
               </div>
+              {reward > currentPoints && (
+                <p className="text-xs text-red-500 font-bold mt-1">보유 포인트가 부족합니다.</p>
+              )}
             </div>
           </form>
         </div>
@@ -101,7 +109,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
           <button
             type="submit"
             form="verification-form"
-            disabled={!reason.trim()}
+            disabled={!reason.trim() || reward > currentPoints}
             className="px-8 py-3.5 bg-primary text-primary-foreground rounded-xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             신청하기

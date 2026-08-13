@@ -12,6 +12,7 @@ export interface Recipe {
   viewCount: number;
   downloadCount: number;
   isExpertVerified: boolean;
+  verificationStatus?: 'NONE' | 'PENDING' | 'COMPLETED';
   isFavorited: boolean;
   forkedFrom?: {
     originalRecipeId: number;
@@ -48,6 +49,7 @@ export const ALL_RECIPES: Recipe[] = [
     viewCount: 450,
     downloadCount: 120,
     isExpertVerified: true,
+    verificationStatus: 'COMPLETED',
     isFavorited: false,
     overview: {
       content: '이 레시피는 폐암 진단용 CT 영상의 노이즈를 억제하고 결절(Nodule)의 경계를 명확하게 만드는데 특화되어 있습니다.',

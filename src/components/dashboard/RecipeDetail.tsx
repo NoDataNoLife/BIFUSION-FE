@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import VerificationRequestModal from '../community/modals/VerificationRequestModal';
-import { ArrowLeft, Star, GitFork, Eye, Award, Download, Calendar, MessageCircle, Share2, Check, Trash2, Clock, CheckCircle, AlertCircle, Save } from 'lucide-react';
+import ExpertVerificationCard from '../community/ExpertVerificationCard';
+import { ArrowLeft, Star, GitFork, Eye, Award, Download, Calendar, MessageCircle, Share2, Check, Trash2, Clock, CheckCircle, AlertCircle, Save, ShieldCheck } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { useAssetStore } from '../../store/useAssetStore';
 import { type Recipe } from '../../store/mockData';
@@ -115,8 +116,15 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               )}
             </div>
             
-            <h1 className="text-4xl font-black text-foreground tracking-tight leading-tight">{recipe.title}</h1>
-            <p className="text-muted-foreground font-medium leading-relaxed">{recipe.description}</p>
+            <div className="flex items-center gap-4">
+              <h1 className="text-4xl font-black text-foreground tracking-tight leading-tight">{recipe.title}</h1>
+              {recipe.verificationStatus === 'COMPLETED' && (
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap">
+                  <ShieldCheck size={14} /> Expert Certified
+                </div>
+              )}
+            </div>
+            <p className="text-xl text-muted-foreground font-medium leading-relaxed">{recipe.description}</p>
 
             {/* Author Card */}
             <div className="flex items-center gap-4 p-4 bg-muted rounded-2xl border border-border">
@@ -213,22 +221,11 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                       </div>
                     </div>
                     
-                    {recipe.id === '3' && ( // 임시로 ID 3번(내 레시피)만 검증 신청 가능하게 표시
-                      <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white">
-                            <Award size={24} />
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground">전문가 검증을 신청하세요</p>
-                            <p className="text-sm text-muted-foreground font-medium">검증 완료 시 레시피 신뢰도가 대폭 향상됩니다.</p>
-                          </div>
-                        </div>
-                        <button onClick={() => setShowVerificationModal(true)} className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all text-sm">
-                          신청하기
-                        </button>
-                      </div>
-                    )}
+                    <ExpertVerificationCard 
+                      status={recipe.verificationStatus || 'NONE'} 
+                      onRequestVerification={() => setShowVerificationModal(true)}
+                      onViewResults={() => alert('검증 결과 모달 오픈 (Mock)')}
+                    />
 
                     <div className="bg-red-50 border border-red-100 rounded-2xl p-6 flex items-center justify-between">
                       <div>

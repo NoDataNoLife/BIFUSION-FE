@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import VerificationRequestModal from '../community/modals/VerificationRequestModal';
+import { Award } from 'lucide-react';
 import { ArrowLeft, Database, Download, Heart, FileText, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
@@ -35,6 +37,7 @@ interface FileItem {
 
 export default function CommunityDatasetDetail({ datasetPost, onBack }: CommunityDatasetDetailProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const sampleFiles: FileItem[] = [
     { name: 'train_images.zip', size: '2.3 GB', type: 'Archive' },
@@ -193,9 +196,37 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
                 전체 라이선스 읽기 <ExternalLink size={14} />
               </button>
             </div>
+
+            {/* Expert Section */}
+            <div className="bg-primary rounded-4xl p-8 text-white shadow-xl shadow-primary/20">
+              <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+                <Award size={20} /> 전문가 검증
+              </h3>
+              <p className="text-white/80 text-sm font-medium leading-relaxed mb-6">
+                커뮤니티에 공유된 데이터셋의 품질 검증을 요청할 수 있습니다.
+              </p>
+              <button 
+                onClick={() => setShowVerificationModal(true)}
+                className="w-full py-4 bg-card text-primary rounded-2xl font-black text-sm hover:bg-primary-foreground transition-all shadow-lg active:scale-95"
+              >
+                검증 신청하기
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {showVerificationModal && (
+        <VerificationRequestModal
+          assetTitle={datasetPost.title}
+          onClose={() => setShowVerificationModal(false)}
+          onSubmit={(reason, reward) => {
+            console.log("Verification requested:", { reason, reward });
+            // TODO: Call API
+            setShowVerificationModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

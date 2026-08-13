@@ -41,6 +41,10 @@ export interface DatasetListResponse {
   createdAt: string;
 }
 
+export interface DatasetDetailResponse extends DatasetListResponse {
+  usageExample?: string;
+}
+
 export interface ApplicationResponse {
   applicationId: number;
   applicant: AuthorInfo;
@@ -87,6 +91,7 @@ interface CommunityStore {
 
   qnaDetail: ExpertQnADetailResponse | null;
   recruitmentDetail: RecruitmentDetailResponse | null;
+  datasetDetail: DatasetDetailResponse | null;
   
   isLoadingQna: boolean;
   isLoadingRecruitment: boolean;
@@ -105,6 +110,8 @@ interface CommunityStore {
   
   fetchRecruitmentDetail: (recruitmentId: number) => Promise<void>;
   updateApplicationStatus: (recruitmentId: number, applicationId: number, status: string) => Promise<void>;
+  
+  fetchDatasetDetail: (datasetId: number) => Promise<void>;
 }
 
 export const useCommunityStore = create<CommunityStore>((set) => ({
@@ -114,6 +121,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
 
   qnaDetail: null,
   recruitmentDetail: null,
+  datasetDetail: null,
 
   isLoadingQna: false,
   isLoadingRecruitment: false,
@@ -171,7 +179,6 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   createQnaAnswer: async (qnaId: number, content: string) => {
     try {
       await api.post(`/community/qna/${qnaId}/answers`, { content });
-      // 답변 달고 나면 상세 정보를 다시 불러와서 최신 상태로 갱신
       const store = useCommunityStore.getState();
       await store.fetchQnaDetail(qnaId);
     } catch (error: any) {
@@ -187,6 +194,16 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
       set({ recruitmentDetail: response.data.data, isLoadingDetail: false });
     } catch (error: any) {
       set({ error: error.message || 'Failed to fetch Recruitment detail', isLoadingDetail: false });
+    }
+  },
+
+  fetchDatasetDetail: async (datasetId: number) => {
+    set({ isLoadingDetail: true, error: null });
+    try {
+      const response = await api.get<{ data: DatasetDetailResponse }>(`/community/datasets/${datasetId}`);
+      set({ datasetDetail: response.data.data, isLoadingDetail: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch Dataset detail', isLoadingDetail: false });
     }
   },
 

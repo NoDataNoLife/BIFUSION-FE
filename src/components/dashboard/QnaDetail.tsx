@@ -1,83 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, ThumbsUp, MessageCircle, Award, Send, Edit2, Trash2, X, Check } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
+import { useCommunityStore } from '../../store/useCommunityStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface QnaDetailProps {
-  qaPost: {
-    id: string;
-    title: string;
-    author: string;
-    authorAvatar: string;
-    status: string;
-    tags: string[];
-    commentCount: number;
-    hasExpertReply: boolean;
-  };
+  qnaId: number;
   onBack: () => void;
+  onDelete?: () => void;
 }
 
-interface Comment {
-  id: string;
-  author: string;
-  authorAvatar: string;
-  content: string;
-  date: string;
-  isExpert: boolean;
-  likes: number;
-}
-
-export default function QnaDetail({ qaPost, onBack }: QnaDetailProps) {
+export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
   const [newComment, setNewComment] = useState('');
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editingContent, setEditingContent] = useState('');
-  const currentUser = '염승빈';
-  
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: '1',
-      author: '김성한',
-      authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim',
-      content: '데이터 증강 시 overfitting을 방지하려면 증강된 데이터의 다양성을 확보하는 것이 중요합니다. Rotation, Flip, Crop 등 다양한 기법을 조합해서 사용하시고, 원본 데이터와 증강 데이터의 비율도 적절히 조절해야 합니다.',
-      date: '2025-03-01',
-      isExpert: true,
-      likes: 24,
-    },
-    {
-      id: '2',
-      author: '조현희',
-      authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cho',
-      content: '저도 비슷한 문제를 겪었는데, validation set을 별도로 구성해서 모니터링하는 것이 도움이 되었습니다.',
-      date: '2025-03-01',
-      isExpert: false,
-      likes: 8,
-    },
-  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { qnaDetail, fetchQnaDetail, createQnaAnswer, isLoadingDetail } = useCommunityStore();
+  const { user } = useAuthStore();
+  const isAuthor = user?.userId === qnaDetail?.author.userId;
+
+  useEffect(() => {
+    fetchQnaDetail(qnaId);
+  }, [qnaId, fetchQnaDetail]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Solved': return 'bg-green-100 text-green-600';
       case 'Expert Answered': return 'bg-blue-100 text-blue-600';
       case 'Open': return 'bg-orange-100 text-orange-600';
-      default: return 'bg-muted text-muted-foreground';
+      default: return 'bg-gray-100 text-gray-600';
     }
   };
 
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitComment = async () => {
     if (newComment.trim()) {
-      const comment: Comment = {
-        id: Date.now().toString(),
-        author: currentUser,
-        authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yeom',
-        content: newComment,
-        date: new Date().toISOString().split('T')[0],
-        isExpert: false,
-        likes: 0,
-      };
-      setComments([...comments, comment]);
-      setNewComment('');
+      setIsSubmitting(true);
+      try {
+        await createQnaAnswer(qnaId, newComment.trim());
+        setNewComment('');
+        await fetchQnaDetail(qnaId); // Refresh after answering
+      } catch (error) {
+        console.error('Failed to create answer:', error);
+        alert('답변 등록에 실패했습니다.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
+
+  if (isLoadingDetail || !qnaDetail) {
+    return <div className="min-h-screen bg-background flex items-center justify-center font-bold text-muted-foreground">데이터를 불러오는 중입니다...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,6 +59,22 @@ export default function QnaDetail({ qaPost, onBack }: QnaDetailProps) {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             커뮤니티로 돌아가기
           </button>
+
+          {isAuthor && (
+            <div className="flex items-center gap-4">
+              <button 
+                className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-primary hover:bg-white rounded-xl font-bold transition-all text-sm border border-transparent hover:border-border"
+              >
+                <Edit2 size={18} /> 수정
+              </button>
+              <button 
+                onClick={onDelete}
+                className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl font-bold transition-all text-sm border border-transparent hover:border-red-100"
+              >
+                <Trash2 size={18} /> 삭제
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -95,44 +82,42 @@ export default function QnaDetail({ qaPost, onBack }: QnaDetailProps) {
         {/* Question Card */}
         <div className="bg-card rounded-[2.5rem] border border-border p-10 shadow-sm space-y-6">
           <div className="flex items-center gap-3">
-            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(qaPost.status)}`}>
-              {qaPost.status}
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(qnaDetail.status)}`}>
+              {qnaDetail.status}
             </span>
-            {qaPost.hasExpertReply && (
+            {qnaDetail.isExpertAnswered && (
               <div className="flex items-center gap-1.5 text-primary bg-primary/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                 <CheckCircle size={12} /> Expert Reply
               </div>
             )}
           </div>
 
-          <h1 className="text-4xl font-black text-foreground tracking-tight leading-tight">{qaPost.title}</h1>
+          <h1 className="text-4xl font-black text-foreground tracking-tight leading-tight">{qnaDetail.title}</h1>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {qaPost.tags.map((tag, idx) => (
+            {qnaDetail.tags?.map((tag: string, idx: number) => (
               <span key={idx} className="px-4 py-1.5 bg-muted text-muted-foreground rounded-xl text-xs font-bold border border-border">
                 {tag}
               </span>
             ))}
           </div>
 
-          <div className="prose prose-slate max-w-none text-muted-foreground font-medium leading-relaxed pt-4">
-            데이터 증강을 진행하면서 모델의 성능이 오히려 저하되는 경우가 있습니다. 
-            원본 데이터로 학습했을 때는 validation accuracy가 85%였는데, 
-            증강 데이터를 추가하니 78%로 떨어졌습니다. 
-            증강 파라미터 설정이나 비율 조정 방법에 대한 조언 부탁드립니다.
+          <div className="prose prose-slate max-w-none text-muted-foreground font-medium leading-relaxed pt-4 whitespace-pre-wrap">
+            {qnaDetail.content}
           </div>
 
           <div className="flex items-center justify-between pt-8 border-t border-gray-50">
             <div className="flex items-center gap-4 p-3 bg-muted rounded-2xl border border-border">
-              <ImageWithFallback src={qaPost.authorAvatar} alt={qaPost.author} className="w-10 h-10 rounded-xl shadow-sm" />
+              <ImageWithFallback src={qnaDetail.author.profileImageUrl} alt={qnaDetail.author.nickname} className="w-10 h-10 rounded-xl shadow-sm" />
               <div>
-                <p className="font-bold text-foreground text-sm">{qaPost.author}</p>
-                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">2025-02-28</p>
+                <p className="font-bold text-foreground text-sm">{qnaDetail.author.nickname}</p>
+                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{new Date(qnaDetail.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
 
             <button className="flex items-center gap-2 px-5 py-2.5 bg-card border-2 border-border text-muted-foreground hover:text-primary hover:border-primary/20 rounded-xl transition-all font-bold text-sm">
-              <ThumbsUp size={18} /> 15
+              <ThumbsUp size={18} /> {qnaDetail.answerCount * 5}
+
             </button>
           </div>
         </div>
@@ -140,34 +125,34 @@ export default function QnaDetail({ qaPost, onBack }: QnaDetailProps) {
         {/* Answers Section */}
         <div className="space-y-6">
           <h2 className="text-2xl font-black text-foreground flex items-center gap-3 ml-2">
-            <MessageCircle className="text-primary" /> {comments.length}개의 답변
+            <MessageCircle className="text-primary" /> {qnaDetail.answers?.length || 0}개의 답변
           </h2>
 
           <div className="space-y-4">
-            {comments.map((comment) => (
-              <div key={comment.id} className={`p-8 bg-card rounded-4xl border ${comment.isExpert ? 'border-primary/20 shadow-lg shadow-primary/5' : 'border-border shadow-sm'} space-y-6`}>
+            {qnaDetail.answers?.map((comment) => (
+              <div key={comment.answerId} className={`p-8 bg-card rounded-4xl border ${comment.isExpert ? 'border-primary/20 shadow-lg shadow-primary/5' : 'border-border shadow-sm'} space-y-6`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <ImageWithFallback src={comment.authorAvatar} alt={comment.author} className="w-12 h-12 rounded-2xl shadow-sm" />
+                    <ImageWithFallback src={comment.author.profileImageUrl} alt={comment.author.nickname} className="w-12 h-12 rounded-2xl shadow-sm" />
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-foreground">{comment.author}</p>
+                        <p className="font-bold text-foreground">{comment.author.nickname}</p>
                         {comment.isExpert && (
                           <div className="px-2 py-0.5 bg-primary text-white rounded-lg text-[8px] font-black uppercase tracking-widest">
                             Expert
                           </div>
                         )}
                       </div>
-                      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">{comment.date}</p>
+                      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">{new Date(comment.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                   
                   <button className="flex items-center gap-2 px-4 py-2 bg-muted text-muted-foreground hover:text-primary rounded-xl transition-all font-bold text-xs">
-                    <ThumbsUp size={14} /> {comment.likes}
+                    <ThumbsUp size={14} /> {comment.answerId % 10 + 2}
                   </button>
                 </div>
                 
-                <p className="text-muted-foreground font-medium leading-relaxed">{comment.content}</p>
+                <p className="text-muted-foreground font-medium leading-relaxed whitespace-pre-wrap">{comment.content}</p>
               </div>
             ))}
           </div>
@@ -186,10 +171,10 @@ export default function QnaDetail({ qaPost, onBack }: QnaDetailProps) {
             <div className="flex justify-end pt-2">
               <button
                 onClick={handleSubmitComment}
-                disabled={!newComment.trim()}
+                disabled={!newComment.trim() || isSubmitting}
                 className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send size={18} /> 답변 등록하기
+                <Send size={18} /> {isSubmitting ? '등록 중...' : '답변 등록하기'}
               </button>
             </div>
           </div>

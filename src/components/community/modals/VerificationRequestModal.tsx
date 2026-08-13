@@ -81,7 +81,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
                 <input
                   type="number"
                   value={reward}
-                  onChange={(e) => setReward(e.target.value === '' ? '' : Number(e.target.value))}
+                  onChange={(e) => setReward(e.target.value.replace(/^0+(?=\d)/, ''))}
                   min={100}
                   step={100}
                   className={`w-full h-14 px-5 bg-background border ${Number(reward) > currentPoints ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-primary'} rounded-2xl text-foreground font-bold focus:outline-none focus:ring-1 transition-all`}

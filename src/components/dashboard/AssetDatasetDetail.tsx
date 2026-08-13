@@ -21,6 +21,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import ExpertVerificationCard, { VerificationStatus } from "../community/ExpertVerificationCard";
+import VerificationRequestModal from "../community/modals/VerificationRequestModal";
+import VerificationResultModal from "../community/modals/VerificationResultModal";
 
 interface AssetDatasetDetailProps {
   dataset: {
@@ -73,6 +75,7 @@ export default function AssetDatasetDetail({
   const [newTags, setNewTags] = useState(dataset.tags || []);
   const [verificationStatus] = useState<VerificationStatus>(dataset.verificationStatus || "NONE");
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
 
   const handleDeleteConfirm = () => {
     onDelete?.();
@@ -286,7 +289,7 @@ export default function AssetDatasetDetail({
             <ExpertVerificationCard 
               status={verificationStatus}
               onRequestVerification={() => setShowVerificationModal(true)}
-              onViewResults={() => alert('검증 결과 모달 오픈 (Mock)')}
+              onViewResults={() => setShowResultModal(true)}
             />
           </div>
         </div>
@@ -326,10 +329,16 @@ export default function AssetDatasetDetail({
           assetTitle={dataset.name}
           onClose={() => setShowVerificationModal(false)}
           onSubmit={(reason, reward) => {
-            console.log("Verification requested:", { reason, reward });
-            // TODO: Call API
+            console.log('Verification requested:', { reason, reward });
             setShowVerificationModal(false);
           }}
+        />
+      )}
+
+      {showResultModal && (
+        <VerificationResultModal
+          assetTitle={dataset.name}
+          onClose={() => setShowResultModal(false)}
         />
       )}
     </div>

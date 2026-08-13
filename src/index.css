@@ -23,18 +23,18 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 .dark {
-  --background: #0f1115;
-  --foreground: #f8fafc;
-  --border: #272a30;
-  --muted: #1e2128;
-  --muted-foreground: #94a3b8;
-  --card: #181a20;
-  --card-foreground: #f8fafc;
+  --background: #141210;
+  --foreground: #f5f0eb;
+  --border: #332d29;
+  --muted: #24201c;
+  --muted-foreground: #a3968d;
+  --card: #1c1815;
+  --card-foreground: #f5f0eb;
 
   --primary: #f0a53a;
   --primary-foreground: #2b1c0a;
-  --secondary: #272a30;
-  --secondary-foreground: #f8fafc;
+  --secondary: #2e2824;
+  --secondary-foreground: #f5f0eb;
   --accent: #c8831d;
   --accent-foreground: #2b1c0a;
 }

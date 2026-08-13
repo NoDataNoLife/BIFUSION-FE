@@ -1118,20 +1118,20 @@ export default function ProfilePage() {
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <div className="bg-card rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="px-8 py-6 border-b border-border flex justify-between items-center bg-[#F8FAFC]">
+            <div className="px-8 py-6 border-b border-border flex justify-between items-center bg-muted/30">
               <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">
                 계정 설정
               </h2>
               <button
                 onClick={() => setShowSettingsModal(false)}
-                className="p-2.5 hover:bg-white rounded-xl transition-all"
+                className="p-2.5 hover:bg-muted rounded-xl transition-all"
               >
                 <X size={24} className="text-muted-foreground" />
               </button>
             </div>
 
             {/* Modal Tabs */}
-            <div className="px-8 border-b border-border flex gap-8 bg-[#F8FAFC]">
+            <div className="px-8 border-b border-border flex gap-8 bg-muted/30">
               {settingsTabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -1139,7 +1139,7 @@ export default function ProfilePage() {
                   className={`pb-4 flex items-center gap-2 font-bold text-xs uppercase tracking-widest transition-all relative ${
                     settingsTab === tab.id
                       ? "text-primary"
-                      : "text-muted-foreground hover:text-gray-600"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <tab.icon size={16} />

@@ -46,7 +46,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack }: Recruitment
 
   if (isLoadingDetail || !recruitmentDetail) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-xl font-bold text-muted-foreground">데이터를 불러오는 중입니다...</div>
       </div>
     );
@@ -54,7 +54,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack }: Recruitment
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8">
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
         <div className="max-w-xl w-full bg-card rounded-[3rem] p-12 text-center border border-border shadow-2xl space-y-8">
           <div className="w-24 h-24 bg-green-50 rounded-4xl flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle className="w-12 h-12 text-green-500" />
@@ -78,7 +78,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack }: Recruitment
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-8 py-6">

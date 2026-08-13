@@ -48,7 +48,7 @@ function App() {
   if (!isInitialized) {
     // 초기화 중에는 로딩 표시
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );

@@ -442,7 +442,7 @@ export default function ProjectDetailPage() {
         {/* Main Content Area */}
         <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
           {/* Filters Header */}
-          <div className="p-6 border-b border-gray-50 bg-[#F8FAFC]/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-6 border-b border-gray-50 bg-background/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0">
               <button
                 onClick={() => setSelectedTypeFilter("all")}

@@ -23,6 +23,7 @@ interface User {
   nickname: string;
   organization?: string;
   contact?: string;
+  points: number;
   websiteUrl?: string;
   bio?: string;
   createdAt: string;
@@ -304,6 +305,7 @@ export const useAuthStore = create<AuthState>()(
                 createdAt: profileData.createdAt,
                 isExpert: profileData.isExpert,
                 planType: profileData.planType,
+                points: 3000,
                 profileImage: profileData.profileImageUrl ? safeEncodeUrl(profileData.profileImageUrl) : '/defaultUserProfile.png',
               } as User
             }));

@@ -16,7 +16,7 @@ interface Dataset {
   thumbnail: string;
   uploadedAt: string;
   format: string;
-  verificationStatus?: 'none' | 'pending' | 'verified';
+  verificationStatus?: 'NONE' | 'PENDING' | 'COMPLETED';
 }
 
 export default function AssetsPage() {
@@ -37,7 +37,7 @@ export default function AssetsPage() {
       thumbnail: 'https://images.unsplash.com/photo-1682706841289-9d7ddf5eb999?w=800&q=80',
       uploadedAt: '2025-01-28',
       format: 'PNG, CSV',
-      verificationStatus: 'verified',
+      verificationStatus: 'COMPLETED',
     },
     {
       id: 'a1',
@@ -48,7 +48,7 @@ export default function AssetsPage() {
       thumbnail: 'https://images.unsplash.com/photo-1682706841289-9d7ddf5eb999?w=800&q=80',
       uploadedAt: '2025-01-30',
       format: 'PNG, CSV',
-      verificationStatus: 'verified',
+      verificationStatus: 'COMPLETED',
     },
   ];
 

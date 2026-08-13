@@ -11,7 +11,7 @@ interface RecruitmentDetailProps {
 }
 
 export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: RecruitmentDetailProps) {
-  const { recruitmentDetail, isLoadingDetail, fetchRecruitmentDetail, updateApplicationStatus } = useCommunityStore();
+  const { recruitmentDetail, isLoadingDetail, fetchRecruitmentDetail, updateApplicationStatus, error } = useCommunityStore();
   const { user } = useAuthStore();
   const [applicationName, setApplicationName] = useState('');
   const [applicationEmail, setApplicationEmail] = useState('');
@@ -44,6 +44,18 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
       setIsSubmitting(false);
     }
   };
+
+  if (error && !recruitmentDetail) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
+        <div className="text-xl font-bold text-red-500">데이터를 불러오는 데 실패했습니다.</div>
+        <div className="text-muted-foreground">{error}</div>
+        <button onClick={onBack} className="mt-4 px-6 py-2 bg-primary text-white rounded-xl font-bold shadow-sm hover:bg-primary/90 transition-all">
+          돌아가기
+        </button>
+      </div>
+    );
+  }
 
   if (isLoadingDetail || !recruitmentDetail) {
     return (
@@ -181,7 +193,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
         </div>
 
         {/* Conditional Rendering: Application Form or Applicant List */}
-        {user?.userId === recruitmentDetail.author.userId ? (
+        {user?.userId === recruitmentDetail.author?.userId ? (
           <div className="bg-muted rounded-[3rem] p-12 shadow-sm border border-border space-y-10">
             <div className="space-y-2">
               <h2 className="text-3xl font-black text-foreground tracking-tight">지원자 목록</h2>

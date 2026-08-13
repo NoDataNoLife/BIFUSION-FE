@@ -1,16 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import VerificationRequestModal from '../community/modals/VerificationRequestModal';
 import { Award, Edit, Trash2 } from 'lucide-react';
 import { ArrowLeft, Database, Download, Heart, FileText, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
-import { useCommunityStore } from '../../store/useCommunityStore';
 import { useAuthStore } from '../../store/useAuthStore';
 
 
 interface CommunityDatasetDetailProps {
-  datasetId: number;
+  datasetPost: {
+    datasetId: number;
+    title: string;
+    description: string;
+    author: {
+      userId: number;
+      nickname: string;
+      profileImageUrl: string;
+    };
+    tags: string[];
+    fileSize: string;
+    fileCount: number;
+    downloadCount: number;
+    isExpertVerified?: boolean;
+    license: string;
+    usageExample?: string;
+    createdAt: string;
+  };
   onBack: () => void;
   onDelete?: () => void;
 }
@@ -21,16 +37,11 @@ interface FileItem {
   type: string;
 }
 
-export default function CommunityDatasetDetail({ datasetId, onBack, onDelete }: CommunityDatasetDetailProps) {
+export default function CommunityDatasetDetail({ datasetPost, onBack, onDelete }: CommunityDatasetDetailProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
-  const { datasetDetail: datasetPost, fetchDatasetDetail, isLoadingDetail } = useCommunityStore();
   const { user } = useAuthStore();
   const isAuthor = user?.userId === datasetPost?.author.userId;
-
-  useEffect(() => {
-    fetchDatasetDetail(datasetId);
-  }, [datasetId, fetchDatasetDetail]);
 
   const sampleFiles: FileItem[] = [
     { name: 'train_images.zip', size: '2.3 GB', type: 'Archive' },
@@ -46,7 +57,7 @@ export default function CommunityDatasetDetail({ datasetId, onBack, onDelete }: 
     }, 1500);
   };
 
-  if (isLoadingDetail || !datasetPost) {
+  if (!datasetPost) {
     return <div className="min-h-screen bg-background flex items-center justify-center font-bold text-muted-foreground">데이터를 불러오는 중입니다...</div>;
   }
 

@@ -233,9 +233,9 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
             )}
           </div>
         ) : (
-          <div className="bg-gray-900 rounded-[3rem] p-12 shadow-2xl space-y-10">
+          <div className="bg-card rounded-[3rem] border border-border p-12 shadow-sm space-y-10">
             <div className="space-y-2">
-              <h2 className="text-3xl font-black text-white tracking-tight">팀 합류 지원하기</h2>
+              <h2 className="text-3xl font-black text-foreground tracking-tight">팀 합류 지원하기</h2>
               <p className="text-muted-foreground font-medium">당신의 연구 여정을 Bifusion 팀과 함께 시작하세요</p>
             </div>
 
@@ -248,7 +248,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                     value={applicationName}
                     onChange={(e) => setApplicationName(e.target.value)}
                     placeholder="홍길동"
-                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                    className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 transition-all font-medium"
                     required
                   />
                 </div>
@@ -259,7 +259,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                     value={applicationEmail}
                     onChange={(e) => setApplicationEmail(e.target.value)}
                     placeholder="researcher@example.com"
-                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                    className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 transition-all font-medium"
                     required
                   />
                 </div>
@@ -271,7 +271,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                   value={applicationMessage}
                   onChange={(e) => setApplicationMessage(e.target.value)}
                   placeholder="이 프로젝트에 참여하고 싶은 이유와 기여하고 싶은 부분을 자유롭게 적어주세요..."
-                  className="w-full h-48 px-6 py-5 bg-white/5 border border-white/10 rounded-3xl text-white placeholder:text-gray-600 focus:ring-2 focus:ring-primary/50 transition-all font-medium resize-none"
+                  className="w-full h-48 px-6 py-5 bg-muted border border-border rounded-3xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 transition-all font-medium resize-none"
                   required
                 />
               </div>
@@ -283,11 +283,11 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                   value={resumeUrl}
                   onChange={(e) => setResumeUrl(e.target.value)}
                   placeholder="https://drive.google.com/..."
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                  className="w-full px-6 py-4 bg-muted border border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 transition-all font-medium"
                 />
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-white/10">
+              <div className="flex justify-end pt-4 border-t border-border">
                 <button
                   type="submit"
                   disabled={isSubmitting || !applicationName || !applicationEmail || !applicationMessage}

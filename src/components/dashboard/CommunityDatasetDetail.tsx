@@ -1,32 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import VerificationRequestModal from '../community/modals/VerificationRequestModal';
-import { Award } from 'lucide-react';
+import { Award, Edit, Trash2 } from 'lucide-react';
 import { ArrowLeft, Database, Download, Heart, FileText, CheckCircle, Code, Info, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
+import { useCommunityStore } from '../../store/useCommunityStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 
 interface CommunityDatasetDetailProps {
-  datasetPost: {
-    datasetId: number;
-    title: string;
-    description: string;
-    author: {
-      userId: number;
-      nickname: string;
-      profileImageUrl: string;
-    };
-    tags: string[];
-    fileSize: string;
-    fileCount: number;
-    downloadCount: number;
-    isExpertVerified?: boolean;
-    license: string;
-    usageExample?: string;
-    createdAt: string;
-  };
+  datasetId: number;
   onBack: () => void;
+  onDelete?: () => void;
 }
 
 interface FileItem {
@@ -35,9 +21,16 @@ interface FileItem {
   type: string;
 }
 
-export default function CommunityDatasetDetail({ datasetPost, onBack }: CommunityDatasetDetailProps) {
+export default function CommunityDatasetDetail({ datasetId, onBack, onDelete }: CommunityDatasetDetailProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const { datasetDetail: datasetPost, fetchDatasetDetail, isLoadingDetail } = useCommunityStore();
+  const { user } = useAuthStore();
+  const isAuthor = user?.userId === datasetPost?.author.userId;
+
+  useEffect(() => {
+    fetchDatasetDetail(datasetId);
+  }, [datasetId, fetchDatasetDetail]);
 
   const sampleFiles: FileItem[] = [
     { name: 'train_images.zip', size: '2.3 GB', type: 'Archive' },
@@ -53,6 +46,10 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
     }, 1500);
   };
 
+  if (isLoadingDetail || !datasetPost) {
+    return <div className="min-h-screen bg-background flex items-center justify-center font-bold text-muted-foreground">데이터를 불러오는 중입니다...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -63,13 +60,30 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
             커뮤니티로 돌아가기
           </button>
           
-          <button 
-            onClick={handleDownload} 
-            disabled={isDownloading}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all text-sm"
-          >
-            <Download size={18} /> {isDownloading ? '준비 중...' : '데이터셋 다운로드'}
-          </button>
+          <div className="flex items-center gap-4">
+            {isAuthor && (
+              <>
+                <button 
+                  className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-primary hover:bg-white rounded-xl font-bold transition-all text-sm border border-transparent hover:border-border"
+                >
+                  <Edit size={18} /> 수정
+                </button>
+                <button 
+                  onClick={onDelete}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl font-bold transition-all text-sm border border-transparent hover:border-red-100"
+                >
+                  <Trash2 size={18} /> 삭제
+                </button>
+              </>
+            )}
+            <button 
+              onClick={handleDownload} 
+              disabled={isDownloading}
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all text-sm"
+            >
+              <Download size={18} /> {isDownloading ? '준비 중...' : '데이터셋 다운로드'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -154,7 +168,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack }: Communit
                     {datasetPost.usageExample}
                   </ReactMarkdown>
                 ) : (
-                  <span className="text-muted-foreground italic">작성자가 등록한 활용 가이드가 없습니다.</span>
+                  <div className="text-center py-10 font-medium text-muted-foreground">사용 예제가 없습니다.</div>
                 )}
               </div>
             </div>

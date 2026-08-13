@@ -62,15 +62,41 @@ export default function CommunityPage() {
       if (post) return <RecipeDetail recipe={post} onBack={() => setSelectedId(null)} isAuthor={post.author === user?.name} />;
     }
     if (activeTab === 'qa') {
-      const post = mockQAPosts.find(p => p.id === selectedId);
-      if (post) return <QnaDetail qaPost={post} onBack={() => setSelectedId(null)} />;
+      return <QnaDetail 
+        qnaId={Number(selectedId)} 
+        onBack={() => setSelectedId(null)} 
+        onDelete={() => {
+          if (confirm('정말로 이 질문을 삭제하시겠습니까?')) {
+            alert('삭제되었습니다. (Mock)');
+            setSelectedId(null);
+          }
+        }}
+      />;
     }
     if (activeTab === 'recruitment') {
-      return <RecruitmentDetail recruitmentId={Number(selectedId)} onBack={() => setSelectedId(null)} />;
+      return <RecruitmentDetail 
+        recruitmentId={Number(selectedId)} 
+        onBack={() => setSelectedId(null)}
+        onDelete={() => {
+          if (confirm('정말로 이 채용 공고를 삭제하시겠습니까?')) {
+            alert('삭제되었습니다. (Mock)');
+            setSelectedId(null);
+          }
+        }}
+      />;
     }
     if (activeTab === 'datasets') {
       const post = datasetList.find(p => p.datasetId.toString() === selectedId);
-      if (post) return <CommunityDatasetDetail datasetPost={post} onBack={() => setSelectedId(null)} />;
+      if (post) return <CommunityDatasetDetail 
+        datasetId={Number(selectedId)} 
+        onBack={() => setSelectedId(null)} 
+        onDelete={() => {
+          if (confirm('정말로 이 데이터셋을 삭제하시겠습니까?')) {
+            alert('삭제되었습니다. (Mock)');
+            setSelectedId(null);
+          }
+        }}
+      />;
     }
   }
 

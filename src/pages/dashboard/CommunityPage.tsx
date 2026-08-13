@@ -88,7 +88,7 @@ export default function CommunityPage() {
     if (activeTab === 'datasets') {
       const post = datasetList.find(p => p.datasetId.toString() === selectedId);
       if (post) return <CommunityDatasetDetail 
-        datasetId={Number(selectedId)} 
+        datasetPost={post} 
         onBack={() => setSelectedId(null)} 
         onDelete={() => {
           if (confirm('정말로 이 데이터셋을 삭제하시겠습니까?')) {

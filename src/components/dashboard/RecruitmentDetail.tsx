@@ -100,7 +100,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
             커뮤니티로 돌아가기
           </button>
 
-          {user?.userId === recruitmentDetail.author.userId && (
+          {user?.userId === recruitmentDetail.author?.userId && (
             <div className="flex items-center gap-4">
               <button 
                 className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-primary hover:bg-white rounded-xl font-bold transition-all text-sm border border-transparent hover:border-border"
@@ -151,7 +151,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
             <div className="prose prose-slate max-w-none">
               <h2 className="text-2xl font-black text-foreground mb-6">프로젝트 및 포지션 소개</h2>
               <div className="text-muted-foreground font-medium leading-loose whitespace-pre-wrap">
-                {recruitmentDetail.content}
+                {recruitmentDetail.content || recruitmentDetail.description}
               </div>
             </div>
 

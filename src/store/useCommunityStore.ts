@@ -54,7 +54,8 @@ export interface ApplicationResponse {
 }
 
 export interface RecruitmentDetailResponse extends RecruitmentResponse {
-  content: string;
+  content?: string;
+  description?: string;
   author: AuthorInfo;
   applications: ApplicationResponse[];
 }

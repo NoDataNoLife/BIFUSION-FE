@@ -151,8 +151,8 @@ export default function ExpertDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">전문가 대시보드</h1>
-          <p className="text-gray-500 mt-1 font-medium">데이터 증강 결과 검수 및 리워드 관리</p>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">전문가 대시보드</h1>
+          <p className="text-muted-foreground mt-1 font-medium">데이터 증강 결과 검수 및 리워드 관리</p>
         </div>
         <div className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-2xl border border-primary/20">
           <Award className="w-5 h-5" />
@@ -171,25 +171,25 @@ export default function ExpertDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+        <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
           <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-500 mb-6">
             <CheckCircle size={24} />
           </div>
-          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">검수 완료 건수</p>
-          <p className="text-3xl font-black text-gray-900">48 <span className="text-sm font-bold text-gray-300 ml-1">건</span></p>
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">검수 완료 건수</p>
+          <p className="text-3xl font-black text-foreground">48 <span className="text-sm font-bold text-muted-foreground ml-1">건</span></p>
         </div>
 
-        <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+        <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
           <div className="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-500 mb-6">
             <Star size={24} />
           </div>
-          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">피드백 만족도</p>
-          <p className="text-3xl font-black text-gray-900">4.9 <span className="text-sm font-bold text-gray-300 ml-1">/ 5.0</span></p>
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">피드백 만족도</p>
+          <p className="text-3xl font-black text-foreground">4.9 <span className="text-sm font-bold text-muted-foreground ml-1">/ 5.0</span></p>
         </div>
       </div>
 
       {/* Main List Section */}
-      <div className="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-4xl border border-border shadow-sm overflow-hidden">
         {/* Tabs */}
         <div className="px-8 pt-8 border-b border-gray-50 flex items-center justify-between">
           <div className="flex gap-8">
@@ -198,7 +198,7 @@ export default function ExpertDashboard() {
                 key={tab}
                 onClick={() => setSelectedTab(tab)}
                 className={`pb-6 text-sm font-black transition-all relative ${
-                  selectedTab === tab ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+                  selectedTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-600'
                 }`}
               >
                 {tab === 'pending' ? '검수 대기' : tab === 'reviewing' ? '검수 중' : '검수 완료'}
@@ -215,7 +215,7 @@ export default function ExpertDashboard() {
           {filteredRequests.length === 0 ? (
             <div className="py-20 text-center space-y-4">
               <MessageSquare className="w-16 h-16 text-gray-100 mx-auto" />
-              <p className="text-gray-400 font-bold">해당하는 검수 요청이 없습니다.</p>
+              <p className="text-muted-foreground font-bold">해당하는 검수 요청이 없습니다.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -225,11 +225,11 @@ export default function ExpertDashboard() {
                     <div className="flex items-center gap-4">
                       <img src={request.requester.avatar} alt={request.requester.name} className="w-12 h-12 rounded-2xl ring-4 ring-white" />
                       <div>
-                        <p className="font-black text-gray-900">{request.requester.name}</p>
-                        <p className="text-xs text-gray-400 font-bold tracking-tight">{request.requester.email}</p>
+                        <p className="font-black text-foreground">{request.requester.name}</p>
+                        <p className="text-xs text-muted-foreground font-bold tracking-tight">{request.requester.email}</p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-black text-gray-400">{request.id}</span>
+                    <span className="px-3 py-1 bg-card border border-border rounded-lg text-[10px] font-black text-muted-foreground">{request.id}</span>
                   </div>
 
                   <div className="relative aspect-video rounded-2xl overflow-hidden mb-6">
@@ -237,7 +237,7 @@ export default function ExpertDashboard() {
                     <div className="absolute top-4 right-4 px-3 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">{request.dataType}</div>
                   </div>
 
-                  <h3 className="text-lg font-black text-gray-900 mb-2 line-clamp-1">{request.project}</h3>
+                  <h3 className="text-lg font-black text-foreground mb-2 line-clamp-1">{request.project}</h3>
                   <p className="text-xs text-primary font-bold mb-6">요청일: {request.requestDate}</p>
 
                   {request.status === 'pending' ? (

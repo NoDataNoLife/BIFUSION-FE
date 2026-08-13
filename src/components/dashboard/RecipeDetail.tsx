@@ -64,9 +64,9 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+      <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-primary transition-all group font-bold text-sm">
+          <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group font-bold text-sm">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Assets로 돌아가기
           </button>
@@ -77,7 +77,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm border ${
                 forked 
                   ? 'bg-green-50 border-green-200 text-green-600' 
-                  : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50'
+                  : 'bg-card border-border text-foreground hover:bg-muted'
               }`}
             >
               {forked ? <Check className="w-4 h-4" /> : <GitFork className="w-4 h-4" />}
@@ -100,8 +100,8 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-8 py-10 space-y-10">
-        <div className="bg-white rounded-4xl overflow-hidden border border-gray-100 shadow-sm grid md:grid-cols-2">
-          <div className="aspect-video md:aspect-auto bg-gray-50">
+        <div className="bg-card rounded-4xl overflow-hidden border border-border shadow-sm grid md:grid-cols-2">
+          <div className="aspect-video md:aspect-auto bg-muted">
             <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover" />
           </div>
 
@@ -114,28 +114,28 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               )}
             </div>
             
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-tight">{recipe.title}</h1>
-            <p className="text-gray-500 font-medium leading-relaxed">{recipe.description}</p>
+            <h1 className="text-4xl font-black text-foreground tracking-tight leading-tight">{recipe.title}</h1>
+            <p className="text-muted-foreground font-medium leading-relaxed">{recipe.description}</p>
 
             {/* Author Card */}
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="flex items-center gap-4 p-4 bg-muted rounded-2xl border border-border">
               <ImageWithFallback src={recipe.authorAvatar} alt={recipe.author} className="w-12 h-12 rounded-xl ring-4 ring-white shadow-sm" />
               <div>
-                <p className="font-bold text-gray-900">{recipe.author}</p>
-                <p className="text-xs text-gray-400 font-medium">{recipe.createdAt.split('T')[0]} 작성됨</p>
+                <p className="font-bold text-foreground">{recipe.author}</p>
+                <p className="text-xs text-muted-foreground font-medium">{recipe.createdAt.split('T')[0]} 작성됨</p>
               </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-white border border-gray-100 rounded-2xl text-center">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">평점</p>
+              <div className="p-4 bg-card border border-border rounded-2xl text-center">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">평점</p>
                 <p className="text-xl font-black text-yellow-500 flex items-center justify-center gap-1">
                   <Star size={18} fill="currentColor" /> {recipe.rating}
                 </p>
               </div>
-              <div className="p-4 bg-white border border-gray-100 rounded-2xl text-center">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Fork 수</p>
+              <div className="p-4 bg-card border border-border rounded-2xl text-center">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Fork 수</p>
                 <p className="text-xl font-black text-primary flex items-center justify-center gap-1">
                   <GitFork size={18} /> {recipe.forkedCount}
                 </p>
@@ -145,14 +145,14 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
         </div>
 
         {/* Tab Content Area */}
-        <div className="bg-white rounded-4xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-4xl border border-border shadow-sm overflow-hidden">
           <div className="px-8 pt-8 border-b border-gray-50 flex gap-8">
             {(['overview', 'config', 'reviews'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`pb-6 text-sm font-black transition-all relative ${
-                  activeTab === tab ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+                  activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-600'
                 }`}
               >
                 {tab === 'overview' ? '개요' : tab === 'config' ? '설정 정보' : `리뷰 (${reviews.length})`}
@@ -167,21 +167,21 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                 <div className="grid md:grid-cols-3 gap-10">
                   <div className="md:col-span-2 space-y-8">
                     <div className="prose prose-slate max-w-none">
-                      <h3 className="text-2xl font-black text-gray-900 mb-6">연구 배경 및 방법론</h3>
-                      <p className="text-gray-600 font-medium leading-loose whitespace-pre-line">
+                      <h3 className="text-2xl font-black text-foreground mb-6">연구 배경 및 방법론</h3>
+                      <p className="text-muted-foreground font-medium leading-loose whitespace-pre-line">
                         {recipe.overview.content}
                       </p>
                     </div>
                     
                     <div className="space-y-4">
-                      <h4 className="text-lg font-black text-gray-900">핵심 기능</h4>
+                      <h4 className="text-lg font-black text-foreground">핵심 기능</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {recipe.overview.features.map((feature, i) => (
-                          <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                          <div key={i} className="flex items-center gap-3 p-4 bg-muted rounded-2xl border border-border">
                             <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
                               <Check size={14} />
                             </div>
-                            <span className="text-sm font-bold text-gray-700">{feature}</span>
+                            <span className="text-sm font-bold text-foreground">{feature}</span>
                           </div>
                         ))}
                       </div>
@@ -193,7 +193,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                       <h4 className="text-lg font-black text-primary">추천 활용 사례</h4>
                       <ul className="space-y-4">
                         {recipe.overview.recommendations.map((rec, i) => (
-                          <li key={i} className="flex gap-3 text-sm font-bold text-gray-600">
+                          <li key={i} className="flex gap-3 text-sm font-bold text-muted-foreground">
                             <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 shrink-0" />
                             {rec}
                           </li>
@@ -204,10 +204,10 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                 </div>
 
                 {isAuthor && (
-                  <div className="p-8 bg-gray-50 rounded-4xl border border-gray-100 space-y-6">
+                  <div className="p-8 bg-muted rounded-4xl border border-border space-y-6">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-black text-gray-900">작성자 관리 도구</h3>
-                      <div className="px-4 py-1.5 bg-gray-200 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                      <h3 className="text-xl font-black text-foreground">작성자 관리 도구</h3>
+                      <div className="px-4 py-1.5 bg-gray-200 text-muted-foreground rounded-xl text-[10px] font-black uppercase tracking-widest">
                         내 레시피
                       </div>
                     </div>
@@ -219,8 +219,8 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                             <Award size={24} />
                           </div>
                           <div>
-                            <p className="font-bold text-gray-900">전문가 검증을 신청하세요</p>
-                            <p className="text-sm text-gray-500 font-medium">검증 완료 시 레시피 신뢰도가 대폭 향상됩니다.</p>
+                            <p className="font-bold text-foreground">전문가 검증을 신청하세요</p>
+                            <p className="text-sm text-muted-foreground font-medium">검증 완료 시 레시피 신뢰도가 대폭 향상됩니다.</p>
                           </div>
                         </div>
                         <button onClick={() => setShowVerificationModal(true)} className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all text-sm">
@@ -246,9 +246,9 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
             {activeTab === 'config' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {Object.entries(recipe.settings).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                    <span className="text-sm font-black text-gray-400 uppercase tracking-widest">{key}</span>
-                    <span className="font-mono font-bold text-primary bg-white px-4 py-1.5 rounded-lg border border-gray-200 shadow-sm">{value}</span>
+                  <div key={key} className="flex justify-between items-center p-6 bg-muted rounded-2xl border border-border">
+                    <span className="text-sm font-black text-muted-foreground uppercase tracking-widest">{key}</span>
+                    <span className="font-mono font-bold text-primary bg-card px-4 py-1.5 rounded-lg border border-border shadow-sm">{value}</span>
                   </div>
                 ))}
               </div>
@@ -257,20 +257,20 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
             {activeTab === 'reviews' && (
               <div className="space-y-6">
                 {reviews.map(review => (
-                  <div key={review.id} className="p-8 bg-gray-50/50 rounded-3xl border border-gray-100 space-y-4">
+                  <div key={review.id} className="p-8 bg-gray-50/50 rounded-3xl border border-border space-y-4">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-4">
                         <ImageWithFallback src={review.authorAvatar} alt={review.author} className="w-10 h-10 rounded-xl" />
                         <div>
-                          <p className="font-bold text-gray-900">{review.author}</p>
+                          <p className="font-bold text-foreground">{review.author}</p>
                           <div className="flex text-yellow-400 gap-0.5 mt-1">
-                            {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={12} fill={i < review.rating ? 'currentColor' : 'none'} className={i < review.rating ? '' : 'text-gray-300'} />)}
+                            {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={12} fill={i < review.rating ? 'currentColor' : 'none'} className={i < review.rating ? '' : 'text-muted-foreground'} />)}
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs text-gray-400 font-medium">{review.date}</span>
+                      <span className="text-xs text-muted-foreground font-medium">{review.date}</span>
                     </div>
-                    <p className="text-gray-600 font-medium leading-relaxed">{review.comment}</p>
+                    <p className="text-muted-foreground font-medium leading-relaxed">{review.comment}</p>
                   </div>
                 ))}
               </div>
@@ -282,14 +282,14 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
       {/* Modals */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in duration-200">
+          <div className="bg-card rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in duration-200">
             <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 mx-auto mb-6">
               <AlertCircle size={32} />
             </div>
-            <h2 className="text-2xl font-black text-gray-900 text-center mb-2">레시피 삭제</h2>
-            <p className="text-gray-500 text-center font-medium mb-8">정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+            <h2 className="text-2xl font-black text-foreground text-center mb-2">레시피 삭제</h2>
+            <p className="text-muted-foreground text-center font-medium mb-8">정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
             <div className="flex gap-4">
-              <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 transition-all">취소</button>
+              <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-4 bg-muted text-muted-foreground rounded-2xl font-bold hover:bg-gray-200 transition-all">취소</button>
               <button onClick={() => { onDelete?.(recipe.id); onBack(); }} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 shadow-xl shadow-red-200 transition-all">삭제하기</button>
             </div>
           </div>

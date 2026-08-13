@@ -62,12 +62,12 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`bg-white dark:bg-card border-r border-gray-200 dark:border-border flex flex-col transition-all duration-300 ${
+      className={`bg-card dark:bg-card border-r border-border dark:border-border flex flex-col transition-all duration-300 ${
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-border flex items-center justify-between">
+      <div className="p-6 border-b border-border dark:border-border flex items-center justify-between">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <img
@@ -79,14 +79,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         )}
         <button
           onClick={onToggle}
-          className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${
+          className={`p-2 hover:bg-muted rounded-lg transition-colors ${
             isCollapsed ? "mx-auto" : ""
           }`}
         >
           {isCollapsed ? (
-            <Menu className="w-5 h-5 text-gray-600 dark:text-muted-foreground" />
+            <Menu className="w-5 h-5 text-muted-foreground dark:text-muted-foreground" />
           ) : (
-            <X className="w-5 h-5 text-gray-600 dark:text-muted-foreground" />
+            <X className="w-5 h-5 text-muted-foreground dark:text-muted-foreground" />
           )}
         </button>
       </div>
@@ -106,7 +106,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 ${
                   isActive
                     ? "bg-primary/10 text-primary font-bold"
-                    : "text-gray-600 dark:text-muted-foreground hover:bg-gray-50 dark:hover:bg-muted"
+                    : "text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-muted"
                 } ${isCollapsed ? "justify-center" : ""}
               `}
               title={isCollapsed ? item.label : ""}
@@ -121,12 +121,12 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* User Info Section */}
-      <div className="p-4 border-t border-gray-200 dark:border-border">
+      <div className="p-4 border-t border-border dark:border-border">
         <NavLink
           to="/dashboard/profile"
           className={({ isActive }) => `
             flex items-center gap-3 px-3 py-3 rounded-xl transition-all
-            ${isActive ? "bg-gray-100 dark:bg-muted" : "hover:bg-gray-50 dark:hover:bg-muted"}
+            ${isActive ? "bg-muted dark:bg-muted" : "hover:bg-muted dark:hover:bg-muted"}
             ${isCollapsed ? "justify-center" : ""}
           `}
         >
@@ -143,10 +143,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           )}
           {!isCollapsed && (
             <div className="min-w-0 text-left">
-              <p className="text-sm font-bold text-gray-900 dark:text-foreground truncate">
+              <p className="text-sm font-bold text-foreground dark:text-foreground truncate">
                 {user?.nickname || user?.name || "사용자"}
               </p>
-              <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground truncate">
                 {user?.email || "user@example.com"}
               </p>
             </div>

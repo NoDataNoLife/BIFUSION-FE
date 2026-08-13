@@ -41,6 +41,33 @@ export interface DatasetListResponse {
   createdAt: string;
 }
 
+export interface ApplicationResponse {
+  applicationId: number;
+  applicant: AuthorInfo;
+  status: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface RecruitmentDetailResponse extends RecruitmentResponse {
+  content: string;
+  author: AuthorInfo;
+  applications: ApplicationResponse[];
+}
+
+export interface QnaAnswerResponse {
+  answerId: number;
+  author: AuthorInfo;
+  content: string;
+  isExpert: boolean;
+  createdAt: string;
+}
+
+export interface ExpertQnADetailResponse extends ExpertQnAListResponse {
+  content: string;
+  answers: QnaAnswerResponse[];
+}
+
 interface PageResponse<T> {
   content: T[];
   totalPages: number;
@@ -57,10 +84,14 @@ interface CommunityStore {
   qnaList: ExpertQnAListResponse[];
   recruitmentList: RecruitmentResponse[];
   datasetList: DatasetListResponse[];
+
+  qnaDetail: ExpertQnADetailResponse | null;
+  recruitmentDetail: RecruitmentDetailResponse | null;
   
   isLoadingQna: boolean;
   isLoadingRecruitment: boolean;
   isLoadingDataset: boolean;
+  isLoadingDetail: boolean;
   
   error: string | null;
 
@@ -68,6 +99,12 @@ interface CommunityStore {
   fetchQnaList: (page?: number, size?: number, sort?: string) => Promise<void>;
   fetchRecruitmentList: (page?: number, size?: number, sort?: string) => Promise<void>;
   fetchDatasetList: (page?: number, size?: number, sort?: string) => Promise<void>;
+  
+  fetchQnaDetail: (qnaId: number) => Promise<void>;
+  createQnaAnswer: (qnaId: number, content: string) => Promise<void>;
+  
+  fetchRecruitmentDetail: (recruitmentId: number) => Promise<void>;
+  updateApplicationStatus: (recruitmentId: number, applicationId: number, status: string) => Promise<void>;
 }
 
 export const useCommunityStore = create<CommunityStore>((set) => ({
@@ -75,9 +112,13 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   recruitmentList: [],
   datasetList: [],
 
+  qnaDetail: null,
+  recruitmentDetail: null,
+
   isLoadingQna: false,
   isLoadingRecruitment: false,
   isLoadingDataset: false,
+  isLoadingDetail: false,
 
   error: null,
 
@@ -114,6 +155,50 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
       set({ datasetList: response.data.data.content, isLoadingDataset: false });
     } catch (error: any) {
       set({ error: error.message || 'Failed to fetch Dataset list', isLoadingDataset: false });
+    }
+  },
+
+  fetchQnaDetail: async (qnaId: number) => {
+    set({ isLoadingDetail: true, error: null });
+    try {
+      const response = await api.get<{ data: ExpertQnADetailResponse }>(`/community/qna/${qnaId}`);
+      set({ qnaDetail: response.data.data, isLoadingDetail: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch QnA detail', isLoadingDetail: false });
+    }
+  },
+
+  createQnaAnswer: async (qnaId: number, content: string) => {
+    try {
+      await api.post(`/community/qna/${qnaId}/answers`, { content });
+      // 답변 달고 나면 상세 정보를 다시 불러와서 최신 상태로 갱신
+      const store = useCommunityStore.getState();
+      await store.fetchQnaDetail(qnaId);
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to create QnA answer' });
+      throw error;
+    }
+  },
+
+  fetchRecruitmentDetail: async (recruitmentId: number) => {
+    set({ isLoadingDetail: true, error: null });
+    try {
+      const response = await api.get<{ data: RecruitmentDetailResponse }>(`/community/recruitments/${recruitmentId}`);
+      set({ recruitmentDetail: response.data.data, isLoadingDetail: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch Recruitment detail', isLoadingDetail: false });
+    }
+  },
+
+  updateApplicationStatus: async (recruitmentId: number, applicationId: number, status: string) => {
+    try {
+      await api.patch(`/community/recruitments/${recruitmentId}/applications/${applicationId}/status`, { status });
+      // 상태 변경 후 상세 정보 갱신
+      const store = useCommunityStore.getState();
+      await store.fetchRecruitmentDetail(recruitmentId);
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to update application status' });
+      throw error;
     }
   }
 }));

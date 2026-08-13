@@ -115,7 +115,7 @@ export default function ActivitiesPage() {
       case 'recipe_update':
         return <div className="p-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100"><TrendingUp className="w-5 h-5" /></div>;
       default:
-        return <div className="p-2 bg-gray-50 text-gray-600 rounded-xl border border-gray-100"><Bell className="w-5 h-5" /></div>;
+        return <div className="p-2 bg-muted text-muted-foreground rounded-xl border border-border"><Bell className="w-5 h-5" /></div>;
     }
   };
 
@@ -147,24 +147,24 @@ export default function ActivitiesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
             <span>Dashboard</span>
             <ChevronRight className="w-3 h-3" />
             <span className="text-primary">Activities</span>
           </nav>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight italic">최근 활동 현황</h1>
-          <p className="text-gray-500 mt-1 font-medium">BIFUSION 팀의 모든 연구 및 협업 기록</p>
+          <h1 className="text-3xl font-black text-foreground tracking-tight italic">최근 활동 현황</h1>
+          <p className="text-muted-foreground mt-1 font-medium">BIFUSION 팀의 모든 연구 및 협업 기록</p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
               type="text"
               placeholder="활동 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+              className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
             />
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function ActivitiesPage() {
         <button
           onClick={() => setFilterType('all')}
           className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all whitespace-nowrap ${
-            filterType === 'all' ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-500 border border-gray-100 hover:border-gray-200'
+            filterType === 'all' ? 'bg-gray-900 text-white shadow-lg' : 'bg-card text-muted-foreground border border-border hover:border-gray-200'
           }`}
         >
           전체 활동
@@ -190,8 +190,8 @@ export default function ActivitiesPage() {
             onClick={() => setFilterType(type.id as any)}
             className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all whitespace-nowrap border ${
               filterType === type.id 
-                ? `bg-white text-gray-900 border-gray-900 shadow-md` 
-                : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                ? `bg-card text-foreground border-gray-900 shadow-md` 
+                : 'bg-card text-muted-foreground border-border hover:border-gray-200'
             }`}
           >
             {type.label}
@@ -210,11 +210,11 @@ export default function ActivitiesPage() {
                 </span>
               </div>
               
-              <div className="space-y-4 ml-2 border-l-2 border-gray-100 pl-8">
+              <div className="space-y-4 ml-2 border-l-2 border-border pl-8">
                 {activities.map((activity) => (
                   <div 
                     key={activity.id}
-                    className="relative group bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
+                    className="relative group bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
                   >
                     {/* Timeline Dot */}
                     <div className="absolute -left-[41px] top-8 w-4 h-4 rounded-full border-4 border-white bg-gray-200 group-hover:bg-primary transition-colors shadow-sm" />
@@ -224,11 +224,11 @@ export default function ActivitiesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-black text-gray-900">{activity.user}</span>
-                            <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded uppercase tracking-widest">{activity.time}</span>
+                            <span className="font-black text-foreground">{activity.user}</span>
+                            <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded uppercase tracking-widest">{activity.time}</span>
                           </div>
                         </div>
-                        <p className="text-gray-600 font-medium leading-relaxed group-hover:text-gray-900 transition-colors">
+                        <p className="text-muted-foreground font-medium leading-relaxed group-hover:text-gray-900 transition-colors">
                           {activity.message}
                         </p>
                       </div>
@@ -246,10 +246,10 @@ export default function ActivitiesPage() {
             </div>
           ))
         ) : (
-          <div className="py-32 text-center bg-white rounded-3xl border-2 border-dashed border-gray-100">
+          <div className="py-32 text-center bg-card rounded-3xl border-2 border-dashed border-border">
             <Activity className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-            <h3 className="text-xl font-black text-gray-900 mb-1 tracking-tight">활동 기록이 없습니다</h3>
-            <p className="text-gray-400 font-medium text-sm">검색어나 필터를 변경해 보세요</p>
+            <h3 className="text-xl font-black text-foreground mb-1 tracking-tight">활동 기록이 없습니다</h3>
+            <p className="text-muted-foreground font-medium text-sm">검색어나 필터를 변경해 보세요</p>
           </div>
         )}
       </div>

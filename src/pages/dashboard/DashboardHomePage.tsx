@@ -74,7 +74,7 @@ export default function DashboardHome() {
       case "data_upload":
         return <TrendingUp className="w-4 h-4 text-purple-600" />;
       default:
-        return <Bell className="w-4 h-4 text-gray-600" />;
+        return <Bell className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -83,10 +83,10 @@ export default function DashboardHome() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-foreground tracking-tight">
+          <h1 className="text-3xl font-bold text-foreground dark:text-foreground tracking-tight">
             대시보드
           </h1>
-          <p className="text-gray-500 dark:text-muted-foreground mt-1 font-medium">
+          <p className="text-muted-foreground dark:text-muted-foreground mt-1 font-medium">
             안녕하세요! 오늘도 좋은 연구 되세요 👋
           </p>
         </div>
@@ -115,16 +115,16 @@ export default function DashboardHome() {
 
         <button
           onClick={() => navigate("/dashboard/community")}
-          className="flex items-center gap-5 p-6 bg-card/90 dark:bg-card/80 border border-gray-200 dark:border-border rounded-2xl hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all text-left group"
+          className="flex items-center gap-5 p-6 bg-card/90 dark:bg-card/80 border border-border dark:border-border rounded-2xl hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all text-left group"
         >
           <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <Users className="w-7 h-7 text-primary" />
           </div>
           <div>
-            <p className="font-bold text-lg text-gray-900 dark:text-foreground">
+            <p className="font-bold text-lg text-foreground dark:text-foreground">
               커뮤니티 둘러보기
             </p>
-            <p className="text-sm text-gray-500 dark:text-muted-foreground font-medium">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground font-medium">
               레시피 공유하기
             </p>
           </div>
@@ -138,10 +138,10 @@ export default function DashboardHome() {
           <section>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">
                   내 프로젝트
                 </h2>
-                <p className="text-sm text-gray-500 mt-1 font-medium">
+                <p className="text-sm text-muted-foreground mt-1 font-medium">
                   진행 중인 프로젝트 {displayProjects.length}개
                 </p>
               </div>
@@ -169,23 +169,23 @@ export default function DashboardHome() {
                   </div>
 
                   <div className="p-6">
-                    <h3 className="font-bold text-gray-900 dark:text-foreground mb-4 line-clamp-1 text-lg">
+                    <h3 className="font-bold text-foreground dark:text-foreground mb-4 line-clamp-1 text-lg">
                       {project.name}
                     </h3>
 
                     <div className="flex items-center gap-6 mb-6 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-muted-foreground font-medium">
+                      <div className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground font-medium">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                         <span>{project.activeJobs} 실행 중</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-muted-foreground font-medium">
+                      <div className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground font-medium">
                         <div className="w-2 h-2 bg-orange-500 rounded-full" />
                         <span>{project.queuedJobs} 대기 중</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-5 border-t border-gray-100 dark:border-border/70">
-                      <span className="text-xs text-gray-400 dark:text-muted-foreground font-medium">
+                    <div className="flex items-center justify-between pt-5 border-t border-border dark:border-border/70">
+                      <span className="text-xs text-muted-foreground dark:text-muted-foreground font-medium">
                         {project.lastUpdated}
                       </span>
                       <button
@@ -205,7 +205,7 @@ export default function DashboardHome() {
 
           {/* 리소스 사용량 */}
           <DashboardCard className="p-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-8 tracking-tight">
+            <h2 className="text-2xl font-bold text-foreground dark:text-foreground mb-8 tracking-tight">
               리소스 사용량
             </h2>
 
@@ -215,19 +215,19 @@ export default function DashboardHome() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <HardDrive className="w-5 h-5 text-primary" />
-                    <span className="font-bold text-gray-900 dark:text-foreground">
+                    <span className="font-bold text-foreground dark:text-foreground">
                       스토리지
                     </span>
                   </div>
-                  <span className="text-sm font-bold text-gray-600 dark:text-muted-foreground">
+                  <span className="text-sm font-bold text-muted-foreground dark:text-muted-foreground">
                     {storageUsage}GB{" "}
-                    <span className="text-gray-300 dark:text-border font-normal">
+                    <span className="text-muted-foreground dark:text-border font-normal">
                       /
                     </span>{" "}
                     {storageLimit}GB
                   </span>
                 </div>
-                <div className="w-full h-3 bg-gray-100 dark:bg-muted rounded-full overflow-hidden">
+                <div className="w-full h-3 bg-muted dark:bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-full transition-all"
                     style={{ width: `${(storageUsage / storageLimit) * 100}%` }}
@@ -240,19 +240,19 @@ export default function DashboardHome() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Zap className="w-5 h-5 text-primary" />
-                    <span className="font-bold text-gray-900 dark:text-foreground">
+                    <span className="font-bold text-foreground dark:text-foreground">
                       월간 증강 횟수
                     </span>
                   </div>
-                  <span className="text-sm font-bold text-gray-600 dark:text-muted-foreground">
+                  <span className="text-sm font-bold text-muted-foreground dark:text-muted-foreground">
                     {monthlyAugmentations}{" "}
-                    <span className="text-gray-300 dark:text-border font-normal">
+                    <span className="text-muted-foreground dark:text-border font-normal">
                       /
                     </span>{" "}
                     {augmentationLimit}
                   </span>
                 </div>
-                <div className="w-full h-3 bg-gray-100 dark:bg-muted rounded-full overflow-hidden">
+                <div className="w-full h-3 bg-muted dark:bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500 rounded-full transition-all"
                     style={{
@@ -263,16 +263,16 @@ export default function DashboardHome() {
               </div>
 
               {/* Rewards */}
-              <div className="p-5 bg-[#F8FAFC] dark:bg-muted/60 rounded-2xl border border-gray-100 dark:border-border/70 flex items-center justify-between transition-colors">
+              <div className="p-5 bg-[#F8FAFC] dark:bg-muted/60 rounded-2xl border border-border dark:border-border/70 flex items-center justify-between transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                     <Award className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900 dark:text-foreground">
+                    <p className="font-bold text-foreground dark:text-foreground">
                       리워드 포인트
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-muted-foreground font-medium">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground font-medium">
                       커뮤니티 활동으로 적립
                     </p>
                   </div>
@@ -287,7 +287,7 @@ export default function DashboardHome() {
         <div className="space-y-8">
           {/* 최근 활동 피드 */}
           <DashboardCard className="p-8">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-foreground mb-8 tracking-tight">
+            <h2 className="text-xl font-bold text-foreground dark:text-foreground mb-8 tracking-tight">
               최근 활동
             </h2>
 
@@ -304,14 +304,14 @@ export default function DashboardHome() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       {getActivityIcon(activity.type)}
-                      <span className="font-bold text-sm text-gray-900 dark:text-foreground">
+                      <span className="font-bold text-sm text-foreground dark:text-foreground">
                         {activity.user}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-muted-foreground leading-relaxed line-clamp-2">
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground leading-relaxed line-clamp-2">
                       {activity.message}
                     </p>
-                    <p className="text-[11px] text-gray-400 dark:text-muted-foreground font-medium mt-1.5">
+                    <p className="text-[11px] text-muted-foreground dark:text-muted-foreground font-medium mt-1.5">
                       {activity.time}
                     </p>
                   </div>

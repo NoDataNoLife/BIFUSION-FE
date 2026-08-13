@@ -6,7 +6,7 @@ import { Zap, Shield, Share2, Terminal } from "lucide-react";
 export default function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -24,30 +24,9 @@ export default function LandingPage() {
       return;
     }
 
-    // [임시] 백엔드 수리 전까지 개발을 위해 Mock 로그인을 사용합니다.
-    const isMock = false; 
-
-    if (isMock) {
-      console.warn("개발 모드: Mock 로그인을 진행합니다.");
-      const mockResponse = {
-        accessToken: "mock-access-token",
-        refreshToken: "mock-refresh-token",
-        user: {
-          userId: 1,
-          email: "yeom@bifusion.com",
-          name: "염승빈",
-          nickname: "승빈짱123",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      };
-      login(mockResponse);
-      navigate("/dashboard");
-      return;
-    }
 
     // 백엔드 명세에 따른 실제 구글 로그인 엔드포인트
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://bifusion.duckdns.org';
     window.location.href = `${baseUrl}/oauth2/authorization/google`;
   };
 

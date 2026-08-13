@@ -91,7 +91,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
       case 'comment':
         return <div className="p-2 bg-purple-50 text-purple-600 rounded-xl"><MessageCircle className="w-5 h-5" /></div>;
       default:
-        return <div className="p-2 bg-gray-50 text-gray-600 rounded-xl"><Bell className="w-5 h-5" /></div>;
+        return <div className="p-2 bg-muted text-muted-foreground rounded-xl"><Bell className="w-5 h-5" /></div>;
     }
   };
 
@@ -113,25 +113,25 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
       <div className="fixed inset-0 z-40" onClick={onClose} />
       
       {/* Notification Panel */}
-      <div className="absolute top-16 right-8 w-[420px] bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+      <div className="absolute top-16 right-8 w-[420px] bg-card rounded-[2.5rem] shadow-2xl border border-border z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-black text-gray-900 tracking-tight italic flex items-center gap-2">
+            <h3 className="text-xl font-black text-foreground tracking-tight italic flex items-center gap-2">
               알림 센터 <span className="px-2 py-0.5 bg-primary text-white text-[10px] rounded-full not-italic tracking-normal">{notifications.filter(n => !n.isRead).length}</span>
             </h3>
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={markAllAsRead}
-              className="p-2 hover:bg-white rounded-xl text-gray-400 hover:text-primary transition-all"
+              className="p-2 hover:bg-white rounded-xl text-muted-foreground hover:text-primary transition-all"
               title="모두 읽음 처리"
             >
               <Check className="w-5 h-5" />
             </button>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-white rounded-xl text-gray-400 hover:text-gray-900 transition-all"
+              className="p-2 hover:bg-white rounded-xl text-muted-foreground hover:text-gray-900 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -145,16 +145,16 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
               <div 
                 key={notification.id}
                 className={`group p-4 rounded-3xl transition-all cursor-pointer flex gap-4 items-start ${
-                  notification.isRead ? 'opacity-60 grayscale-[0.5]' : 'bg-white shadow-sm border border-gray-100 hover:border-primary/20'
+                  notification.isRead ? 'opacity-60 grayscale-[0.5]' : 'bg-card shadow-sm border border-border hover:border-primary/20'
                 }`}
               >
                 {getNotificationIcon(notification.type)}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-sm font-black text-gray-900 truncate tracking-tight">{notification.title}</h4>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getRelativeTime(notification.timestamp)}</span>
+                    <h4 className="text-sm font-black text-foreground truncate tracking-tight">{notification.title}</h4>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{getRelativeTime(notification.timestamp)}</span>
                   </div>
-                  <p className="text-xs text-gray-500 font-medium leading-relaxed line-clamp-2">{notification.description}</p>
+                  <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{notification.description}</p>
                   
                   {!notification.isRead && (
                     <div className="mt-3 flex justify-end">
@@ -166,16 +166,16 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
             ))
           ) : (
             <div className="py-20 text-center space-y-4">
-              <div className="w-16 h-16 bg-gray-50 text-gray-200 rounded-3xl flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-muted text-gray-200 rounded-3xl flex items-center justify-center mx-auto">
                 <Bell size={32} />
               </div>
-              <p className="text-sm font-black text-gray-400 uppercase tracking-widest italic">새로운 알림이 없습니다</p>
+              <p className="text-sm font-black text-muted-foreground uppercase tracking-widest italic">새로운 알림이 없습니다</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <button className="w-full py-5 bg-gray-50 border-t border-gray-100 text-xs font-black text-gray-400 hover:text-primary hover:bg-white transition-all uppercase tracking-widest italic">
+        <button className="w-full py-5 bg-muted border-t border-border text-xs font-black text-muted-foreground hover:text-primary hover:bg-white transition-all uppercase tracking-widest italic">
           전체 알림 기록 보기
         </button>
       </div>

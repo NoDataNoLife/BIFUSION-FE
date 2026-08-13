@@ -45,24 +45,24 @@ export default function TrainProgressPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
                 <span>Project</span>
                 <ChevronRight className="w-3 h-3" />
                 <span>Job {jobId}</span>
                 <ChevronRight className="w-3 h-3" />
                 <span className="text-primary font-black italic">Training</span>
               </nav>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">모델 학습 중</h1>
+              <h1 className="text-2xl font-black text-foreground tracking-tight">모델 학습 중</h1>
             </div>
           </div>
         </div>
@@ -70,12 +70,12 @@ export default function TrainProgressPage() {
 
       {/* Main Content (Strict prototype structure) */}
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full bg-white rounded-[3rem] border border-gray-100 shadow-2xl shadow-primary/5 p-16 space-y-12">
-          <h1 className="text-3xl font-black text-gray-900 text-center tracking-tight">모델 학습 중</h1>
+        <div className="max-w-2xl w-full bg-card rounded-[3rem] border border-border shadow-2xl shadow-primary/5 p-16 space-y-12">
+          <h1 className="text-3xl font-black text-foreground text-center tracking-tight">모델 학습 중</h1>
 
           {/* Progress Bar Container */}
           <div className="space-y-6">
-            <div className="w-full bg-gray-50 rounded-full h-4 p-1 shadow-inner border border-gray-100 overflow-hidden">
+            <div className="w-full bg-muted rounded-full h-4 p-1 shadow-inner border border-border overflow-hidden">
               <div 
                 className="h-full bg-primary rounded-full transition-all duration-300 ease-out shadow-lg shadow-primary/30"
                 style={{ width: `${progress}%` }}
@@ -87,9 +87,9 @@ export default function TrainProgressPage() {
           </div>
 
           {/* Current Step (Gray box from prototype) */}
-          <div className="bg-gray-50 rounded-3xl p-10 border border-gray-100 text-center space-y-2">
-            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">현재 단계</p>
-            <p className="text-2xl font-black text-gray-900 tracking-tight">
+          <div className="bg-muted rounded-3xl p-10 border border-border text-center space-y-2">
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">현재 단계</p>
+            <p className="text-2xl font-black text-foreground tracking-tight">
               Episode 생성 중... <span className="text-primary italic ml-2">({currentEpisode}/{totalEpisodes})</span>
             </p>
           </div>

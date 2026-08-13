@@ -1,25 +1,59 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@theme {
+:root {
   /* Brand Colors */
-  --color-primary: #e68a00;
-  --color-primary-foreground: #ffffff;
-
-  --color-secondary: #434d5a;
-  --color-secondary-foreground: #ffffff;
-
-  --color-accent: #8d5a00;
-  --color-accent-foreground: #ffffff;
+  --primary: #e68a00;
+  --primary-foreground: #ffffff;
+  --secondary: #434d5a;
+  --secondary-foreground: #ffffff;
+  --accent: #8d5a00;
+  --accent-foreground: #ffffff;
 
   /* UI Colors (Light Default) */
-  --color-background: #fffbf4;
-  --color-foreground: #434d5a;
-  --color-border: #e4e4e7;
-  --color-muted: #f4f4f5;
-  --color-muted-foreground: #71717a;
-  --color-card: #ffffff;
-  --color-card-foreground: #434d5a;
+  --background: #fffbf4;
+  --foreground: #434d5a;
+  --border: #e4e4e7;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --card: #ffffff;
+  --card-foreground: #434d5a;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --background: #0f1115;
+  --foreground: #f8fafc;
+  --border: #272a30;
+  --muted: #1e2128;
+  --muted-foreground: #94a3b8;
+  --card: #181a20;
+  --card-foreground: #f8fafc;
+
+  --primary: #f0a53a;
+  --primary-foreground: #2b1c0a;
+  --secondary: #272a30;
+  --secondary-foreground: #f8fafc;
+  --accent: #c8831d;
+  --accent-foreground: #2b1c0a;
+}
+
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
 
   /* Fonts */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -28,26 +62,6 @@
   --radius-lg: 0.5rem;
   --radius-md: calc(0.5rem - 2px);
   --radius-sm: calc(0.5rem - 4px);
-}
-
-/* Dark Mode Overrides */
-@custom-variant dark (&:where(.dark, .dark *));
-
-.dark {
-  --color-background: #191714;
-  --color-foreground: #f3ede3;
-  --color-border: #3a352d;
-  --color-muted: #24201b;
-  --color-muted-foreground: #b8ab95;
-  --color-card: #211d18;
-  --color-card-foreground: #f3ede3;
-
-  --color-primary: #f0a53a;
-  --color-primary-foreground: #2b1c0a;
-  --color-secondary: #2e333a;
-  --color-secondary-foreground: #f7f2e8;
-  --color-accent: #c8831d;
-  --color-accent-foreground: #2b1c0a;
 }
 
 @layer base {

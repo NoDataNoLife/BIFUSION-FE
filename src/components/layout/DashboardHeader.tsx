@@ -15,11 +15,11 @@ export default function DashboardHeader() {
   const userInitial = user?.name ? user.name.slice(0, 2).toUpperCase() : "??";
 
   return (
-    <header className="h-20 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-100 dark:border-border flex items-center justify-end px-10 shrink-0 z-40 transition-colors">
+    <header className="h-20 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-border dark:border-border flex items-center justify-end px-10 shrink-0 z-40 transition-colors">
       <div className="flex items-center gap-6 ml-auto">
         <button
           onClick={toggleTheme}
-          className="p-3 rounded-2xl bg-gray-50 dark:bg-muted text-gray-500 dark:text-foreground/70 hover:bg-gray-100 dark:hover:bg-muted/80 transition-all active:scale-95"
+          className="p-3 rounded-2xl bg-muted dark:bg-muted text-muted-foreground dark:text-foreground/70 hover:bg-muted dark:hover:bg-muted/80 transition-all active:scale-95"
           aria-label="Toggle dark mode"
         >
           {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -31,7 +31,7 @@ export default function DashboardHeader() {
             className={`relative p-3 rounded-2xl transition-all active:scale-95 ${
               isNotificationOpen
                 ? "bg-primary/10 text-primary"
-                : "bg-gray-50 dark:bg-muted text-gray-500 dark:text-foreground/70 hover:bg-gray-100 dark:hover:bg-muted/80"
+                : "bg-muted dark:bg-muted text-muted-foreground dark:text-foreground/70 hover:bg-muted dark:hover:bg-muted/80"
             }`}
           >
             <Bell size={22} />
@@ -44,17 +44,17 @@ export default function DashboardHeader() {
           />
         </div>
 
-        <div className="w-px h-8 bg-gray-100 dark:bg-border"></div>
+        <div className="w-px h-8 bg-muted dark:bg-border"></div>
 
         <div
           onClick={() => navigate("/dashboard/profile")}
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="text-right hidden md:block">
-            <p className="text-sm font-black text-gray-900 dark:text-foreground leading-tight group-hover:text-primary transition-colors">
+            <p className="text-sm font-black text-foreground dark:text-foreground leading-tight group-hover:text-primary transition-colors">
               {user?.nickname || user?.name || "사용자"}
             </p>
-            <p className="text-[10px] font-bold text-gray-400 dark:text-muted-foreground uppercase tracking-widest leading-tight">
+            <p className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-widest leading-tight">
               Researcher
             </p>
           </div>

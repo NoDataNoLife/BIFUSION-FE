@@ -551,7 +551,7 @@ export default function ProfilePage() {
     <div className="p-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
       {/* --- Left Column: Profile Card (Based on Prototype Structure) --- */}
       <div className="lg:w-1/3 space-y-6">
-        <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center">
+        <div className="bg-card rounded-3xl p-8 border border-border shadow-sm flex flex-col items-center text-center">
           {/* Avatar Section */}
           <div className="relative mb-6">
             <input
@@ -595,7 +595,7 @@ export default function ProfilePage() {
                     onKeyDown={(e) => e.key === 'Enter' && handleNicknameUpdate()}
                     autoFocus
                     placeholder="닉네임 입력"
-                    className="text-2xl font-bold text-gray-900 bg-gray-50 border-b-2 border-primary outline-none px-2 py-0.5 w-48 text-center"
+                    className="text-2xl font-bold text-foreground bg-muted border-b-2 border-primary outline-none px-2 py-0.5 w-48 text-center"
                   />
                   <div className="flex gap-1">
                     <button 
@@ -619,7 +619,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+                  <h1 className="text-2xl font-black text-foreground tracking-tight">
                     {user?.nickname || "닉네임을 설정해주세요"}
                   </h1>
                   <button 
@@ -627,7 +627,7 @@ export default function ProfilePage() {
                       setNewNickname(user?.nickname || "");
                       setIsEditingNickname(true);
                     }}
-                    className="p-1 text-gray-300 hover:text-primary hover:bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                     title="닉네임 수정"
                   >
                     <Edit2 size={16} />
@@ -635,7 +635,7 @@ export default function ProfilePage() {
                 </div>
               )}
               
-              <p className="text-sm text-gray-400 font-medium">
+              <p className="text-sm text-muted-foreground font-medium">
                 @{user?.name || "researcher"}
               </p>
             </div>
@@ -652,7 +652,7 @@ export default function ProfilePage() {
           {/* Bio Section */}
           <div className="w-full text-left space-y-2 border-t border-gray-50 pt-6">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 About Me
               </p>
               {!isEditingBio && (
@@ -661,7 +661,7 @@ export default function ProfilePage() {
                     setNewBio(user?.bio || "");
                     setIsEditingBio(true);
                   }}
-                  className="p-1 text-gray-300 hover:text-primary transition-colors"
+                  className="p-1 text-muted-foreground hover:text-primary transition-colors"
                 >
                   <Edit2 size={12} />
                 </button>
@@ -673,7 +673,7 @@ export default function ProfilePage() {
                 <textarea
                   value={newBio}
                   onChange={(e) => setNewBio(e.target.value)}
-                  className="w-full text-sm text-gray-600 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl p-3 outline-none focus:border-primary/30 min-h-25 resize-none"
+                  className="w-full text-sm text-muted-foreground leading-relaxed bg-muted border border-border rounded-xl p-3 outline-none focus:border-primary/30 min-h-25 resize-none"
                   placeholder="자기소개를 입력해주세요."
                   autoFocus
                 />
@@ -683,7 +683,7 @@ export default function ProfilePage() {
                       setIsEditingBio(false);
                       setNewBio(user?.bio || "");
                     }}
-                    className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                    className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-gray-600 transition-colors"
                   >
                     취소
                   </button>
@@ -696,7 +696,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {user?.bio || "자기소개를 입력해주세요."}
               </p>
             )}
@@ -706,7 +706,7 @@ export default function ProfilePage() {
           <div className="w-full pt-8">
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-50 text-gray-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-gray-100 transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-muted transition-all active:scale-[0.98]"
             >
               <SettingsIcon size={16} /> Account Settings
             </button>
@@ -714,9 +714,9 @@ export default function ProfilePage() {
         </div>
 
         {/* Info List Section */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+        <div className="bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4">
           <div className="flex items-center justify-between group h-6">
-            <div className="flex items-center gap-3 text-sm text-gray-500 font-medium flex-1">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium flex-1">
               <MapPin size={18} className="text-primary" />
               {isEditingOrg ? (
                 <input
@@ -725,7 +725,7 @@ export default function ProfilePage() {
                   onChange={(e) => setNewOrg(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleOrgUpdate()}
                   autoFocus
-                  className="bg-gray-50 border-b border-primary outline-none px-1 w-full"
+                  className="bg-muted border-b border-primary outline-none px-1 w-full"
                 />
               ) : (
                 <span className="truncate">{user?.organization || "소속 정보 없음"}</span>
@@ -747,7 +747,7 @@ export default function ProfilePage() {
                     setNewOrg(user?.organization || "");
                     setIsEditingOrg(true);
                   }}
-                  className="p-1 text-gray-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                  className="p-1 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Edit2 size={12} />
                 </button>
@@ -755,7 +755,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="flex items-center justify-between group h-6">
-            <div className="flex items-center gap-3 text-sm text-gray-500 font-medium flex-1">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium flex-1">
               <LinkIcon size={18} className="text-primary" />
               {isEditingWebsite ? (
                 <input
@@ -765,7 +765,7 @@ export default function ProfilePage() {
                   onKeyDown={(e) => e.key === 'Enter' && handleWebsiteUpdate()}
                   autoFocus
                   placeholder="https://example.com"
-                  className="bg-gray-50 border-b border-primary outline-none px-1 w-full"
+                  className="bg-muted border-b border-primary outline-none px-1 w-full"
                 />
               ) : (
                 <span className="truncate">{user?.websiteUrl || "웹사이트 정보 없음"}</span>
@@ -787,18 +787,18 @@ export default function ProfilePage() {
                     setNewWebsite(user?.websiteUrl || "");
                     setIsEditingWebsite(true);
                   }}
-                  className="p-1 text-gray-300 hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                  className="p-1 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Edit2 size={12} />
                 </button>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
             <MessageSquare size={18} className="text-primary" />
             {user?.contact || "연락처 정보 없음"}
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
             <Calendar size={18} className="text-primary" />{' '}
             {user?.createdAt ? (
               isNaN(Date.parse(user.createdAt)) ? (
@@ -816,14 +816,14 @@ export default function ProfilePage() {
       {/* --- Right Column: Content (Based on Prototype Structure) --- */}
       <div className="flex-1 space-y-8">
         {/* My Projects */}
-        <section className="bg-white rounded-4xl border border-gray-100 shadow-sm p-6">
+        <section className="bg-card rounded-4xl border border-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
               <AlertTriangle size={20} className="text-primary" /> 나의 개미집
             </h2>
             <button
               onClick={openProjectVisibilityModal}
-              className="p-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+              className="p-2.5 rounded-xl bg-muted text-muted-foreground hover:bg-muted hover:text-gray-800 transition-colors"
               aria-label="프로젝트 공개 설정"
             >
               <SettingsIcon size={18} />
@@ -831,19 +831,19 @@ export default function ProfilePage() {
           </div>
 
           {displayedProjects.length === 0 ? (
-            <div className="py-12 flex flex-col items-center justify-center text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-              <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mb-4">
-                <AlertTriangle className="w-8 h-8 text-gray-300" />
+            <div className="py-12 flex flex-col items-center justify-center text-center bg-gray-50/50 rounded-2xl border border-dashed border-border">
+              <div className="w-16 h-16 bg-card shadow-sm rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-gray-900 font-bold mb-1">공개된 프로젝트가 없습니다.</h3>
-              <p className="text-gray-500 text-sm">현재 모두 비공개 상태이거나, 아직 참여 중인 프로젝트가 없습니다.</p>
+              <h3 className="text-foreground font-bold mb-1">공개된 프로젝트가 없습니다.</h3>
+              <p className="text-muted-foreground text-sm">현재 모두 비공개 상태이거나, 아직 참여 중인 프로젝트가 없습니다.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {displayedProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50/40"
+                  className="rounded-xl overflow-hidden border border-border bg-gray-50/40"
                 >
                   <img
                     src={project.coverImage}
@@ -851,10 +851,10 @@ export default function ProfilePage() {
                     className="w-full h-28 object-cover"
                   />
                   <div className="p-3">
-                    <h3 className="text-lg font-black text-gray-900 leading-tight line-clamp-1">
+                    <h3 className="text-lg font-black text-foreground leading-tight line-clamp-1">
                       {project.title}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {project.role}
                     </p>
                   </div>
@@ -877,9 +877,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Community Activities */}
-        <section className="bg-white rounded-4xl border border-gray-100 shadow-sm p-6">
+        <section className="bg-card rounded-4xl border border-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
               <TrendingUp size={20} className="text-primary" /> 집단 활동
             </h2>
 
@@ -888,7 +888,7 @@ export default function ProfilePage() {
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
                 isCommunityPublic
                   ? "bg-primary/10 text-primary"
-                  : "bg-gray-100 text-gray-500"
+                  : "bg-muted text-muted-foreground"
               }`}
             >
               {isCommunityPublic ? <Eye size={16} /> : <EyeOff size={16} />}
@@ -926,8 +926,8 @@ export default function ProfilePage() {
                   key={activity.id}
                   className={`p-5 rounded-2xl border transition-all ${
                     activity.isPublic && isCommunityPublic
-                      ? "border-primary/20 bg-white"
-                      : "border-gray-100 bg-gray-50/50"
+                      ? "border-primary/20 bg-card"
+                      : "border-border bg-gray-50/50"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -948,7 +948,7 @@ export default function ProfilePage() {
                           >
                             {activity.type}
                           </span>
-                          <h3 className="text-lg font-black text-gray-900 truncate">
+                          <h3 className="text-lg font-black text-foreground truncate">
                             {activity.title}
                           </h3>
                           {activity.isExpertVerified && (
@@ -964,7 +964,7 @@ export default function ProfilePage() {
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                             activity.isPublic
                               ? "bg-primary/10 text-primary"
-                              : "bg-gray-100 text-gray-500"
+                              : "bg-muted text-muted-foreground"
                           } ${!isCommunityPublic ? "cursor-not-allowed opacity-50" : ""}`}
                         >
                           {activity.isPublic ? (
@@ -976,11 +976,11 @@ export default function ProfilePage() {
                         </button>
                       </div>
 
-                      <p className="text-sm text-gray-500 line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {activity.description}
                       </p>
 
-                      <div className="flex items-center gap-5 pt-3 text-xs font-bold text-gray-400">
+                      <div className="flex items-center gap-5 pt-3 text-xs font-bold text-muted-foreground">
                         <span>{activity.timestamp}</span>
                         {activity.stats?.likes && (
                           <span className="flex items-center gap-1 text-red-400">
@@ -994,7 +994,7 @@ export default function ProfilePage() {
                           </span>
                         )}
                         {activity.stats?.comments && (
-                          <span className="flex items-center gap-1 text-gray-500">
+                          <span className="flex items-center gap-1 text-muted-foreground">
                             <MessageSquare size={13} />{" "}
                             {activity.stats.comments}
                           </span>
@@ -1009,7 +1009,7 @@ export default function ProfilePage() {
             {hasMoreActivities && (
               <button
                 onClick={loadMoreActivities}
-                className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-colors"
+                className="w-full py-3 rounded-xl border border-border text-muted-foreground font-bold hover:bg-muted transition-colors"
               >
                 더보기 (+
                 {Math.min(5, communityActivities.length - visibleActivityCount)}
@@ -1023,25 +1023,25 @@ export default function ProfilePage() {
       {/* Project Visibility Modal */}
       {showProjectVisibilityModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-4xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+          <div className="bg-card rounded-4xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-8 py-6 border-b border-border flex justify-between items-center">
+              <h2 className="text-2xl font-black text-foreground tracking-tight">
                 프로젝트 공개 설정
               </h2>
               <button
                 onClick={() => setShowProjectVisibilityModal(false)}
-                className="p-2.5 hover:bg-gray-100 rounded-xl transition-all"
+                className="p-2.5 hover:bg-muted rounded-xl transition-all"
               >
-                <X size={22} className="text-gray-500" />
+                <X size={22} className="text-muted-foreground" />
               </button>
             </div>
 
             <div className="p-8 space-y-5 overflow-y-auto">
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 프로필에 표시할 프로젝트를 선택하고 순서를 관리하세요. 비공개로
                 설정한 프로젝트는 다른 사용자에게 표시되지 않습니다.
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 드래그해서 순서를 바꾸면 상단 노출 순서에 그대로 반영됩니다.
               </p>
 
@@ -1054,13 +1054,13 @@ export default function ProfilePage() {
                     onDragOver={handleProjectDragOver}
                     onDrop={() => handleProjectDrop(project.id)}
                     onDragEnd={handleProjectDragEnd}
-                    className={`flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border transition-colors ${
+                    className={`flex items-center gap-4 p-4 bg-muted rounded-2xl border transition-colors ${
                       draggingProjectId === project.id
                         ? "border-primary/40 bg-primary/5"
-                        : "border-gray-100"
+                        : "border-border"
                     }`}
                   >
-                    <GripVertical className="w-5 h-5 text-gray-400" />
+                    <GripVertical className="w-5 h-5 text-muted-foreground" />
                     <img
                       src={project.coverImage}
                       alt={project.title}
@@ -1068,10 +1068,10 @@ export default function ProfilePage() {
                     />
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-base font-black text-gray-900 truncate">
+                      <p className="text-base font-black text-foreground truncate">
                         {project.title}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {project.role}
                       </p>
                     </div>
@@ -1081,7 +1081,7 @@ export default function ProfilePage() {
                       className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-sm transition-colors ${
                         project.isPublic
                           ? "bg-primary/10 text-primary"
-                          : "bg-gray-200 text-gray-500"
+                          : "bg-gray-200 text-muted-foreground"
                       }`}
                     >
                       {project.isPublic ? (
@@ -1096,10 +1096,10 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="px-8 py-5 border-t border-gray-100 flex justify-end gap-3">
+            <div className="px-8 py-5 border-t border-border flex justify-end gap-3">
               <button
                 onClick={() => setShowProjectVisibilityModal(false)}
-                className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors"
+                className="px-6 py-3 rounded-xl text-muted-foreground font-bold hover:bg-muted transition-colors"
               >
                 취소
               </button>
@@ -1117,21 +1117,21 @@ export default function ProfilePage() {
       {/* --- Settings Modal (Plan, Verification, Account) --- */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-[#F8FAFC]">
-              <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight">
+          <div className="bg-card rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-8 py-6 border-b border-border flex justify-between items-center bg-[#F8FAFC]">
+              <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">
                 계정 설정
               </h2>
               <button
                 onClick={() => setShowSettingsModal(false)}
                 className="p-2.5 hover:bg-white rounded-xl transition-all"
               >
-                <X size={24} className="text-gray-400" />
+                <X size={24} className="text-muted-foreground" />
               </button>
             </div>
 
             {/* Modal Tabs */}
-            <div className="px-8 border-b border-gray-100 flex gap-8 bg-[#F8FAFC]">
+            <div className="px-8 border-b border-border flex gap-8 bg-[#F8FAFC]">
               {settingsTabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -1139,7 +1139,7 @@ export default function ProfilePage() {
                   className={`pb-4 flex items-center gap-2 font-bold text-xs uppercase tracking-widest transition-all relative ${
                     settingsTab === tab.id
                       ? "text-primary"
-                      : "text-gray-400 hover:text-gray-600"
+                      : "text-muted-foreground hover:text-gray-600"
                   }`}
                 >
                   <tab.icon size={16} />
@@ -1159,44 +1159,44 @@ export default function ProfilePage() {
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">현재 플랜</p>
-                        <h3 className="text-2xl font-black text-gray-900">
+                        <h3 className="text-2xl font-black text-foreground">
                           {user?.planType === "PRO" ? "Pro Plan" : "Basic Plan"}
                         </h3>
                       </div>
-                      <span className="px-4 py-1.5 bg-white border border-primary/20 text-primary rounded-full text-sm font-bold shadow-sm">
+                      <span className="px-4 py-1.5 bg-card border border-primary/20 text-primary rounded-full text-sm font-bold shadow-sm">
                         {user?.planType === "PRO" ? "유료" : "무료"}
                       </span>
                     </div>
 
                     <div className="space-y-6">
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">플랜 제한사항</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">플랜 제한사항</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                          <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
                             <Check size={18} className="text-primary shrink-0" /> 월 {user?.planType === "PRO" ? "무제한" : "100개"} 데이터 증강 작업
                           </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                          <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
                             <Check size={18} className="text-primary shrink-0" /> 프로젝트 {user?.planType === "PRO" ? "무제한" : "3개까지"} 생성 가능
                           </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                          <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
                             <Check size={18} className="text-primary shrink-0" /> {user?.planType === "PRO" ? "고급 AI 모델 및 커스텀 설정" : "기본 AI 모델 사용"}
                           </div>
                           {user?.planType === "PRO" ? (
                             <>
-                              <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
                                 <Check size={18} className="text-primary shrink-0" /> 우선 지원 및 전용 서버
                               </div>
-                              <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
                                 <Check size={18} className="text-primary shrink-0" /> 팀 협업 기능 제공
                               </div>
                             </>
                           ) : (
                             <>
-                              <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                                <X size={18} className="text-gray-300 shrink-0" /> 고급 AI 모델 및 커스텀 설정
+                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
+                                <X size={18} className="text-muted-foreground shrink-0" /> 고급 AI 모델 및 커스텀 설정
                               </div>
-                              <div className="flex items-center gap-3 text-sm font-bold text-gray-300">
-                                <X size={18} className="text-gray-300 shrink-0" /> 우선 지원 및 전용 서버
+                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
+                                <X size={18} className="text-muted-foreground shrink-0" /> 우선 지원 및 전용 서버
                               </div>
                             </>
                           )}
@@ -1204,9 +1204,9 @@ export default function ProfilePage() {
                       </div>
 
                       {user?.planType !== "PRO" && (
-                        <div className="pt-6 border-t border-gray-100">
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
-                          <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                        <div className="pt-6 border-t border-border">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
+                          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                             무제한 데이터 증강, 고급 AI 모델, 우선 지원, 팀 협업 기능 등 모든 기능을 제한 없이 이용해보세요.
                           </p>
                         </div>
@@ -1260,7 +1260,7 @@ export default function ProfilePage() {
                           전문가 인증 신청이 성공적으로 접수되어 심사 중입니다.
                         </p>
                       </div>
-                      <p className="text-xs text-amber-700 max-w-sm mx-auto font-medium leading-relaxed bg-white border border-amber-200/50 px-4 py-3 rounded-2xl">
+                      <p className="text-xs text-amber-700 max-w-sm mx-auto font-medium leading-relaxed bg-card border border-amber-200/50 px-4 py-3 rounded-2xl">
                         첨부하신 의료 면허증 또는 학위 증명서 검토에는 **영업일 기준 1~3일**이 소요됩니다. 심사가 완료되면 결과가 메일 등으로 통보됩니다.
                       </p>
                     </div>
@@ -1269,20 +1269,20 @@ export default function ProfilePage() {
                     <div className="space-y-6">
                       <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10 space-y-4">
                         <div className="flex gap-4">
-                          <div className="p-3 bg-white border border-primary/20 text-primary rounded-2xl shadow-sm h-fit">
+                          <div className="p-3 bg-card border border-primary/20 text-primary rounded-2xl shadow-sm h-fit">
                             <ShieldCheck size={24} />
                           </div>
                           <div>
-                            <h4 className="text-lg font-black text-gray-900 mb-1">의료 및 학위 전문가 신청</h4>
-                            <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                            <h4 className="text-lg font-black text-foreground mb-1">의료 및 학위 전문가 신청</h4>
+                            <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                               의료진, 관련 학계 연구자 등 전문 지식을 인증받아 신뢰받는 기여를 시작해보세요. 의료 면허증 또는 학위 증명서를 첨부하여 인증을 요청할 수 있습니다.
                             </p>
                           </div>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-100 space-y-3">
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">지원 대상서류</p>
-                          <ul className="text-xs text-gray-600 font-medium space-y-2 pl-4 list-disc">
+                        <div className="pt-4 border-t border-border space-y-3">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">지원 대상서류</p>
+                          <ul className="text-xs text-muted-foreground font-medium space-y-2 pl-4 list-disc">
                             <li>의사 면허증 / 간호사 면허증 등 전문 의료 면허증</li>
                             <li>의학 또는 생명과학 석사/박사 학위 증명서</li>
                           </ul>
@@ -1295,7 +1295,7 @@ export default function ProfilePage() {
                         className={`border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all ${
                           expertFile 
                             ? 'border-primary bg-primary/5' 
-                            : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50'
+                            : 'border-border hover:border-primary/50 hover:bg-muted'
                         }`}
                       >
                         <input 
@@ -1307,12 +1307,12 @@ export default function ProfilePage() {
                         />
                         {expertFile ? (
                           <div className="space-y-4">
-                            <div className="p-4 bg-white border border-primary/20 text-primary rounded-2xl shadow-sm inline-flex items-center justify-center">
+                            <div className="p-4 bg-card border border-primary/20 text-primary rounded-2xl shadow-sm inline-flex items-center justify-center">
                               <Upload size={24} />
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-gray-900 break-all">{expertFile.name}</p>
-                              <p className="text-xs text-gray-500 mt-1">{(expertFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                              <p className="text-sm font-bold text-foreground break-all">{expertFile.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{(expertFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                             </div>
                             <button 
                               type="button"
@@ -1320,19 +1320,19 @@ export default function ProfilePage() {
                                 e.stopPropagation();
                                 setExpertFile(null);
                               }}
-                              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all"
+                              className="px-4 py-2 bg-muted hover:bg-gray-200 text-foreground text-xs font-bold rounded-xl transition-all"
                             >
                               파일 재선택
                             </button>
                           </div>
                         ) : (
                           <div className="space-y-4">
-                            <div className="p-4 bg-gray-50 text-gray-400 border border-gray-100 rounded-2xl inline-flex items-center justify-center">
+                            <div className="p-4 bg-muted text-muted-foreground border border-border rounded-2xl inline-flex items-center justify-center">
                               <Upload size={24} />
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-gray-700">인증 서류 파일 업로드</p>
-                              <p className="text-xs text-gray-400 mt-1">
+                              <p className="text-sm font-bold text-foreground">인증 서류 파일 업로드</p>
+                              <p className="text-xs text-muted-foreground mt-1">
                                 클릭하여 컴퓨터에서 파일을 선택하세요 (PDF, JPG, JPEG, PNG / 최대 10MB)
                               </p>
                             </div>
@@ -1355,11 +1355,11 @@ export default function ProfilePage() {
 
               {settingsTab === "account" && (
                 <div className="space-y-8 text-center pt-4">
-                  <div className="p-8 bg-gray-50 rounded-3xl border border-gray-100 inline-block mx-auto min-w-62.5">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-widest">
+                  <div className="p-8 bg-muted rounded-3xl border border-border inline-block mx-auto min-w-62.5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1 tracking-widest">
                       연동된 이메일
                     </p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-lg font-bold text-foreground">
                       {user?.email}
                     </p>
                   </div>
@@ -1369,12 +1369,12 @@ export default function ProfilePage() {
                         logout();
                         setShowSettingsModal(false);
                       }}
-                      className="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-muted text-muted-foreground rounded-2xl font-bold hover:bg-muted transition-all flex items-center justify-center gap-3"
                     >
                       <LogOut size={20} /> 로그아웃 (Sign Out)
                     </button>
 
-                    <div className="pt-4 border-t border-gray-100">
+                    <div className="pt-4 border-t border-border">
                       <p className="text-[10px] font-bold text-red-400 uppercase mb-3 tracking-widest flex items-center justify-center gap-2">
                         <AlertTriangle size={12} /> 위험 구역 (Danger Zone)
                       </p>

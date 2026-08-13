@@ -54,25 +54,25 @@ export default function OnboardingPage() {
           <div className="flex justify-center mb-6">
             <img src="/logo1.png" alt="Bifusion Logo" className="h-12 w-auto" />
           </div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-2">
+          <h1 className="text-3xl font-black text-foreground tracking-tight mb-2">
             환영합니다! 👋
           </h1>
-          <p className="text-gray-500 font-medium leading-relaxed">
+          <p className="text-muted-foreground font-medium leading-relaxed">
             BIFUSION에서 사용할 추가 정보를 입력해주세요.<br />
             언제든지 프로필에서 수정할 수 있습니다.
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-blue-500/5 border border-gray-100 p-10">
+        <div className="bg-card rounded-[2.5rem] shadow-xl shadow-blue-500/5 border border-border p-10">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Nickname */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">
                 Nickname <span className="text-primary">*</span>
               </label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                   <User size={18} />
                 </div>
                 <input
@@ -81,18 +81,18 @@ export default function OnboardingPage() {
                   value={formData.nickname}
                   onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
                   placeholder="사용하실 닉네임을 입력하세요"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-gray-900"
+                  className="w-full pl-12 pr-4 py-4 bg-muted border border-transparent rounded-2xl focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-foreground"
                 />
               </div>
             </div>
 
             {/* Organization */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">
                 Organization
               </label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                   <Building2 size={18} />
                 </div>
                 <input
@@ -100,18 +100,18 @@ export default function OnboardingPage() {
                   value={formData.organization}
                   onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
                   placeholder="소속 기관 (예: 상명대학교)"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-gray-900"
+                  className="w-full pl-12 pr-4 py-4 bg-muted border border-transparent rounded-2xl focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-foreground"
                 />
               </div>
             </div>
 
             {/* Contact */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">
                 Contact
               </label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                   <Phone size={18} />
                 </div>
                 <input
@@ -119,7 +119,7 @@ export default function OnboardingPage() {
                   value={formData.contact}
                   onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
                   placeholder="연락처 (예: 010-1234-5678)"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-gray-900"
+                  className="w-full pl-12 pr-4 py-4 bg-muted border border-transparent rounded-2xl focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-foreground"
                 />
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function OnboardingPage() {
           </form>
         </div>
 
-        <p className="text-center mt-8 text-sm text-gray-400 font-medium">
+        <p className="text-center mt-8 text-sm text-muted-foreground font-medium">
           이미 계정이 있으신가요? <span className="text-primary hover:underline cursor-pointer">문의하기</span>
         </p>
       </div>

@@ -48,36 +48,36 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="p-8">
-      <h3 className="text-2xl font-black text-gray-900 mb-2">전문가 Q&A 질문하기</h3>
-      <p className="text-gray-500 mb-8 font-medium">해결되지 않는 연구 문제를 구체적으로 작성해 주세요.</p>
+      <h3 className="text-2xl font-black text-foreground mb-2">전문가 Q&A 질문하기</h3>
+      <p className="text-muted-foreground mb-8 font-medium">해결되지 않는 연구 문제를 구체적으로 작성해 주세요.</p>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">질문 제목</label>
+          <label className="block text-sm font-bold text-foreground mb-2">질문 제목</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+            className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
             placeholder="어떤 문제가 발생했나요?"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">질문 내용</label>
+          <label className="block text-sm font-bold text-foreground mb-2">질문 내용</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium h-48 resize-none"
+            className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium h-48 resize-none"
             placeholder="발생한 에러 메시지나 시도해본 방법 등을 상세히 적어주세요."
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">태그</label>
-          <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
+          <label className="block text-sm font-bold text-foreground mb-2">태그</label>
+          <div className="w-full px-4 py-3 rounded-xl border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
             {tags.map(tag => (
               <span key={tag} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                 {tag}
@@ -102,7 +102,7 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
             type="button" 
             onClick={onClose} 
             disabled={isSubmitting}
-            className="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+            className="px-6 py-3 rounded-xl font-bold text-muted-foreground bg-muted hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
             취소
           </button>

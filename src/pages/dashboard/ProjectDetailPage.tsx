@@ -269,7 +269,7 @@ export default function ProjectDetailPage() {
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100 self-start">
               <Loader className="w-3 h-3 animate-spin" /> {progress}% 진행중
             </span>
-            <div className="w-full bg-gray-100 rounded-full h-1.5">
+            <div className="w-full bg-muted rounded-full h-1.5">
               <div
                 className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
@@ -329,22 +329,22 @@ export default function ProjectDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50/50">
       {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/dashboard/projects")}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500 hover:text-gray-900"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-gray-900"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
                 <span>Projects</span>
                 <ChevronRight className="w-3 h-3" />
                 <span className="text-primary">Detail</span>
               </nav>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+              <h1 className="text-2xl font-black text-foreground tracking-tight">
                 {currentProject?.title || "로딩 중..."}
               </h1>
             </div>
@@ -362,14 +362,14 @@ export default function ProjectDetailPage() {
                 ))}
                 <button
                   onClick={() => setIsSettingsOpen(true)}
-                  className="w-8 h-8 rounded-full border-2 border-white bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors ring-1 ring-gray-100"
+                  className="w-8 h-8 rounded-full border-2 border-white bg-muted flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors ring-1 ring-gray-100"
                 >
                   <Plus className="w-3 h-3" />
                 </button>
               </div>
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold text-sm text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl font-bold text-sm text-foreground hover:bg-muted transition-all shadow-sm"
               >
                 <Settings className="w-4 h-4" />
                 설정
@@ -384,7 +384,7 @@ export default function ProjectDetailPage() {
 
       <div className="max-w-7xl mx-auto px-8 py-8 space-y-8">
         {/* Cover Image */}
-        <section className="relative h-64 md:h-72 rounded-4xl overflow-hidden border border-gray-200 shadow-sm">
+        <section className="relative h-64 md:h-72 rounded-4xl overflow-hidden border border-border shadow-sm">
           <img
             src={coverImage}
             alt={currentProject?.title}
@@ -414,7 +414,7 @@ export default function ProjectDetailPage() {
               className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group ${
                 selectedTab === stat.id
                   ? `border-${stat.color}-500 bg-${stat.color}-50 shadow-lg shadow-${stat.color}-500/10`
-                  : "border-white bg-white hover:border-gray-200 shadow-sm"
+                  : "border-white bg-card hover:border-gray-200 shadow-sm"
               }`}
             >
               <div
@@ -424,10 +424,10 @@ export default function ProjectDetailPage() {
                   className={`w-6 h-6 ${stat.id === "processing" ? "animate-spin" : ""}`}
                 />
               </div>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
                 {stat.label}
               </p>
-              <p className="text-3xl font-black text-gray-900 mt-1">
+              <p className="text-3xl font-black text-foreground mt-1">
                 {stat.value}
               </p>
               {selectedTab === stat.id && (
@@ -440,7 +440,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
           {/* Filters Header */}
           <div className="p-6 border-b border-gray-50 bg-[#F8FAFC]/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0">
@@ -449,7 +449,7 @@ export default function ProjectDetailPage() {
                 className={`px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${
                   selectedTypeFilter === "all"
                     ? "bg-gray-900 text-white shadow-md"
-                    : "text-gray-500 hover:bg-gray-100"
+                    : "text-muted-foreground hover:bg-muted"
                 }`}
               >
                 전체 보기
@@ -461,7 +461,7 @@ export default function ProjectDetailPage() {
                   className={`px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${
                     selectedTypeFilter === type
                       ? "bg-primary text-white shadow-md shadow-primary/20"
-                      : "text-gray-500 hover:bg-gray-100"
+                      : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {type.toUpperCase()}
@@ -470,13 +470,13 @@ export default function ProjectDetailPage() {
             </div>
 
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
                 placeholder="작업 ID 또는 담당자 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+                className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
               />
             </div>
           </div>
@@ -486,22 +486,22 @@ export default function ProjectDetailPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/50">
-                  <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <th className="px-6 py-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest border-b border-border">
                     작업 정보
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <th className="px-6 py-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest border-b border-border">
                     타입
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <th className="px-6 py-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest border-b border-border">
                     상태
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <th className="px-6 py-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest border-b border-border">
                     담당자
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <th className="px-6 py-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest border-b border-border">
                     생성일
                   </th>
-                  <th className="px-6 py-4 text-right border-b border-gray-100"></th>
+                  <th className="px-6 py-4 text-right border-b border-border"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -514,10 +514,10 @@ export default function ProjectDetailPage() {
                     >
                       <td className="px-6 py-5">
                         <div className="flex flex-col">
-                          <span className="font-bold text-gray-900 tracking-tight group-hover:text-primary transition-colors cursor-pointer">
+                          <span className="font-bold text-foreground tracking-tight group-hover:text-primary transition-colors cursor-pointer">
                             {job.id}
                           </span>
-                          <span className="text-xs font-medium text-gray-400 mt-0.5 select-all">
+                          <span className="text-xs font-medium text-muted-foreground mt-0.5 select-all">
                             Seed: {job.seed}
                           </span>
                         </div>
@@ -543,18 +543,18 @@ export default function ProjectDetailPage() {
                           <img
                             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${job.user}`}
                             alt={job.user}
-                            className="w-6 h-6 rounded-full bg-gray-100 ring-1 ring-gray-200 shadow-sm"
+                            className="w-6 h-6 rounded-full bg-muted ring-1 ring-gray-200 shadow-sm"
                           />
-                          <span className="text-sm font-bold text-gray-700">
+                          <span className="text-sm font-bold text-foreground">
                             {job.user}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-sm font-medium text-gray-500 tabular-nums">
+                      <td className="px-6 py-5 text-sm font-medium text-muted-foreground tabular-nums">
                         {job.date}
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <button className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                        <button className="p-2 text-muted-foreground hover:text-gray-900 hover:bg-muted rounded-lg transition-all opacity-0 group-hover:opacity-100">
                           <MoreVertical className="w-4 h-4" />
                         </button>
                       </td>
@@ -563,9 +563,9 @@ export default function ProjectDetailPage() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-20 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-400">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
                         <Activity className="w-12 h-12 mb-4 opacity-20" />
-                        <p className="font-bold text-gray-500">
+                        <p className="font-bold text-muted-foreground">
                           조건에 맞는 작업이 없습니다
                         </p>
                         <p className="text-sm mt-1">
@@ -584,14 +584,14 @@ export default function ProjectDetailPage() {
       {/* Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-gray-900">
+          <div className="bg-card rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex justify-between items-center">
+              <h3 className="text-2xl font-bold text-foreground">
                 프로젝트 설정
               </h3>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -600,26 +600,26 @@ export default function ProjectDetailPage() {
             <div className="p-6 space-y-8">
               {/* Basic Info Section */}
               <section>
-                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                <h4 className="text-lg font-bold text-foreground mb-4">
                   기본 정보
                 </h4>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">프로젝트 제목</label>
+                    <label className="block text-sm font-semibold text-foreground mb-1">프로젝트 제목</label>
                     <input
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">프로젝트 설명</label>
+                    <label className="block text-sm font-semibold text-foreground mb-1">프로젝트 설명</label>
                     <textarea
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                     />
                   </div>
                 </div>
@@ -627,11 +627,11 @@ export default function ProjectDetailPage() {
 
               {/* Cover Image Section */}
               <section>
-                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                <h4 className="text-lg font-bold text-foreground mb-4">
                   배경 이미지
                 </h4>
                 <div className="space-y-4">
-                  <div className="relative h-48 rounded-lg overflow-hidden bg-gray-100">
+                  <div className="relative h-48 rounded-lg overflow-hidden bg-muted">
                     <img
                       src={coverImage}
                       alt="Cover preview"
@@ -639,13 +639,13 @@ export default function ProjectDetailPage() {
                     />
                   </div>
                   <label className="block">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
                       <input
                         type="text"
                         value={coverImage}
                         onChange={(e) => setCoverImage(e.target.value)}
                         placeholder="배경 이미지 URL을 입력하세요"
-                        className="w-full bg-transparent text-center focus:outline-none text-sm text-gray-600"
+                        className="w-full bg-transparent text-center focus:outline-none text-sm text-muted-foreground"
                       />
                     </div>
                   </label>
@@ -654,7 +654,7 @@ export default function ProjectDetailPage() {
 
               {/* Team Members Section */}
               <section>
-                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                <h4 className="text-lg font-bold text-foreground mb-4">
                   멤버 관리
                 </h4>
 
@@ -665,7 +665,7 @@ export default function ProjectDetailPage() {
                       value={newMemberEmail}
                       onChange={(e) => setNewMemberEmail(e.target.value)}
                       placeholder="이메일 주소 입력"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                     <button
                       type="submit"
@@ -681,7 +681,7 @@ export default function ProjectDetailPage() {
                   {currentProject?.members?.map((member) => (
                     <div
                       key={member.userId}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <img
@@ -690,10 +690,10 @@ export default function ProjectDetailPage() {
                           className="w-10 h-10 rounded-full object-cover"
                         />
                         <div>
-                          <p className="font-semibold text-gray-900">
+                          <p className="font-semibold text-foreground">
                             {member.nickname || "이름 없음"}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-muted-foreground">
                             {member.email || "이메일 없음"}
                           </p>
                         </div>
@@ -719,17 +719,17 @@ export default function ProjectDetailPage() {
                           </button>
                           
                           {openDropdownId === member.userId && member.userId !== user?.userId && (
-                            <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-100 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-10 py-1 overflow-hidden">
+                            <div className="absolute right-0 mt-2 w-36 bg-card border border-border rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-10 py-1 overflow-hidden">
                               <button
                                 onClick={() => handleRoleChange(member.userId, "MANAGER")}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors flex items-center justify-between"
+                                className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors flex items-center justify-between"
                               >
                                 Manager
                                 {member.role === "MANAGER" && <Check className="w-4 h-4 text-primary" />}
                               </button>
                               <button
                                 onClick={() => handleRoleChange(member.userId, "MEMBER")}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors flex items-center justify-between"
+                                className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors flex items-center justify-between"
                               >
                                 Member
                                 {member.role === "MEMBER" && <Check className="w-4 h-4 text-primary" />}
@@ -752,10 +752,10 @@ export default function ProjectDetailPage() {
                 </div>
               </section>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
                   onClick={() => setIsSettingsOpen(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2 border border-border text-foreground rounded-lg font-semibold hover:bg-muted transition-colors"
                 >
                   취소
                 </button>

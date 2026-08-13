@@ -67,7 +67,7 @@ export default function OAuth2RedirectHandler() {
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
       <div className="text-center space-y-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-gray-500 font-bold animate-pulse">
+        <p className="text-muted-foreground font-bold animate-pulse">
           로그인 중입니다. 잠시만 기다려주세요...
         </p>
       </div>

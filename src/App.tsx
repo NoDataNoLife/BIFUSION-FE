@@ -30,8 +30,8 @@ import OnboardingPage from './pages/OnboardingPage';
 // 임시 컴포넌트들
 const Placeholder = ({ title }: { title: string }) => (
   <div className="p-8">
-    <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-    <p className="text-gray-500 mt-2">이 페이지는 현재 준비 중입니다.</p>
+    <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+    <p className="text-muted-foreground mt-2">이 페이지는 현재 준비 중입니다.</p>
   </div>
 );
 

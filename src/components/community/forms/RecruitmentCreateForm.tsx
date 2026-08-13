@@ -74,29 +74,29 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
 
   return (
     <div className="p-8">
-      <h3 className="text-2xl font-black text-gray-900 mb-2">팀원 모집 공고 올리기</h3>
-      <p className="text-gray-500 mb-8 font-medium">연구 프로젝트를 함께 이끌어갈 우수한 인재를 모집하세요.</p>
+      <h3 className="text-2xl font-black text-foreground mb-2">팀원 모집 공고 올리기</h3>
+      <p className="text-muted-foreground mb-8 font-medium">연구 프로젝트를 함께 이끌어갈 우수한 인재를 모집하세요.</p>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">포지션 제목</label>
+            <label className="block text-sm font-bold text-foreground mb-2">포지션 제목</label>
             <input
               type="text"
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+              className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
               placeholder="예: 의료 AI 논문 작성 파트너 구합니다"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">소속 / 기관</label>
+            <label className="block text-sm font-bold text-foreground mb-2">소속 / 기관</label>
             <input
               type="text"
               value={organization}
               onChange={(e) => setOrganization(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+              className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
               placeholder="예: 서울대학교병원, 개인 프로젝트 등"
               required
             />
@@ -104,11 +104,11 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">포지션 상세 설명</label>
+          <label className="block text-sm font-bold text-foreground mb-2">포지션 상세 설명</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium h-32 resize-none"
+            className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium h-32 resize-none"
             placeholder="프로젝트의 목표와 찾고 있는 팀원에 대해 자세히 설명해주세요."
             required
           />
@@ -116,22 +116,22 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">모집 인원</label>
+            <label className="block text-sm font-bold text-foreground mb-2">모집 인원</label>
             <input
               type="number"
               min="1"
               value={teamSize}
               onChange={(e) => setTeamSize(parseInt(e.target.value) || 1)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+              className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">마감일 (선택)</label>
+            <label className="block text-sm font-bold text-foreground mb-2">마감일 (선택)</label>
             <input
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+              className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
             />
           </div>
         </div>
@@ -139,10 +139,10 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
         {/* List Inputs: Requirements, Responsibilities, Benefits, Tags */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">자격 요건 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
+            <label className="block text-sm font-bold text-foreground mb-2">자격 요건 (엔터로 추가)</label>
+            <div className="w-full px-4 py-3 rounded-xl border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {requirements.map(item => (
-                <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                <span key={item} className="bg-muted text-foreground px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
                   <button type="button" onClick={() => handleRemoveFromList(item, requirements, setRequirements)} className="hover:text-gray-900">&times;</button>
                 </span>
@@ -152,10 +152,10 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">주요 업무 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
+            <label className="block text-sm font-bold text-foreground mb-2">주요 업무 (엔터로 추가)</label>
+            <div className="w-full px-4 py-3 rounded-xl border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {responsibilities.map(item => (
-                <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                <span key={item} className="bg-muted text-foreground px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
                   <button type="button" onClick={() => handleRemoveFromList(item, responsibilities, setResponsibilities)} className="hover:text-gray-900">&times;</button>
                 </span>
@@ -165,10 +165,10 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">제공 혜택 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
+            <label className="block text-sm font-bold text-foreground mb-2">제공 혜택 (엔터로 추가)</label>
+            <div className="w-full px-4 py-3 rounded-xl border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {benefits.map(item => (
-                <span key={item} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                <span key={item} className="bg-muted text-foreground px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
                   <button type="button" onClick={() => handleRemoveFromList(item, benefits, setBenefits)} className="hover:text-gray-900">&times;</button>
                 </span>
@@ -178,8 +178,8 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">태그 (엔터로 추가)</label>
-            <div className="w-full px-4 py-3 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
+            <label className="block text-sm font-bold text-foreground mb-2">태그 (엔터로 추가)</label>
+            <div className="w-full px-4 py-3 rounded-xl border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2 items-center min-h-13">
               {tags.map(item => (
                 <span key={item} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                   {item}
@@ -196,7 +196,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
             type="button" 
             onClick={onClose} 
             disabled={isSubmitting}
-            className="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+            className="px-6 py-3 rounded-xl font-bold text-muted-foreground bg-muted hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
             취소
           </button>

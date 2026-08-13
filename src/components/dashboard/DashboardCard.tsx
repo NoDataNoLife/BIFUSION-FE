@@ -11,7 +11,7 @@ export default function DashboardCard({
 }: DashboardCardProps) {
   return (
     <div
-      className={`bg-white/95 dark:bg-card/85 backdrop-blur-sm border border-gray-100 dark:border-border/70 shadow-sm shadow-black/5 dark:shadow-none rounded-2xl transition-colors ${className}`}
+      className={`bg-white/95 dark:bg-card/85 backdrop-blur-sm border border-border dark:border-border/70 shadow-sm shadow-black/5 dark:shadow-none rounded-2xl transition-colors ${className}`}
     >
       {children}
     </div>

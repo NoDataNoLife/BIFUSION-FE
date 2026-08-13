@@ -88,11 +88,11 @@ export default function AssetDatasetDetail({
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+      <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-400 hover:text-primary transition-all group font-bold text-sm"
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group font-bold text-sm"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Assets로 돌아가기
@@ -101,7 +101,7 @@ export default function AssetDatasetDetail({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsEditing(true)}
-              className="p-2.5 text-gray-400 hover:bg-gray-50 rounded-xl transition-all"
+              className="p-2.5 text-muted-foreground hover:bg-muted rounded-xl transition-all"
             >
               <Edit size={20} />
             </button>
@@ -125,7 +125,7 @@ export default function AssetDatasetDetail({
 
       <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
         {/* Main Info Card */}
-        <div className="bg-white rounded-4xl p-10 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-10">
+        <div className="bg-card rounded-4xl p-10 border border-border shadow-sm flex flex-col md:flex-row gap-10">
           <div className="w-full md:w-64 h-64 rounded-3xl overflow-hidden shadow-inner shrink-0">
             <img
               src={dataset.thumbnail}
@@ -148,10 +148,10 @@ export default function AssetDatasetDetail({
               )}
             </div>
 
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+            <h1 className="text-4xl font-black text-foreground tracking-tight">
               {dataset.name}
             </h1>
-            <p className="text-gray-500 font-medium leading-relaxed max-w-2xl">
+            <p className="text-muted-foreground font-medium leading-relaxed max-w-2xl">
               {dataset.description ||
                 (dataset.type === "augmented"
                   ? "Bifusion AI를 통해 정밀하게 증강된 의료 데이터셋입니다. 해부학적 구조를 유지하면서 데이터의 다양성을 확보했습니다."
@@ -160,30 +160,30 @@ export default function AssetDatasetDetail({
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-gray-50">
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                   총 용량
                 </p>
-                <p className="font-bold text-gray-900">{dataset.size}</p>
+                <p className="font-bold text-foreground">{dataset.size}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                   파일 수
                 </p>
-                <p className="font-bold text-gray-900">
+                <p className="font-bold text-foreground">
                   {dataset.fileCount.toLocaleString()}개
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                   업로드 날짜
                 </p>
-                <p className="font-bold text-gray-900">{dataset.uploadedAt}</p>
+                <p className="font-bold text-foreground">{dataset.uploadedAt}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                   데이터 형식
                 </p>
-                <p className="font-bold text-gray-900">{dataset.format}</p>
+                <p className="font-bold text-foreground">{dataset.format}</p>
               </div>
             </div>
           </div>
@@ -192,9 +192,9 @@ export default function AssetDatasetDetail({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* File List */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
+            <div className="bg-card rounded-4xl p-8 border border-border shadow-sm">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                <h3 className="text-xl font-black text-foreground flex items-center gap-3">
                   <FileText className="text-primary" /> 데이터셋 파일 목록
                 </h3>
               </div>
@@ -203,20 +203,20 @@ export default function AssetDatasetDetail({
                 {sampleFiles.map((file, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl border border-transparent hover:border-primary/20 hover:bg-white transition-all group"
+                    className="flex items-center justify-between p-5 bg-muted rounded-2xl border border-transparent hover:border-primary/20 hover:bg-white transition-all group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm group-hover:text-primary transition-colors">
+                      <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center text-muted-foreground shadow-sm group-hover:text-primary transition-colors">
                         <Database size={20} />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900">{file.name}</p>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <p className="font-bold text-foreground">{file.name}</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                           {file.type} • {file.size}
                         </p>
                       </div>
                     </div>
-                    <button className="p-2 text-gray-300 hover:text-primary transition-colors">
+                    <button className="p-2 text-muted-foreground hover:text-primary transition-colors">
                       <Download size={20} />
                     </button>
                   </div>
@@ -241,30 +241,30 @@ export default function AssetDatasetDetail({
 
           {/* Sidebar / Stats */}
           <div className="space-y-8">
-            <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
-              <h3 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+            <div className="bg-card rounded-4xl p-8 border border-border shadow-sm">
+              <h3 className="text-lg font-black text-foreground mb-6 flex items-center gap-2">
                 <Info size={18} className="text-primary" /> 상세 명세
               </h3>
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400 font-bold">라벨 수</span>
-                  <span className="font-bold text-gray-900">12 Classes</span>
+                  <span className="text-muted-foreground font-bold">라벨 수</span>
+                  <span className="font-bold text-foreground">12 Classes</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400 font-bold">해상도</span>
-                  <span className="font-bold text-gray-900">1024 x 1024</span>
+                  <span className="text-muted-foreground font-bold">해상도</span>
+                  <span className="font-bold text-foreground">1024 x 1024</span>
                 </div>
                 {dataset.type === "augmented" && (
                   <div className="pt-4 mt-4 border-t border-gray-50 space-y-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400 font-bold">증강 방식</span>
+                      <span className="text-muted-foreground font-bold">증강 방식</span>
                       <span className="font-bold text-primary">
                         Diffusion v4
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400 font-bold">생성 시간</span>
-                      <span className="font-bold text-gray-900">2h 15m</span>
+                      <span className="text-muted-foreground font-bold">생성 시간</span>
+                      <span className="font-bold text-foreground">2h 15m</span>
                     </div>
                   </div>
                 )}
@@ -280,7 +280,7 @@ export default function AssetDatasetDetail({
                 품질이 검증된 데이터셋은 연구 신뢰도를 높여줍니다. 전문가에게
                 검증을 요청하세요.
               </p>
-              <button className="w-full py-4 bg-white text-primary rounded-2xl font-black text-sm hover:bg-primary-foreground transition-all shadow-lg active:scale-95">
+              <button className="w-full py-4 bg-card text-primary rounded-2xl font-black text-sm hover:bg-primary-foreground transition-all shadow-lg active:scale-95">
                 검증 신청하기
               </button>
             </div>
@@ -291,18 +291,18 @@ export default function AssetDatasetDetail({
       {/* Delete Modal (Simplified) */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full">
-            <h2 className="text-2xl font-black text-gray-900 mb-2">
+          <div className="bg-card rounded-3xl p-8 max-w-md w-full">
+            <h2 className="text-2xl font-black text-foreground mb-2">
               데이터셋 삭제
             </h2>
-            <p className="text-gray-500 font-medium mb-8">
+            <p className="text-muted-foreground font-medium mb-8">
               "{dataset.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수
               없습니다.
             </p>
             <div className="flex gap-4">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold"
+                className="flex-1 py-4 bg-muted text-muted-foreground rounded-2xl font-bold"
               >
                 취소
               </button>

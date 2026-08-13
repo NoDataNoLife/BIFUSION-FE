@@ -2,7 +2,7 @@ import { cn } from '../lib/utils';
 
 export default function TestPage() {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center gap-8 p-4">
+    <div className="min-h-screen bg-muted flex flex-col items-center justify-center gap-8 p-4">
       {/* 로고 영역 (Frame 4 컨셉 재현) */}
       <div className="flex flex-col items-center gap-2">
         <div className="text-primary text-8xl font-bold font-hbios">

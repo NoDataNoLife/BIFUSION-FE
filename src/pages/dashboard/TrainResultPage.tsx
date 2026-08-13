@@ -53,29 +53,29 @@ export default function TrainResultPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
                 <span>Project</span>
                 <ChevronRight className="w-3 h-3" />
                 <span>Job {jobId}</span>
                 <ChevronRight className="w-3 h-3" />
                 <span className="text-green-600 font-black italic">Completed</span>
               </nav>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight italic">학습 완료 리포트</h1>
+              <h1 className="text-2xl font-black text-foreground tracking-tight italic">학습 완료 리포트</h1>
             </div>
           </div>
 
           <div className="ml-auto flex items-center gap-3">
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-2xl font-black text-sm text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-2xl font-black text-sm text-foreground hover:bg-muted transition-all shadow-sm">
               <Download size={18} />
               모델(PTH) 다운로드
             </button>
@@ -92,36 +92,36 @@ export default function TrainResultPage() {
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-10">
         {/* Metrics Grid (Prototype structure) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
+          <div className="bg-card rounded-4xl p-8 border border-border shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
               <Target size={24} />
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Accuracy</p>
-            <p className="text-3xl font-black text-gray-900 italic">94.2%</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Accuracy</p>
+            <p className="text-3xl font-black text-foreground italic">94.2%</p>
           </div>
-          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
+          <div className="bg-card rounded-4xl p-8 border border-border shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-6">
               <TrendingUp size={24} />
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">AUROC</p>
-            <p className="text-3xl font-black text-gray-900 italic">0.982</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">AUROC</p>
+            <p className="text-3xl font-black text-foreground italic">0.982</p>
           </div>
-          <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
+          <div className="bg-card rounded-4xl p-8 border border-border shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center mb-6">
               <Activity size={24} />
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Confidence</p>
-            <p className="text-3xl font-black text-gray-900 italic">High</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Confidence</p>
+            <p className="text-3xl font-black text-foreground italic">High</p>
           </div>
         </div>
 
         {/* Interaction Section */}
-        <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm space-y-8">
+        <div className="bg-card rounded-[2.5rem] p-10 border border-border shadow-sm space-y-8">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gray-50 text-gray-400 rounded-2xl">
+            <div className="p-3 bg-muted text-muted-foreground rounded-2xl">
               <MessageSquare className="w-6 h-6" />
             </div>
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">팀 코멘트</h3>
+            <h3 className="text-2xl font-black text-foreground tracking-tight">팀 코멘트</h3>
           </div>
 
           {/* Comment Input */}
@@ -130,13 +130,13 @@ export default function TrainResultPage() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="학습 결과에 대한 의견을 공유하세요..."
-              className="w-full p-6 bg-gray-50 border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-gray-700 min-h-[120px]"
+              className="w-full p-6 bg-muted border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-foreground min-h-[120px]"
             />
             <button 
               onClick={handlePostComment}
               disabled={!newComment.trim()}
               className={`absolute bottom-4 right-4 p-4 rounded-2xl transition-all shadow-lg ${
-                newComment.trim() ? 'bg-primary text-white shadow-primary/20' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                newComment.trim() ? 'bg-primary text-white shadow-primary/20' : 'bg-gray-200 text-muted-foreground cursor-not-allowed'
               }`}
             >
               <Send className="w-5 h-5" />
@@ -147,18 +147,18 @@ export default function TrainResultPage() {
           <div className="space-y-6 pt-4">
             {comments.map((comment) => (
               <div key={comment.id} className="flex gap-4 group">
-                <img src={comment.avatar} alt={comment.user} className="w-12 h-12 rounded-2xl bg-gray-100 ring-4 ring-gray-50 shrink-0" />
+                <img src={comment.avatar} alt={comment.user} className="w-12 h-12 rounded-2xl bg-muted ring-4 ring-gray-50 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-gray-900 text-sm">{comment.user}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{comment.time}</span>
+                      <span className="font-black text-foreground text-sm">{comment.user}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{comment.time}</span>
                     </div>
-                    <button className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-900 transition-all">
+                    <button className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-gray-900 transition-all">
                       <MoreVertical className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="p-5 bg-gray-50 rounded-2xl rounded-tl-none border border-gray-100 text-gray-600 font-medium leading-relaxed">
+                  <div className="p-5 bg-muted rounded-2xl rounded-tl-none border border-border text-muted-foreground font-medium leading-relaxed">
                     {comment.content}
                   </div>
                 </div>

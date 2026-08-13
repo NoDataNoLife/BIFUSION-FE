@@ -10,14 +10,14 @@ interface VerificationRequestModalProps {
 
 export default function VerificationRequestModal({ onClose, onSubmit, assetTitle }: VerificationRequestModalProps) {
   const [reason, setReason] = useState('');
-  const [reward, setReward] = useState<number>(500);
+  const [reward, setReward] = useState<number | string>(500);
   const { user } = useAuthStore();
   const currentPoints = user?.points || 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reason.trim() || reward > currentPoints) return;
-    onSubmit(reason, reward);
+    if (!reason.trim() || Number(reward) > currentPoints) return;
+    onSubmit(reason, Number(reward));
   };
 
   return (
@@ -73,7 +73,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground flex justify-between items-end">
                 <span>리워드(포인트) 설정</span>
-                <span className={`text-xs font-bold ${reward > currentPoints ? 'text-red-500' : 'text-primary'}`}>
+                <span className={`text-xs font-bold ${Number(reward) > currentPoints ? 'text-red-500' : 'text-primary'}`}>
                   내 보유 포인트: {currentPoints.toLocaleString()} P
                 </span>
               </label>
@@ -81,16 +81,16 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
                 <input
                   type="number"
                   value={reward}
-                  onChange={(e) => setReward(Number(e.target.value))}
+                  onChange={(e) => setReward(e.target.value === '' ? '' : Number(e.target.value))}
                   min={100}
                   step={100}
-                  className={`w-full h-14 px-5 bg-background border ${reward > currentPoints ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-primary'} rounded-2xl text-foreground font-bold focus:outline-none focus:ring-1 transition-all`}
+                  className={`w-full h-14 px-5 bg-background border ${Number(reward) > currentPoints ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-primary'} rounded-2xl text-foreground font-bold focus:outline-none focus:ring-1 transition-all`}
                 />
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold flex items-center gap-2">
                   <span>P</span>
                 </div>
               </div>
-              {reward > currentPoints && (
+              {Number(reward) > currentPoints && (
                 <p className="text-xs text-red-500 font-bold mt-1">보유 포인트가 부족합니다.</p>
               )}
             </div>
@@ -109,7 +109,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
           <button
             type="submit"
             form="verification-form"
-            disabled={!reason.trim() || reward > currentPoints}
+            disabled={!reason.trim() || Number(reward) > currentPoints}
             className="px-8 py-3.5 bg-primary text-primary-foreground rounded-xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             신청하기

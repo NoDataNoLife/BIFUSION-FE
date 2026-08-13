@@ -1,4 +1,5 @@
 import { useState } from "react";
+import VerificationRequestModal from "../community/modals/VerificationRequestModal";
 import {
   ArrowLeft,
   Database,
@@ -70,6 +71,11 @@ export default function AssetDatasetDetail({
   const [newTags, setNewTags] = useState(dataset.tags || []);
   const [verificationStatus] = useState(dataset.verificationStatus || "none");
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+
+  const handleDeleteConfirm = () => {
+    onDelete?.(dataset.id);
+    setShowDeleteConfirm(false);
+  };
 
   const sampleFiles: FileItem[] = [
     { name: "train_images.zip", size: "2.3 GB", type: "Archive" },
@@ -280,7 +286,10 @@ export default function AssetDatasetDetail({
                 품질이 검증된 데이터셋은 연구 신뢰도를 높여줍니다. 전문가에게
                 검증을 요청하세요.
               </p>
-              <button className="w-full py-4 bg-card text-primary rounded-2xl font-black text-sm hover:bg-primary-foreground transition-all shadow-lg active:scale-95">
+              <button 
+                onClick={() => setShowVerificationModal(true)}
+                className="w-full py-4 bg-card text-primary rounded-2xl font-black text-sm hover:bg-primary-foreground transition-all shadow-lg active:scale-95"
+              >
                 검증 신청하기
               </button>
             </div>
@@ -315,6 +324,18 @@ export default function AssetDatasetDetail({
             </div>
           </div>
         </div>
+      )}
+
+      {showVerificationModal && (
+        <VerificationRequestModal
+          assetTitle={dataset.name}
+          onClose={() => setShowVerificationModal(false)}
+          onSubmit={(reason, reward) => {
+            console.log("Verification requested:", { reason, reward });
+            // TODO: Call API
+            setShowVerificationModal(false);
+          }}
+        />
       )}
     </div>
   );

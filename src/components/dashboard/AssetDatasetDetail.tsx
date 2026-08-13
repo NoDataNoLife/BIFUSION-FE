@@ -21,7 +21,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import ExpertVerificationCard, { VerificationStatus } from "../community/ExpertVerificationCard";
-import VerificationRequestModal from "../community/modals/VerificationRequestModal";
 import VerificationResultModal from "../community/modals/VerificationResultModal";
 
 interface AssetDatasetDetailProps {

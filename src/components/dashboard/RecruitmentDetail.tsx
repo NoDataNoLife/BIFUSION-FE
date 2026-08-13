@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MapPin, Briefcase, Clock, CheckCircle, Send, Calendar } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Briefcase, Clock, CheckCircle, Send, Calendar, Edit2, Trash2 } from 'lucide-react';
 import api from '../../lib/axios';
 import { useCommunityStore } from '../../store/useCommunityStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -7,9 +7,10 @@ import { useAuthStore } from '../../store/useAuthStore';
 interface RecruitmentDetailProps {
   recruitmentId: number;
   onBack: () => void;
+  onDelete?: () => void;
 }
 
-export default function RecruitmentDetail({ recruitmentId, onBack }: RecruitmentDetailProps) {
+export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: RecruitmentDetailProps) {
   const { recruitmentDetail, isLoadingDetail, fetchRecruitmentDetail, updateApplicationStatus } = useCommunityStore();
   const { user } = useAuthStore();
   const [applicationName, setApplicationName] = useState('');
@@ -81,11 +82,27 @@ export default function RecruitmentDetail({ recruitmentId, onBack }: Recruitment
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-8 py-6">
+        <div className="max-w-5xl mx-auto px-8 py-6 flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group font-bold text-sm">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             커뮤니티로 돌아가기
           </button>
+
+          {user?.userId === recruitmentDetail.author.userId && (
+            <div className="flex items-center gap-4">
+              <button 
+                className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-primary hover:bg-white rounded-xl font-bold transition-all text-sm border border-transparent hover:border-border"
+              >
+                <Edit2 size={18} /> 수정
+              </button>
+              <button 
+                onClick={onDelete}
+                className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl font-bold transition-all text-sm border border-transparent hover:border-red-100"
+              >
+                <Trash2 size={18} /> 삭제
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

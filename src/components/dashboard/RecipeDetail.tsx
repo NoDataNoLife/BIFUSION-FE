@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import VerificationRequestModal from '../community/modals/VerificationRequestModal';
 import { ArrowLeft, Star, GitFork, Eye, Award, Download, Calendar, MessageCircle, Share2, Check, Trash2, Clock, CheckCircle, AlertCircle, Save } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { useAssetStore } from '../../store/useAssetStore';
@@ -294,6 +295,18 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
             </div>
           </div>
         </div>
+      )}
+
+      {showVerificationModal && (
+        <VerificationRequestModal
+          assetTitle={recipe.title}
+          onClose={() => setShowVerificationModal(false)}
+          onSubmit={(reason, reward) => {
+            console.log("Verification requested:", { reason, reward });
+            // TODO: Call API
+            setShowVerificationModal(false);
+          }}
+        />
       )}
     </div>
   );

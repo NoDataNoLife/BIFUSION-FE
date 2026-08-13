@@ -1,9 +1,11 @@
 # 전문가 검증 요청 모달 UI 구현 및 연동
 
 ## 개요
+
 Research Hub(커뮤니티) 내에서 업로드된 데이터셋이나 레시피에 대해 "전문가 검증"을 요청할 수 있는 모달 UI를 선제적으로 구현하여 백엔드 팀과 데이터 페이로드(Payload) 및 흐름을 논의하기 위한 시안을 작성했습니다.
 
 ## 주요 작업 내역
+
 1. **`VerificationRequestModal` 컴포넌트 신규 생성**
    - **위치**: `src/components/community/modals/VerificationRequestModal.tsx`
    - **기능**:
@@ -22,8 +24,10 @@ Research Hub(커뮤니티) 내에서 업로드된 데이터셋이나 레시피�
      - 하단에 모달 컴포넌트 마운트 로직 추가.
 
 ## 향후 백엔드 협업 포인트 (TODO)
+
 - **API Endpoint**: `POST /community/verification-requests` 형태의 API 설계 논의
 - **Request Body**:
+
   ```json
   {
     "assetId": "string (레시피 또는 데이터셋 ID)",
@@ -32,8 +36,10 @@ Research Hub(커뮤니티) 내에서 업로드된 데이터셋이나 레시피�
     "reward": "number (포인트)"
   }
   ```
+
 - **Response**: 생성된 검증 요청글 ID 또는 상태값 반환
 
 ## PR 준비 및 배포 브랜치
+
 - **브랜치명**: `feature/verification-modal`
 - 본 문서와 함께 PR에 포함되어 백엔드 팀이 기획을 직관적으로 확인하고 API 스펙을 역제안할 수 있도록 돕습니다.

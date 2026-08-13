@@ -80,7 +80,7 @@ export default function QnaDetail({ qaPost, onBack }: QnaDetailProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-8 py-6 flex items-center justify-between">

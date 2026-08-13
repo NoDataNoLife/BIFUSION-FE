@@ -81,7 +81,7 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-5xl mx-auto px-8 py-8">

@@ -7,7 +7,7 @@ export default function DashboardPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] dark:bg-background">
+    <div className="flex h-screen bg-background dark:bg-background">
       {/* 1. 고정 사이드바 */}
       <Sidebar
         isCollapsed={isSidebarCollapsed}
@@ -19,7 +19,7 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         {/* 하위 라우트가 렌더링되는 곳 */}
-        <main className="flex-1 overflow-auto bg-[#F8FAFC] dark:bg-background custom-scrollbar transition-colors">
+        <main className="flex-1 overflow-auto bg-background dark:bg-background custom-scrollbar transition-colors">
           <Outlet />
         </main>
       </div>

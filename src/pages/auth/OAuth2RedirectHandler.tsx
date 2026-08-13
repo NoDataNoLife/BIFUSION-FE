@@ -64,7 +64,7 @@ export default function OAuth2RedirectHandler() {
   }, [location, login, fetchUser, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-muted-foreground font-bold animate-pulse">

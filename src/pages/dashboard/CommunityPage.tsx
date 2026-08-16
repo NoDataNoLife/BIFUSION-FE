@@ -46,14 +46,18 @@ export default function CommunityPage() {
   } = useCommunityStore();
 
   useEffect(() => {
-    if (activeTab === 'qa') {
-      fetchQnaList();
-    } else if (activeTab === 'datasets') {
-      fetchDatasetList();
-    } else if (activeTab === 'recruitment') {
-      fetchRecruitmentList();
-    }
-  }, [activeTab, fetchQnaList, fetchDatasetList, fetchRecruitmentList]);
+    const handler = setTimeout(() => {
+      if (activeTab === 'qa') {
+        fetchQnaList(0, 10, 'LATEST', searchQuery);
+      } else if (activeTab === 'datasets') {
+        fetchDatasetList(0, 10, 'LATEST', searchQuery);
+      } else if (activeTab === 'recruitment') {
+        fetchRecruitmentList(0, 10, 'LATEST', searchQuery);
+      }
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [activeTab, searchQuery, fetchQnaList, fetchDatasetList, fetchRecruitmentList]);
 
   // --- Sub-page Rendering Logic ---
   if (selectedId) {

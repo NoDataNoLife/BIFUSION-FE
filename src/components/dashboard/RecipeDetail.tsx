@@ -5,6 +5,8 @@ import { ArrowLeft, Star, GitFork, Eye, Award, Download, Calendar, MessageCircle
 import ImageWithFallback from '../common/ImageWithFallback';
 import { useAssetStore } from '../../store/useAssetStore';
 import { type Recipe } from '../../store/mockData';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useCommunityStore } from '../../store/useCommunityStore';
 
 interface RecipeDetailProps {
   recipe: Recipe;
@@ -32,6 +34,8 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
   const [copied, setCopied] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const { user } = useAuthStore();
+  const { deleteRecipeReview, requestExpertVerification } = useCommunityStore();
 
   const reviews: Review[] = [
     {
@@ -266,7 +270,29 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs text-muted-foreground font-medium">{review.date}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs text-muted-foreground font-medium">{review.date}</span>
+                        {(isAuthor || user?.name === review.author) && (
+                          <button 
+                            onClick={async () => {
+                              if (confirm('이 리뷰를 삭제하시겠습니까?')) {
+                                try {
+                                  // id string to number conversion if needed, e.g. 'r1' -> 1
+                                  const rId = parseInt(recipe.id.replace(/\D/g, '')) || 1;
+                                  const revId = parseInt(review.id.replace(/\D/g, '')) || 1;
+                                  await deleteRecipeReview(rId, revId);
+                                  alert('리뷰가 삭제되었습니다.');
+                                } catch (e) {
+                                  alert('리뷰 삭제 중 오류가 발생했습니다.');
+                                }
+                              }
+                            }}
+                            className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-muted-foreground font-medium leading-relaxed">{review.comment}</p>
                   </div>
@@ -298,10 +324,14 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
         <VerificationRequestModal
           assetTitle={recipe.title}
           onClose={() => setShowVerificationModal(false)}
-          onSubmit={(reason, reward) => {
-            console.log("Verification requested:", { reason, reward });
-            // TODO: Call API
-            setShowVerificationModal(false);
+          onSubmit={async (reason, reward) => {
+            try {
+              await requestExpertVerification('RECIPE', recipe.id, reason, reward);
+              alert('검증 요청이 완료되었습니다.');
+              setShowVerificationModal(false);
+            } catch (error) {
+              alert('검증 요청 실패');
+            }
           }}
         />
       )}

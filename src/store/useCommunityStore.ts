@@ -43,6 +43,10 @@ export interface DatasetListResponse {
 
 export interface DatasetDetailResponse extends DatasetListResponse {
   usageExample?: string;
+  verificationStatus?: string;
+  thumbnail?: string;
+  fileId?: number;
+  fileName?: string;
 }
 
 export interface ApplicationResponse {
@@ -102,9 +106,9 @@ interface CommunityStore {
   error: string | null;
 
   // Actions
-  fetchQnaList: (page?: number, size?: number, sort?: string) => Promise<void>;
-  fetchRecruitmentList: (page?: number, size?: number, sort?: string) => Promise<void>;
-  fetchDatasetList: (page?: number, size?: number, sort?: string) => Promise<void>;
+  fetchQnaList: (page?: number, size?: number, sort?: string, keyword?: string) => Promise<void>;
+  fetchRecruitmentList: (page?: number, size?: number, sort?: string, keyword?: string) => Promise<void>;
+  fetchDatasetList: (page?: number, size?: number, sort?: string, keyword?: string) => Promise<void>;
   
   fetchQnaDetail: (qnaId: number) => Promise<void>;
   createQnaAnswer: (qnaId: number, content: string) => Promise<void>;
@@ -113,6 +117,10 @@ interface CommunityStore {
   updateApplicationStatus: (recruitmentId: number, applicationId: number, status: string) => Promise<void>;
   
   fetchDatasetDetail: (datasetId: number) => Promise<void>;
+  
+  requestExpertVerification: (targetType: 'RECIPE' | 'DATASET', targetId: number | string, reason: string, reward: number) => Promise<void>;
+  deleteRecipeReview: (recipeId: number, reviewId: number) => Promise<void>;
+  getDatasetDownloadUrl: (fileId: number) => Promise<string>;
 }
 
 export const useCommunityStore = create<CommunityStore>((set) => ({
@@ -131,11 +139,11 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
 
   error: null,
 
-  fetchQnaList: async (page = 0, size = 10, sort = 'LATEST') => {
+  fetchQnaList: async (page = 0, size = 10, sort = 'LATEST', keyword = '') => {
     set({ isLoadingQna: true, error: null });
     try {
       const response = await api.get<{ data: PageResponse<ExpertQnAListResponse> }>('/community/qna', {
-        params: { page, size, sort }
+        params: { page, size, sort, keyword: keyword || undefined }
       });
       set({ qnaList: response.data.data.content, isLoadingQna: false });
     } catch (error: any) {
@@ -143,11 +151,11 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
     }
   },
 
-  fetchRecruitmentList: async (page = 0, size = 10, sort = 'LATEST') => {
+  fetchRecruitmentList: async (page = 0, size = 10, sort = 'LATEST', keyword = '') => {
     set({ isLoadingRecruitment: true, error: null });
     try {
       const response = await api.get<{ data: PageResponse<RecruitmentResponse> }>('/community/recruitments', {
-        params: { page, size, sort }
+        params: { page, size, sort, keyword: keyword || undefined }
       });
       set({ recruitmentList: response.data.data.content, isLoadingRecruitment: false });
     } catch (error: any) {
@@ -155,11 +163,11 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
     }
   },
 
-  fetchDatasetList: async (page = 0, size = 10, sort = 'LATEST') => {
+  fetchDatasetList: async (page = 0, size = 10, sort = 'LATEST', keyword = '') => {
     set({ isLoadingDataset: true, error: null });
     try {
       const response = await api.get<{ data: PageResponse<DatasetListResponse> }>('/community/datasets', {
-        params: { page, size, sort }
+        params: { page, size, sort, keyword: keyword || undefined }
       });
       set({ datasetList: response.data.data.content, isLoadingDataset: false });
     } catch (error: any) {
@@ -218,5 +226,34 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
       set({ error: error.message || 'Failed to update application status' });
       throw error;
     }
-  }
+  },
+
+  requestExpertVerification: async (targetType: 'RECIPE' | 'DATASET', targetId: number | string, reason: string, reward: number) => {
+    try {
+      await api.post('/inspections', { targetType, targetId, reason, reward });
+      // 상태 갱신을 위해 디테일 다시 호출할 수 있음 (호출부에서 처리)
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to request expert verification' });
+      throw error;
+    }
+  },
+
+  deleteRecipeReview: async (recipeId: number, reviewId: number) => {
+    try {
+      await api.delete(`/community/recipes/${recipeId}/reviews/${reviewId}`);
+    } catch (error: any) {
+      set({ error: '댓글 삭제 중 오류가 발생했습니다.' });
+      throw error;
+    }
+  },
+
+  getDatasetDownloadUrl: async (fileId: number) => {
+    try {
+      const response = await api.post(`/api/v1/files/${fileId}/download`);
+      return response.data.data.presignedUrl;
+    } catch (error) {
+      console.error('Failed to get download URL:', error);
+      throw error;
+    }
+  },
 }));

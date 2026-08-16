@@ -20,8 +20,10 @@ import {
   AlertCircle,
   ShieldCheck,
 } from "lucide-react";
-import ExpertVerificationCard, { VerificationStatus } from "../community/ExpertVerificationCard";
+import ExpertVerificationCard, { type VerificationStatus } from "../community/ExpertVerificationCard";
 import VerificationResultModal from "../community/modals/VerificationResultModal";
+import { useCommunityStore } from "../../store/useCommunityStore";
+import { useEffect } from "react";
 
 interface AssetDatasetDetailProps {
   dataset: {
@@ -57,6 +59,16 @@ interface AssetDatasetDetailProps {
   onDelete,
   onUpdate,
 }: AssetDatasetDetailProps) {
+  const { fetchDatasetDetail, datasetDetail, isLoadingDetail, getDatasetDownloadUrl } = useCommunityStore();
+
+  useEffect(() => {
+    if (!isNaN(Number(dataset.id))) {
+      fetchDatasetDetail(Number(dataset.id));
+    }
+  }, [dataset.id, fetchDatasetDetail]);
+
+  const displayData = datasetDetail || dataset as any;
+
   const [isDownloading, setIsDownloading] = useState(false);
  
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -76,11 +88,24 @@ interface AssetDatasetDetailProps {
   };
 
  
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    if (displayData.fileId) {
+      try {
+        setIsDownloading(true);
+        const url = await getDatasetDownloadUrl(displayData.fileId);
+        window.open(url, '_blank');
+      } catch (error) {
+        alert("다운로드 URL을 가져오는데 실패했습니다.");
+      } finally {
+        setIsDownloading(false);
+      }
+      return;
+    }
+    
     setIsDownloading(true);
     setTimeout(() => {
       setIsDownloading(false);
-      alert("다운로드가 시작되었습니다.");
+      alert("다운로드가 시작되었습니다. (Mock)");
     }, 1500);
   };
 
@@ -136,57 +161,34 @@ interface AssetDatasetDetailProps {
           <div className="flex-1 space-y-6">
             <div className="flex items-center gap-3">
               <span
-                className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${dataset.type === "augmented" ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}
+                className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${displayData.type === "augmented" ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}
               >
-                {dataset.type}
+                {displayData.type === "augmented" ? "Augmented Data" : "Raw Data"}
               </span>
+              <h2 className="text-3xl font-black text-foreground tracking-tight">
+                {displayData.name || displayData.title}
+              </h2>
             </div>
-
-            <div className="flex items-center gap-4">
-              <h1 className="text-4xl font-black text-foreground tracking-tight">
-                {dataset.name}
-              </h1>
-              {verificationStatus === 'COMPLETED' && (
+            {displayData.verificationStatus === 'COMPLETED' && (
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap">
                   <ShieldCheck size={14} /> Expert Certified
                 </div>
               )}
-            </div>
 
-            <p className="text-muted-foreground font-medium leading-relaxed max-w-2xl">
-              {dataset.description ||
-                (dataset.type === "augmented"
-                  ? "Bifusion AI를 통해 정밀하게 증강된 의료 데이터셋입니다. 해부학적 구조를 유지하면서 데이터의 다양성을 확보했습니다."
-                  : "사용자가 직접 업로드한 원본 의료 데이터셋입니다. 증강 및 학습 프로젝트의 기초 데이터로 활용됩니다.")}
+            <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+              {displayData.description}
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-gray-50">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                  총 용량
-                </p>
-                <p className="font-bold text-foreground">{dataset.size}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                  파일 수
-                </p>
-                <p className="font-bold text-foreground">
-                  {dataset.fileCount.toLocaleString()}개
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                  업로드 날짜
-                </p>
-                <p className="font-bold text-foreground">{dataset.uploadedAt}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                  데이터 형식
-                </p>
-                <p className="font-bold text-foreground">{dataset.format}</p>
-              </div>
+            <div className="flex items-center gap-4 text-sm font-bold text-foreground">
+              <span className="flex items-center gap-1.5 bg-muted px-3 py-1.5 rounded-lg">
+                <Database size={16} className="text-primary" /> {displayData.size || displayData.fileSize || "0 MB"}
+              </span>
+              <span className="flex items-center gap-1.5 bg-muted px-3 py-1.5 rounded-lg">
+                <FileText size={16} className="text-primary" /> {displayData.fileCount?.toLocaleString() || "0"} Files
+              </span>
+              <span className="flex items-center gap-1.5 bg-muted px-3 py-1.5 rounded-lg">
+                <Calendar size={16} className="text-primary" /> {displayData.uploadedAt || displayData.createdAt}
+              </span>
             </div>
           </div>
         </div>
@@ -242,9 +244,9 @@ interface AssetDatasetDetailProps {
 
             {/* Expert Section */}
             <ExpertVerificationCard 
-              status={verificationStatus}
-              onRequestVerification={() => setShowVerificationModal(true)}
-              onViewResults={() => setShowResultModal(true)}
+              status={displayData.verificationStatus || verificationStatus}
+              onRequestClick={() => setShowVerificationModal(true)}
+              onResultClick={() => setShowResultModal(true)}
             />
           </div>
         </div>
@@ -261,6 +263,16 @@ interface AssetDatasetDetailProps {
               "{dataset.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수
               없습니다.
             </p>
+            <div className="flex gap-2">
+              {(displayData.tags || []).map((tag: string) => (
+                <span
+                  key={tag}
+                  className="px-2.5 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
             <div className="flex gap-4">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
@@ -281,11 +293,19 @@ interface AssetDatasetDetailProps {
 
       {showVerificationModal && (
         <VerificationRequestModal
-          assetTitle={dataset.name}
+          assetTitle={displayData.name || displayData.title}
           onClose={() => setShowVerificationModal(false)}
-          onSubmit={(reason, reward) => {
-            console.log('Verification requested:', { reason, reward });
-            setShowVerificationModal(false);
+          onSubmit={async (reason, reward) => {
+            try {
+              await useCommunityStore.getState().requestExpertVerification('DATASET', dataset.id, reason, reward);
+              alert('검증 요청이 완료되었습니다.');
+              if (!isNaN(Number(dataset.id))) {
+                fetchDatasetDetail(Number(dataset.id));
+              }
+              setShowVerificationModal(false);
+            } catch (error) {
+              alert('검증 요청 실패');
+            }
           }}
         />
       )}

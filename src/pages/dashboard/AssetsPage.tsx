@@ -58,7 +58,8 @@ export default function AssetsPage() {
     if (activeTab === 'recipes') {
       return forkedRecipeIds.includes(r.id) && matchesSearch;
     } else if (activeTab === 'uploaded-recipes') {
-      return r.author === user?.name && matchesSearch;
+      // Show user's recipes, or fallback to mock data (r.id === '1' or '2')
+      return (r.author === user?.name || r.id === '1' || r.id === '2') && matchesSearch;
     }
     return matchesSearch;
   });
@@ -120,44 +121,73 @@ export default function AssetsPage() {
       {/* Grid Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {activeTab.includes('recipe') ? (
-          filteredRecipes.length > 0 ? (
-            filteredRecipes.map(recipe => (
+          <>
+            {activeTab === 'uploaded-recipes' && (
               <div 
-                key={recipe.id}
-                onClick={() => setSelectedRecipe(recipe)}
-                className="group bg-card rounded-4xl border border-border overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
+                onClick={() => alert('새 레시피 만들기 모달 오픈 (Mock)')}
+                className="group flex flex-col items-center justify-center bg-primary/5 rounded-4xl border-2 border-dashed border-primary/20 hover:border-primary hover:bg-primary/10 transition-all cursor-pointer min-h-[320px]"
               >
-                <div className="aspect-video relative overflow-hidden bg-muted">
-                  <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  {recipe.isExpertVerified && (
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-lg uppercase tracking-widest">
-                      Expert
-                    </div>
-                  )}
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                  <Plus size={32} />
                 </div>
-                <div className="p-8">
-                  <h3 className="text-lg font-black text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">{recipe.title}</h3>
-                  <p className="text-sm text-muted-foreground font-medium line-clamp-2 mb-6">{recipe.description}</p>
-                  <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                    <div className="flex items-center gap-2">
-                      <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                      <span className="text-sm font-black text-foreground">{recipe.rating}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-muted-foreground font-bold text-xs uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {recipe.forkedCount}</span>
-                      <span className="flex items-center gap-1.5"><Eye size={14} /> {recipe.viewCount}</span>
+                <h3 className="text-xl font-black text-primary">새 레시피 만들기</h3>
+                <p className="text-sm font-bold text-primary/60 mt-2">나만의 레시피를 등록하세요</p>
+              </div>
+            )}
+            {filteredRecipes.length > 0 ? (
+              filteredRecipes.map(recipe => (
+                <div 
+                  key={recipe.id}
+                  onClick={() => setSelectedRecipe(recipe)}
+                  className="group bg-card rounded-4xl border border-border overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
+                >
+                  <div className="aspect-video relative overflow-hidden bg-muted">
+                    <ImageWithFallback src={recipe.thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {recipe.isExpertVerified && (
+                      <div className="absolute top-4 right-4 px-3 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-lg uppercase tracking-widest">
+                        Expert
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-8">
+                    <h3 className="text-lg font-black text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">{recipe.title}</h3>
+                    <p className="text-sm text-muted-foreground font-medium line-clamp-2 mb-6">{recipe.description}</p>
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                      <div className="flex items-center gap-2">
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                        <span className="text-sm font-black text-foreground">{recipe.rating}</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-muted-foreground font-bold text-xs uppercase tracking-widest">
+                        <span className="flex items-center gap-1.5"><GitFork size={14} /> {recipe.forkedCount}</span>
+                        <span className="flex items-center gap-1.5"><Eye size={14} /> {recipe.viewCount}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center">
-              <p className="text-muted-foreground font-bold">표시할 레시피가 없습니다.</p>
-            </div>
-          )
+              ))
+            ) : (
+              activeTab !== 'uploaded-recipes' && (
+                <div className="col-span-full py-20 text-center">
+                  <p className="text-muted-foreground font-bold">표시할 레시피가 없습니다.</p>
+                </div>
+              )
+            )}
+          </>
         ) : (
-          filteredDatasets.map(dataset => (
+          <>
+            {activeTab === 'datasets' && (
+              <div 
+                onClick={() => alert('새 데이터셋 추가 모달 오픈 (Mock)')}
+                className="group flex flex-col items-center justify-center bg-blue-50 rounded-4xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-100 transition-all cursor-pointer min-h-[320px]"
+              >
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-blue-500 mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                  <Plus size={32} />
+                </div>
+                <h3 className="text-xl font-black text-blue-600">새 데이터셋 추가</h3>
+                <p className="text-sm font-bold text-blue-400 mt-2">의료 데이터셋을 업로드하세요</p>
+              </div>
+            )}
+            {filteredDatasets.map(dataset => (
             <div 
               key={dataset.id}
               onClick={() => setSelectedDataset(dataset)}
@@ -194,6 +224,8 @@ export default function AssetsPage() {
               </div>
             </div>
           ))
+          }
+          </>
         )}
       </div>
     </div>

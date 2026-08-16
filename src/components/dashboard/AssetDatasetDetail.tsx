@@ -51,20 +51,14 @@ interface AssetDatasetDetailProps {
   }) => void;
 }
 
-interface FileItem {
-  name: string;
-  size: string;
-  type: string;
-}
-
-export default function AssetDatasetDetail({
+ export default function AssetDatasetDetail({
   dataset,
   onBack,
   onDelete,
   onUpdate,
 }: AssetDatasetDetailProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+ 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(dataset.name);
@@ -81,12 +75,7 @@ export default function AssetDatasetDetail({
     setShowDeleteConfirm(false);
   };
 
-  const sampleFiles: FileItem[] = [
-    { name: "train_images.zip", size: "2.3 GB", type: "Archive" },
-    { name: "annotations.json", size: "45 MB", type: "JSON" },
-    { name: "metadata.csv", size: "12 MB", type: "CSV" },
-  ];
-
+ 
   const handleDownload = () => {
     setIsDownloading(true);
     setTimeout(() => {
@@ -127,7 +116,7 @@ export default function AssetDatasetDetail({
               className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all text-sm disabled:opacity-50"
             >
               <Download size={18} />{" "}
-              {isDownloading ? "준비 중..." : "전체 다운로드"}
+              {isDownloading ? "다운로드 중..." : "데이터셋 다운로드"}
             </button>
           </div>
         </div>
@@ -203,40 +192,7 @@ export default function AssetDatasetDetail({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* File List */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card rounded-4xl p-8 border border-border shadow-sm">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-black text-foreground flex items-center gap-3">
-                  <FileText className="text-primary" /> 데이터셋 파일 목록
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                {sampleFiles.map((file, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-5 bg-muted rounded-2xl border border-transparent hover:border-primary/20 hover:bg-white transition-all group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center text-muted-foreground shadow-sm group-hover:text-primary transition-colors">
-                        <Database size={20} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-foreground">{file.name}</p>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                          {file.type} • {file.size}
-                        </p>
-                      </div>
-                    </div>
-                    <button className="p-2 text-muted-foreground hover:text-primary transition-colors">
-                      <Download size={20} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Usage Code Area */}
             <div className="bg-gray-900 rounded-4xl p-8 shadow-2xl relative overflow-hidden">
               <Code className="absolute -right-4 -bottom-4 w-32 h-32 text-white/5" />

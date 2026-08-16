@@ -62,6 +62,9 @@ export interface RecruitmentDetailResponse extends RecruitmentResponse {
   description?: string;
   author: AuthorInfo;
   applications: ApplicationResponse[];
+  requirements?: string[];
+  responsibilities?: string[];
+  benefits?: string[];
 }
 
 export interface QnaAnswerResponse {

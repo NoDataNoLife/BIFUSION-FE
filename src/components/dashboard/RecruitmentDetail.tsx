@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, MapPin, Briefcase, Clock, CheckCircle, Send, Calendar, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Briefcase, Clock, CheckCircle, Send, Calendar, Edit2, Trash2, Tag } from 'lucide-react';
 import api from '../../lib/axios';
 import axios from 'axios';
 import { useCommunityStore } from '../../store/useCommunityStore';
@@ -142,7 +142,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                 </div>
                 {recruitmentDetail.tags && recruitmentDetail.tags.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <MapPin size={18} /> {recruitmentDetail.tags[0]}
+                    <Tag size={18} /> {recruitmentDetail.tags.join(', ')}
                   </div>
                 )}
                 <div className="flex items-center gap-2">
@@ -165,38 +165,51 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-8 bg-muted rounded-4xl border border-border space-y-6">
-                <h3 className="text-lg font-black text-foreground">핵심 자격 요건</h3>
-                <ul className="space-y-4">
-                  {['의료 AI 또는 딥러닝 관련 기초 지식', '팀 협업 및 원활한 커뮤니케이션 능력', '새로운 기술에 대한 호기심과 학습 의지', '프로젝트 일정 준수 및 책임감'].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <span className="text-muted-foreground font-medium text-sm leading-relaxed">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="p-8 bg-primary/5 rounded-4xl border border-primary/10 space-y-6">
-                <h3 className="text-lg font-black text-primary">팀 활동 혜택</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  {[
-                    { label: '유연한 일정', desc: '비대면 협업을 통한 효율적인 시간 관리' },
-                    { label: '전문가 네트워킹', desc: '해당 분야 최고 전문가들과의 직접 소통' },
-                    { label: '논문 공동 저자', desc: '연구 성과에 따른 논문 참여 기회 제공' }
-                  ].map((benefit, i) => (
-                    <div key={i} className="flex gap-4">
-                      <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center text-primary shadow-sm shrink-0">
-                        <Calendar size={20} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-foreground text-sm">{benefit.label}</p>
-                        <p className="text-xs text-muted-foreground font-medium">{benefit.desc}</p>
-                      </div>
-                    </div>
-                  ))}
+              {recruitmentDetail.requirements && recruitmentDetail.requirements.length > 0 && (
+                <div className="p-8 bg-muted rounded-4xl border border-border space-y-6">
+                  <h3 className="text-lg font-black text-foreground">핵심 자격 요건</h3>
+                  <ul className="space-y-4">
+                    {recruitmentDetail.requirements.map((item, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground font-medium text-sm leading-relaxed">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
+              )}
+
+              {recruitmentDetail.responsibilities && recruitmentDetail.responsibilities.length > 0 && (
+                <div className="p-8 bg-muted rounded-4xl border border-border space-y-6">
+                  <h3 className="text-lg font-black text-foreground">주요 업무</h3>
+                  <ul className="space-y-4">
+                    {recruitmentDetail.responsibilities.map((item, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground font-medium text-sm leading-relaxed">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {recruitmentDetail.benefits && recruitmentDetail.benefits.length > 0 && (
+                <div className="p-8 bg-primary/5 rounded-4xl border border-primary/10 space-y-6">
+                  <h3 className="text-lg font-black text-primary">팀 활동 혜택</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    {recruitmentDetail.benefits.map((benefit, i) => (
+                      <div key={i} className="flex gap-4 items-center">
+                        <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center text-primary shadow-sm shrink-0">
+                          <Calendar size={20} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground text-sm">{benefit}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

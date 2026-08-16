@@ -2,17 +2,23 @@ import React, { useState } from 'react';
 import { useCommunityStore } from '../../../store/useCommunityStore';
 import api from '../../../lib/axios';
 
-export default function DatasetCreateForm({ onClose }: { onClose: () => void }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [license, setLicense] = useState('');
-  const [format, setFormat] = useState('');
-  const [imageType, setImageType] = useState('');
-  const [resolution, setResolution] = useState('');
-  const [classes, setClasses] = useState('');
-  const [usageExample, setUsageExample] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+interface DatasetCreateFormProps {
+  onClose: () => void;
+  context?: 'COMMUNITY' | 'ASSET' | 'EDIT_ASSET';
+  initialData?: any;
+}
+
+export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', initialData }: DatasetCreateFormProps) {
+  const [title, setTitle] = useState(initialData?.title || initialData?.name || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [category, setCategory] = useState(initialData?.category || '');
+  const [license, setLicense] = useState(initialData?.license || '');
+  const [format, setFormat] = useState(initialData?.format || '');
+  const [imageType, setImageType] = useState(initialData?.imageType || '');
+  const [resolution, setResolution] = useState(initialData?.resolution || '');
+  const [classes, setClasses] = useState(initialData?.classes || '');
+  const [usageExample, setUsageExample] = useState(initialData?.usageExample || '');
+  const [tags, setTags] = useState<string[]>(initialData?.tags || []);
   const [tagInput, setTagInput] = useState('');
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -42,14 +48,35 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !description.trim() || !selectedFile) {
+    if (!title.trim() || !description.trim() || (!selectedFile && context !== 'EDIT_ASSET')) {
       alert('제목, 설명, 그리고 업로드할 파일을 반드시 지정해야 합니다.');
+      return;
+    }
+
+    if (context === 'ASSET') {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        alert('내 작업실에 데이터셋이 안전하게 비공개로 저장되었습니다! (Mock)');
+        setIsSubmitting(false);
+        onClose();
+      }, 1000);
+      return;
+    }
+
+    if (context === 'EDIT_ASSET') {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        alert('데이터셋 정보가 성공적으로 수정되었습니다! (Mock)');
+        setIsSubmitting(false);
+        onClose();
+      }, 1000);
       return;
     }
 
     setIsSubmitting(true);
     try {
       // 1. Upload File
+      if (!selectedFile) return; // TS Type Guard
       const formData = new FormData();
       formData.append('files', selectedFile);
 
@@ -95,8 +122,16 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
 
   return (
     <div className="p-8">
-      <h3 className="text-2xl font-black text-foreground mb-2">데이터셋 기여하기</h3>
-      <p className="text-muted-foreground mb-8 font-medium">고품질 데이터셋을 업로드하고 연구 커뮤니티에 기여하세요.</p>
+      <h3 className="text-2xl font-black text-foreground mb-2">
+        {context === 'EDIT_ASSET' ? '데이터셋 수정하기' : context === 'ASSET' ? '새 데이터셋 추가' : '데이터셋 기여하기'}
+      </h3>
+      <p className="text-muted-foreground mb-8 font-medium">
+        {context === 'EDIT_ASSET'
+          ? '업로드한 데이터셋의 정보를 수정하세요.'
+          : context === 'ASSET' 
+          ? '의료 데이터셋을 내 작업실에 안전하게 비공개로 업로드하세요.' 
+          : '고품질 데이터셋을 업로드하고 연구 커뮤니티에 기여하세요.'}
+      </p>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -196,21 +231,20 @@ export default function DatasetCreateForm({ onClose }: { onClose: () => void }) 
           />
         </div>
 
-        <div className="pt-4 flex justify-end gap-3">
-          <button 
-            type="button" 
-            onClick={onClose} 
-            disabled={isSubmitting}
-            className="px-6 py-3 rounded-xl font-bold text-muted-foreground bg-muted hover:bg-gray-200 transition-colors disabled:opacity-50"
+        <div className="flex justify-end gap-3 pt-6 border-t border-border">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-xl text-muted-foreground hover:bg-muted font-bold transition-colors"
           >
             취소
           </button>
-          <button 
+          <button
             type="submit"
-            disabled={isSubmitting || !title.trim() || !description.trim() || !selectedFile}
-            className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+            disabled={isSubmitting}
+            className="px-8 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50"
           >
-            {isSubmitting ? '업로드 중...' : '데이터셋 업로드'}
+            {isSubmitting ? '진행 중...' : (context === 'EDIT_ASSET' ? '수정 완료' : '업로드')}
           </button>
         </div>
       </form>

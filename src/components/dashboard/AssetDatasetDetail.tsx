@@ -24,6 +24,7 @@ import ExpertVerificationCard, { type VerificationStatus } from "../community/Ex
 import VerificationResultModal from "../community/modals/VerificationResultModal";
 import { useCommunityStore } from "../../store/useCommunityStore";
 import { useEffect } from "react";
+import DatasetCreateForm from "../community/forms/DatasetCreateForm";
 
 interface AssetDatasetDetailProps {
   dataset: {
@@ -315,6 +316,21 @@ interface AssetDatasetDetailProps {
           assetTitle={dataset.name}
           onClose={() => setShowResultModal(false)}
         />
+      )}
+
+      {/* Edit Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 border border-border">
+            <div className="overflow-y-auto flex-1">
+              <DatasetCreateForm 
+                onClose={() => setIsEditing(false)} 
+                context="EDIT_ASSET"
+                initialData={displayData}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

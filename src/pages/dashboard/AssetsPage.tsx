@@ -6,6 +6,7 @@ import AssetDatasetDetail from '../../components/dashboard/AssetDatasetDetail';
 import { useAssetStore } from '../../store/useAssetStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { ALL_RECIPES, type Recipe } from '../../store/mockData';
+import CreateAssetModal from '../../components/dashboard/CreateAssetModal';
 
 interface Dataset {
   id: string;
@@ -24,6 +25,7 @@ export default function AssetsPage() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { forkedRecipeIds } = useAssetStore();
   const { user } = useAuthStore();
 
@@ -97,7 +99,10 @@ export default function AssetsPage() {
               className="w-64 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm whitespace-nowrap">
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm whitespace-nowrap"
+          >
             <Plus size={18} /> 새 자산 추가
           </button>
         </div>
@@ -122,18 +127,6 @@ export default function AssetsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {activeTab.includes('recipe') ? (
           <>
-            {activeTab === 'uploaded-recipes' && (
-              <div 
-                onClick={() => alert('새 레시피 만들기 모달 오픈 (Mock)')}
-                className="group flex flex-col items-center justify-center bg-primary/5 rounded-4xl border-2 border-dashed border-primary/20 hover:border-primary hover:bg-primary/10 transition-all cursor-pointer min-h-[320px]"
-              >
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
-                  <Plus size={32} />
-                </div>
-                <h3 className="text-xl font-black text-primary">새 레시피 만들기</h3>
-                <p className="text-sm font-bold text-primary/60 mt-2">나만의 레시피를 등록하세요</p>
-              </div>
-            )}
             {filteredRecipes.length > 0 ? (
               filteredRecipes.map(recipe => (
                 <div 
@@ -175,18 +168,6 @@ export default function AssetsPage() {
           </>
         ) : (
           <>
-            {activeTab === 'datasets' && (
-              <div 
-                onClick={() => alert('새 데이터셋 추가 모달 오픈 (Mock)')}
-                className="group flex flex-col items-center justify-center bg-blue-50 rounded-4xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-100 transition-all cursor-pointer min-h-[320px]"
-              >
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-blue-500 mb-4 shadow-sm group-hover:scale-110 transition-transform">
-                  <Plus size={32} />
-                </div>
-                <h3 className="text-xl font-black text-blue-600">새 데이터셋 추가</h3>
-                <p className="text-sm font-bold text-blue-400 mt-2">의료 데이터셋을 업로드하세요</p>
-              </div>
-            )}
             {filteredDatasets.map(dataset => (
             <div 
               key={dataset.id}
@@ -228,6 +209,11 @@ export default function AssetsPage() {
           </>
         )}
       </div>
+      
+      <CreateAssetModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }

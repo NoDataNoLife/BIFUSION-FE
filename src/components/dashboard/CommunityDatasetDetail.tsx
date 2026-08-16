@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useCommunityStore } from '../../store/useCommunityStore';
 
 
 interface CommunityDatasetDetailProps {
@@ -26,6 +27,8 @@ interface CommunityDatasetDetailProps {
     license: string;
     usageExample?: string;
     createdAt: string;
+    downloadUrl?: string;
+    fileId?: number;
   };
   onBack: () => void;
   onDelete?: () => void;
@@ -41,6 +44,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack, onDelete }
   const [isDownloading, setIsDownloading] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const { user } = useAuthStore();
+  const { getDatasetDownloadUrl } = useCommunityStore();
   const isAuthor = user?.userId === datasetPost?.author.userId;
 
   const sampleFiles: FileItem[] = [
@@ -49,12 +53,25 @@ export default function CommunityDatasetDetail({ datasetPost, onBack, onDelete }
     { name: 'metadata.csv', size: '12 MB', type: 'CSV' },
   ];
 
-  const handleDownload = () => {
-    setIsDownloading(true);
-    setTimeout(() => {
-      setIsDownloading(false);
-      alert('다운로드가 시작되었습니다.');
-    }, 1500);
+  const handleDownload = async () => {
+    if (datasetPost.downloadUrl) {
+      window.open(datasetPost.downloadUrl, '_blank');
+      return;
+    }
+    if (datasetPost.fileId) {
+      try {
+        setIsDownloading(true);
+        const url = await getDatasetDownloadUrl(datasetPost.fileId);
+        window.open(url, '_blank');
+      } catch (error) {
+        console.error(error);
+        alert("다운로드 URL을 가져오는데 실패했습니다.");
+      } finally {
+        setIsDownloading(false);
+      }
+      return;
+    }
+    alert('다운로드 정보를 찾을 수 없습니다.');
   };
 
   if (!datasetPost) {

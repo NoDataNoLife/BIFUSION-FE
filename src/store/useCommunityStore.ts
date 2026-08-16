@@ -249,7 +249,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
 
   getDatasetDownloadUrl: async (fileId: number) => {
     try {
-      const response = await api.post(`/api/v1/files/${fileId}/download`);
+      const response = await api.post(`/files/${fileId}/download`);
       return response.data.data.presignedUrl;
     } catch (error) {
       console.error('Failed to get download URL:', error);

@@ -90,12 +90,18 @@ interface AssetDatasetDetailProps {
 
  
   const handleDownload = async () => {
+    if (displayData.downloadUrl) {
+      window.open(displayData.downloadUrl, '_blank');
+      return;
+    }
+    
     if (displayData.fileId) {
       try {
         setIsDownloading(true);
         const url = await getDatasetDownloadUrl(displayData.fileId);
         window.open(url, '_blank');
       } catch (error) {
+        console.error(error);
         alert("다운로드 URL을 가져오는데 실패했습니다.");
       } finally {
         setIsDownloading(false);

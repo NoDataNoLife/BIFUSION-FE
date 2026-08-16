@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Users, MapPin, Briefcase, Clock, CheckCircle, Send, Calendar, Edit2, Trash2 } from 'lucide-react';
 import api from '../../lib/axios';
+import axios from 'axios';
 import { useCommunityStore } from '../../store/useCommunityStore';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -39,11 +40,19 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
       setIsSubmitted(true);
     } catch (error) {
       console.error('지원 실패:', error);
-      alert('지원에 실패했습니다. 다시 시도해주세요.');
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        alert('이미 지원한 모집글입니다.');
+      } else {
+        alert('지원에 실패했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const myApplication = recruitmentDetail?.applications?.find(
+    (app) => app.applicant.userId === user?.userId
+  );
 
   if (error && !recruitmentDetail) {
     return (
@@ -231,6 +240,32 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                 ))}
               </div>
             )}
+          </div>
+        ) : myApplication ? (
+          <div className="bg-muted/30 border border-border rounded-[3rem] p-12 text-center flex flex-col items-center justify-center space-y-6 shadow-sm">
+            <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-2 ${
+              myApplication.status === 'ACCEPTED' ? 'bg-green-100 text-green-600' :
+              myApplication.status === 'REJECTED' ? 'bg-red-100 text-red-600' :
+              'bg-blue-100 text-blue-600'
+            }`}>
+              <CheckCircle size={40} />
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-2xl font-black text-foreground">이미 지원을 완료하셨습니다</h3>
+              <p className="text-muted-foreground font-medium text-lg max-w-md mx-auto">
+                {myApplication.status === 'ACCEPTED' ? '축하합니다! 팀 합류가 수락되었습니다. 작성자의 별도 연락을 기다려주세요.' :
+                 myApplication.status === 'REJECTED' ? '아쉽게도 이번 팀 합류는 거절되었습니다. 다음 기회에 함께해요!' :
+                 '작성자님의 검토를 기다리고 있습니다. 좋은 결과가 있기를 바랍니다!'}
+              </p>
+            </div>
+            <div className="pt-6">
+              <span className={`px-6 py-2 rounded-xl text-sm font-black uppercase tracking-widest ${
+                myApplication.status === 'ACCEPTED' ? 'bg-green-100 text-green-600' :
+                myApplication.status === 'REJECTED' ? 'bg-red-100 text-red-600' : 'bg-muted text-muted-foreground'
+              }`}>
+                상태: {myApplication.status}
+              </span>
+            </div>
           </div>
         ) : (
           <div className="bg-card rounded-[3rem] border border-border p-12 shadow-sm space-y-10">

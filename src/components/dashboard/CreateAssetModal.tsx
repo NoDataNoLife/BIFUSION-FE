@@ -80,8 +80,8 @@ export default function CreateAssetModal({ isOpen, onClose }: CreateAssetModalPr
         {/* Content Area */}
         <div className="overflow-y-auto flex-1">
           {!selectedCategory && renderCategorySelection()}
-          {selectedCategory === 'RECIPE' && <ShowcaseCreateForm onClose={handleClose} />}
-          {selectedCategory === 'DATASET' && <DatasetCreateForm onClose={handleClose} />}
+          {selectedCategory === 'RECIPE' && <ShowcaseCreateForm onClose={handleClose} context="ASSET" />}
+          {selectedCategory === 'DATASET' && <DatasetCreateForm onClose={handleClose} context="ASSET" />}
         </div>
       </div>
     </div>

@@ -29,6 +29,7 @@ interface ReviewRequest {
   status: 'pending' | 'reviewing' | 'completed';
   reviewResult?: 'approved' | 'rejected';
   feedback?: string;
+  imageComments?: Record<number, string>;
 }
 
 const mockReviewRequests: ReviewRequest[] = [
@@ -105,12 +106,12 @@ export default function ExpertDashboard() {
     setSelectedRequest(null);
   };
 
-  const handleApprove = (comment: string) => {
+  const handleApprove = (comment: string, imageComments?: Record<number, string>) => {
     if (selectedRequest) {
       setReviewRequests(prev => 
         prev.map(req => 
           req.id === selectedRequest.id 
-            ? { ...req, status: 'completed' as const, reviewResult: 'approved' as const, feedback: comment } 
+            ? { ...req, status: 'completed' as const, reviewResult: 'approved' as const, feedback: comment, imageComments } 
             : req
         )
       );
@@ -119,12 +120,12 @@ export default function ExpertDashboard() {
     }
   };
 
-  const handleReject = (comment: string) => {
+  const handleReject = (comment: string, imageComments?: Record<number, string>) => {
     if (selectedRequest) {
       setReviewRequests(prev => 
         prev.map(req => 
           req.id === selectedRequest.id 
-            ? { ...req, status: 'completed' as const, reviewResult: 'rejected' as const, feedback: comment } 
+            ? { ...req, status: 'completed' as const, reviewResult: 'rejected' as const, feedback: comment, imageComments } 
             : req
         )
       );

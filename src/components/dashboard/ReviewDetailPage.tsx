@@ -20,6 +20,7 @@ interface ReviewRequest {
   status: 'pending' | 'reviewing' | 'completed';
   reviewResult?: 'approved' | 'rejected';
   feedback?: string;
+  imageComments?: Record<number, string>;
 }
 
 interface ImageDetail {
@@ -32,18 +33,23 @@ interface ImageDetail {
 interface ReviewDetailPageProps {
   request: ReviewRequest;
   onBack: () => void;
-  onApprove: (comment: string) => void;
-  onReject: (comment: string) => void;
-  onSaveDraft?: (comment: string) => void;
+  onApprove: (comment: string, imageComments?: Record<number, string>) => void;
+  onReject: (comment: string, imageComments?: Record<number, string>) => void;
+  onSaveDraft?: (comment: string, imageComments?: Record<number, string>) => void;
 }
 
-export default function ReviewDetailPage({ request, onBack, onApprove, onReject, onSaveDraft }: ReviewDetailPageProps) {
+export default function ReviewDetailPage({
+  request,
+  onBack,
+  onApprove,
+  onReject,
+  onSaveDraft,
+}: ReviewDetailPageProps) {
   const [reviewComment, setReviewComment] = useState(request.feedback || '');
   const [selectedImage, setSelectedImage] = useState<ImageDetail | null>(null);
-  const [imageComments, setImageComments] = useState<Record<number, string>>({
-    2: '경계면 노이즈가 약간 발생함',
-    6: '병변 영역 왜곡 없이 잘 보존됨',
-  });
+  const [imageComments, setImageComments] = useState<Record<number, string>>(
+    request.imageComments || {}
+  );
   const [imageComment, setImageComment] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -84,9 +90,9 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
     if (onSaveDraft) {
       setIsSaving(true);
       setSaveMessage('');
-      
+
       setTimeout(() => {
-        onSaveDraft(reviewComment);
+        onSaveDraft(reviewComment, imageComments);
         setIsSaving(false);
         setSaveMessage('임시 저장되었습니다.');
         setTimeout(() => setSaveMessage(''), 3000);
@@ -108,17 +114,26 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
           </button>
           <div className="flex justify-between items-end">
             <div>
-              <h1 className="text-3xl font-black text-foreground tracking-tight">{request.project}</h1>
+              <h1 className="text-3xl font-black text-foreground tracking-tight">
+                {request.project}
+              </h1>
               <p className="text-sm text-muted-foreground mt-2 font-medium flex items-center gap-2">
-                <span className="bg-muted px-2 py-0.5 rounded text-muted-foreground">{request.id}</span>
+                <span className="bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                  {request.id}
+                </span>
               </p>
             </div>
             {request.status !== 'completed' && (
               <div className="flex items-center gap-3">
                 {saveMessage && (
-                  <span className="text-xs font-bold text-green-600 animate-fade-in">{saveMessage}</span>
+                  <span className="text-xs font-bold text-green-600 animate-fade-in">
+                    {saveMessage}
+                  </span>
                 )}
-                <button onClick={handleSaveDraft} className="px-6 py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold hover:bg-muted transition-all text-sm flex items-center gap-2">
+                <button
+                  onClick={handleSaveDraft}
+                  className="px-6 py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold hover:bg-muted transition-all text-sm flex items-center gap-2"
+                >
                   <Save size={18} /> {isSaving ? '저장 중...' : '임시 저장'}
                 </button>
               </div>
@@ -133,11 +148,19 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
           <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
             <h3 className="text-lg font-bold text-foreground mb-6">요청자 정보</h3>
             <div className="flex items-center gap-4">
-              <img src={request.requester.avatar} alt={request.requester.name} className="w-16 h-16 rounded-2xl ring-4 ring-gray-50" />
+              <img
+                src={request.requester.avatar}
+                alt={request.requester.name}
+                className="w-14 h-14 rounded-2xl ring-4 ring-gray-50"
+              />
               <div>
                 <p className="font-bold text-foreground text-lg">{request.requester.name}</p>
-                <p className="text-sm text-muted-foreground font-medium">{request.requester.email}</p>
-                <p className="text-xs text-primary font-bold mt-2">요청일: {request.requestDate}</p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {request.requester.email}
+                </p>
+                <p className="text-xs text-primary font-bold mt-2">
+                  요청일: {request.requestDate}
+                </p>
               </div>
             </div>
           </div>
@@ -146,16 +169,28 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
             <h3 className="text-lg font-bold text-primary mb-6">데이터 증강 파라미터</h3>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">Images/Class</p>
-                <p className="text-2xl font-black text-primary">{request.parameters.imagesPerClass}</p>
+                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
+                  Images/Class
+                </p>
+                <p className="text-2xl font-black text-primary">
+                  {request.parameters.imagesPerClass}
+                </p>
               </div>
               <div>
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">Sampling</p>
-                <p className="text-2xl font-black text-primary">{request.parameters.samplingSteps}</p>
+                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
+                  Sampling
+                </p>
+                <p className="text-2xl font-black text-primary">
+                  {request.parameters.samplingSteps}
+                </p>
               </div>
               <div>
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">Guidance</p>
-                <p className="text-2xl font-black text-primary">{request.parameters.guidanceScale}</p>
+                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
+                  Guidance
+                </p>
+                <p className="text-2xl font-black text-primary">
+                  {request.parameters.guidanceScale}
+                </p>
               </div>
             </div>
           </div>
@@ -163,22 +198,42 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
 
         {/* Sample Images */}
         <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
-          <h3 className="text-lg font-bold text-foreground mb-8 tracking-tight">생성된 샘플 이미지 <span className="text-muted-foreground font-medium text-sm ml-2">(8/800)</span></h3>
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-lg font-bold text-foreground tracking-tight">
+              생성된 샘플 이미지{' '}
+              <span className="text-muted-foreground font-medium text-sm ml-2">(8/800)</span>
+            </h3>
+            {Object.keys(imageComments).length > 0 && (
+              <span className="px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-xl text-xs font-black flex items-center gap-1.5 animate-fade-in">
+                <MessageSquare size={14} className="fill-primary/20" /> 이미지별 코멘트 {Object.keys(imageComments).length}개
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {sampleImages.map((image) => (
-              <div 
-                key={image.id} 
+              <div
+                key={image.id}
                 onClick={() => handleImageClick(image)}
-                className="aspect-square rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer group relative"
+                className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group relative ${
+                  imageComments[image.id]
+                    ? 'border-primary ring-4 ring-primary/15 shadow-md shadow-primary/10'
+                    : 'border-transparent hover:border-primary/50'
+                }`}
               >
-                <img src={image.url} alt={image.fileName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <img
+                  src={image.url}
+                  alt={image.fileName}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
                 {imageComments[image.id] && (
-                  <div className="absolute top-3 left-3 px-2 py-1 bg-primary text-white rounded-lg text-[10px] font-black flex items-center gap-1 shadow-md z-10">
-                    <MessageSquare size={12} /> 코멘트 있음
+                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-primary text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-lg shadow-primary/30 z-10 animate-fade-in">
+                    <MessageSquare size={12} className="fill-current" /> 코멘트
                   </div>
                 )}
-                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="bg-card text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">자세히 보기</span>
+                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                  <span className="bg-card text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                    {request.status === 'completed' ? '코멘트 및 이미지 확인' : '자세히 보기'}
+                  </span>
                 </div>
               </div>
             ))}
@@ -191,33 +246,51 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
               <MessageSquare size={20} />
             </div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">전문가 최종 검수 코멘트</h3>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">
+              전문가 최종 검수 코멘트
+            </h3>
           </div>
           <textarea
             value={reviewComment}
             onChange={(e) => setReviewComment(e.target.value)}
             disabled={request.status === 'completed'}
-            placeholder={request.status === 'completed' ? '작성된 검수 피드백이 없습니다.' : '이 데이터셋의 품질에 대한 상세한 피드백을 남겨주세요...'}
+            placeholder={
+              request.status === 'completed'
+                ? '작성된 검수 피드백이 없습니다.'
+                : '이 데이터셋의 품질에 대한 상세한 피드백을 남겨주세요...'
+            }
             className="w-full h-40 px-6 py-5 bg-muted border border-transparent rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-foreground disabled:opacity-80"
           />
         </div>
 
         {/* Sticky Actions */}
         {request.status === 'completed' ? (
-          <div className={`w-full py-5 rounded-2xl flex items-center justify-center gap-3 font-black text-base shadow-sm border ${request.reviewResult === 'approved' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-            {request.reviewResult === 'approved' ? <CheckCircle size={22} /> : <XCircle size={22} />}
-            <span>검수 완료: {request.reviewResult === 'approved' ? '최종 승인됨' : '반려됨'}</span>
+          <div
+            className={`w-full py-5 rounded-2xl flex items-center justify-center gap-3 font-black text-base shadow-sm border ${
+              request.reviewResult === 'approved'
+                ? 'bg-green-50 text-green-700 border-green-200'
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}
+          >
+            {request.reviewResult === 'approved' ? (
+              <CheckCircle size={22} />
+            ) : (
+              <XCircle size={22} />
+            )}
+            <span>
+              검수 완료: {request.reviewResult === 'approved' ? '최종 승인됨' : '반려됨'}
+            </span>
           </div>
         ) : (
           <div className="flex gap-4 pt-4">
             <button
-              onClick={() => onReject(reviewComment)}
+              onClick={() => onReject(reviewComment, imageComments)}
               className="flex-1 py-5 bg-card border-2 border-red-100 text-red-500 rounded-2xl font-black hover:bg-red-50 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <XCircle size={20} /> 거절하기
             </button>
             <button
-              onClick={() => onApprove(reviewComment)}
+              onClick={() => onApprove(reviewComment, imageComments)}
               className="flex-1 py-5 bg-primary text-white rounded-2xl font-black hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <CheckCircle size={20} /> 최종 승인하기
@@ -228,39 +301,99 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
 
       {/* Image Modal */}
       {selectedImage && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-8" onClick={handleCloseImageModal}>
-          <div className="bg-card rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-8"
+          onClick={handleCloseImageModal}
+        >
+          <div
+            className="bg-card rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b border-border flex justify-between items-center">
               <h3 className="font-bold text-foreground">이미지 정밀 검수</h3>
-              <button onClick={handleCloseImageModal} className="p-2 hover:bg-muted rounded-xl transition-colors"><X size={24} /></button>
+              <button
+                onClick={handleCloseImageModal}
+                className="p-2 hover:bg-muted rounded-xl transition-colors"
+              >
+                <X size={24} />
+              </button>
             </div>
             <div className="p-8 flex flex-col md:flex-row gap-8">
               <div className="flex-1">
-                <img src={selectedImage.url} alt={selectedImage.fileName} className="w-full rounded-2xl shadow-inner" />
+                <img
+                  src={selectedImage.url}
+                  alt={selectedImage.fileName}
+                  className="w-full rounded-2xl shadow-inner"
+                />
               </div>
-              <div className="w-full md:w-80 space-y-6">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">파일 정보</p>
-                  <p className="font-bold text-foreground text-lg">{selectedImage.fileName}</p>
+              <div className="w-full md:w-80 flex flex-col justify-between space-y-6">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                      파일 정보
+                    </p>
+                    <p className="font-bold text-foreground text-lg">{selectedImage.fileName}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                      분류 라벨
+                    </p>
+                    <span
+                      className={`inline-block px-3 py-1 rounded-lg text-xs font-black ${
+                        selectedImage.label === '정상'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {selectedImage.label}
+                    </span>
+                  </div>
+
+                  {/* 검수 완료(결과 확인) vs 검수 중(작성) 분기 */}
+                  {request.status === 'completed' ? (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        전문가 이미지 코멘트
+                      </p>
+                      {imageComments[selectedImage.id] ? (
+                        <div className="p-4 bg-muted/80 rounded-2xl border border-border text-sm font-medium text-foreground leading-relaxed">
+                          {imageComments[selectedImage.id]}
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-muted/40 rounded-2xl border border-dashed border-border text-xs text-muted-foreground italic">
+                          작성된 개별 코멘트가 없습니다.
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        이미지별 검수 의견 작성
+                      </p>
+                      <textarea
+                        value={imageComment}
+                        onChange={(e) => setImageComment(e.target.value)}
+                        placeholder="이 이미지에 대한 피드백을 작성하세요..."
+                        className="w-full h-32 p-4 bg-muted border border-transparent rounded-2xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-sm font-medium resize-none text-foreground"
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">분류 라벨</p>
-                  <span className={`inline-block px-3 py-1 rounded-lg text-xs font-black ${selectedImage.label === '정상' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{selectedImage.label}</span>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">이미지별 검수 의견</p>
-                  <textarea
-                    value={imageComment}
-                    onChange={(e) => setImageComment(e.target.value)}
-                    disabled={request.status === 'completed'}
-                    placeholder={request.status === 'completed' ? '작성된 이미지 코멘트가 없습니다.' : '이 이미지에 대한 피드백을 작성하세요...'}
-                    className="w-full h-32 p-4 bg-muted border border-transparent rounded-2xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-sm font-medium resize-none disabled:opacity-80"
-                  />
-                </div>
+
                 {request.status === 'completed' ? (
-                  <button onClick={handleCloseImageModal} className="w-full py-4 bg-muted text-foreground hover:bg-gray-200 rounded-xl font-black text-sm transition-all">닫기</button>
+                  <button
+                    onClick={handleCloseImageModal}
+                    className="w-full py-4 bg-muted hover:bg-gray-200 text-foreground rounded-xl font-black text-sm transition-all"
+                  >
+                    확인 (닫기)
+                  </button>
                 ) : (
-                  <button onClick={handleSaveImageComment} className="w-full py-4 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all">코멘트 저장</button>
+                  <button
+                    onClick={handleSaveImageComment}
+                    className="w-full py-4 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                  >
+                    코멘트 저장
+                  </button>
                 )}
               </div>
             </div>

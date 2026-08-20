@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, MessageSquare, X, FileText, Tag, Save } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, MessageSquare, X, Save } from 'lucide-react';
 
 interface ReviewRequest {
   id: string;
@@ -97,15 +97,18 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
               <h1 className="text-3xl font-black text-foreground tracking-tight">{request.project}</h1>
               <p className="text-sm text-muted-foreground mt-2 font-medium flex items-center gap-2">
                 <span className="bg-muted px-2 py-0.5 rounded text-muted-foreground">{request.id}</span>
-                <span>•</span>
-                <span className="text-primary font-bold">{request.dataType}</span>
               </p>
             </div>
-            <div className="flex gap-3">
-              <button onClick={handleSaveDraft} className="px-6 py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold hover:bg-muted transition-all text-sm flex items-center gap-2">
-                <Save size={18} /> {isSaving ? '저장 중...' : '임시 저장'}
-              </button>
-            </div>
+            {request.status !== 'completed' && (
+              <div className="flex items-center gap-3">
+                {saveMessage && (
+                  <span className="text-xs font-bold text-green-600 animate-fade-in">{saveMessage}</span>
+                )}
+                <button onClick={handleSaveDraft} className="px-6 py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold hover:bg-muted transition-all text-sm flex items-center gap-2">
+                  <Save size={18} /> {isSaving ? '저장 중...' : '임시 저장'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -174,26 +177,34 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
           <textarea
             value={reviewComment}
             onChange={(e) => setReviewComment(e.target.value)}
-            placeholder="이 데이터셋의 품질에 대한 상세한 피드백을 남겨주세요..."
-            className="w-full h-40 px-6 py-5 bg-muted border border-transparent rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-foreground"
+            disabled={request.status === 'completed'}
+            placeholder={request.status === 'completed' ? '작성된 검수 피드백이 없습니다.' : '이 데이터셋의 품질에 대한 상세한 피드백을 남겨주세요...'}
+            className="w-full h-40 px-6 py-5 bg-muted border border-transparent rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-foreground disabled:opacity-80"
           />
         </div>
 
         {/* Sticky Actions */}
-        <div className="flex gap-4 pt-4">
-          <button
-            onClick={() => onReject(reviewComment)}
-            className="flex-1 py-5 bg-card border-2 border-red-100 text-red-500 rounded-2xl font-black hover:bg-red-50 transition-all flex items-center justify-center gap-2 active:scale-95"
-          >
-            <XCircle size={20} /> 거절하기
-          </button>
-          <button
-            onClick={() => onApprove(reviewComment)}
-            className="flex-1 py-5 bg-primary text-white rounded-2xl font-black hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95"
-          >
-            <CheckCircle size={20} /> 최종 승인하기
-          </button>
-        </div>
+        {request.status === 'completed' ? (
+          <div className={`w-full py-5 rounded-2xl flex items-center justify-center gap-3 font-black text-base shadow-sm border ${request.reviewResult === 'approved' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+            {request.reviewResult === 'approved' ? <CheckCircle size={22} /> : <XCircle size={22} />}
+            <span>검수 완료: {request.reviewResult === 'approved' ? '최종 승인됨' : '반려됨'}</span>
+          </div>
+        ) : (
+          <div className="flex gap-4 pt-4">
+            <button
+              onClick={() => onReject(reviewComment)}
+              className="flex-1 py-5 bg-card border-2 border-red-100 text-red-500 rounded-2xl font-black hover:bg-red-50 transition-all flex items-center justify-center gap-2 active:scale-95"
+            >
+              <XCircle size={20} /> 거절하기
+            </button>
+            <button
+              onClick={() => onApprove(reviewComment)}
+              className="flex-1 py-5 bg-primary text-white rounded-2xl font-black hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+            >
+              <CheckCircle size={20} /> 최종 승인하기
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Image Modal (Simplified for brevity) */}

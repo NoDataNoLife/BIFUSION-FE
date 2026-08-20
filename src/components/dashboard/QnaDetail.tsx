@@ -158,26 +158,39 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
           </div>
 
           {/* Answer Form */}
-          <div className="bg-gray-900 rounded-[2.5rem] p-10 shadow-2xl space-y-6">
-            <h3 className="text-xl font-black text-white flex items-center gap-3">
-              <Edit2 className="text-primary" size={20} /> 답변 남기기
-            </h3>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="동료 연구자에게 도움이 되는 따뜻한 답변을 남겨주세요..."
-              className="w-full h-40 px-6 py-5 bg-white/5 border border-white/10 rounded-3xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white/10 transition-all font-medium resize-none"
-            />
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={handleSubmitComment}
-                disabled={!newComment.trim() || isSubmitting}
-                className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send size={18} /> {isSubmitting ? '등록 중...' : '답변 등록하기'}
-              </button>
+          {user?.isExpert ? (
+            <div className="bg-gray-900 rounded-[2.5rem] p-10 shadow-2xl space-y-6">
+              <h3 className="text-xl font-black text-white flex items-center gap-3">
+                <Edit2 className="text-primary" size={20} /> 답변 남기기
+              </h3>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="동료 연구자에게 도움이 되는 따뜻한 답변을 남겨주세요..."
+                className="w-full h-40 px-6 py-5 bg-white/5 border border-white/10 rounded-3xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white/10 transition-all font-medium resize-none"
+              />
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSubmitComment}
+                  disabled={!newComment.trim() || isSubmitting}
+                  className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send size={18} /> {isSubmitting ? '등록 중...' : '답변 등록하기'}
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-muted/30 border border-border rounded-[2.5rem] p-10 text-center flex flex-col items-center justify-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400 flex items-center justify-center mb-2">
+                <Award size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">답변 권한이 없습니다</h3>
+              <p className="text-muted-foreground font-medium max-w-md">
+                Q&A 답변은 플랫폼에서 인증된 <strong>전문가(Expert)</strong>만 작성할 수 있습니다.<br/>
+                마이페이지에서 전문가 인증을 신청해 보세요!
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

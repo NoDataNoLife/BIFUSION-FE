@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircle, 
   XCircle, 
@@ -7,10 +8,7 @@ import {
   Star, 
   MessageCircle, 
   X, 
-  Filter, 
-  Check,
-  ChevronRight,
-  Info
+  Check
 } from 'lucide-react';
 
 interface Notification {
@@ -29,6 +27,7 @@ interface NotificationCenterProps {
 }
 
 export default function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: 'NOT-001',
@@ -175,7 +174,13 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
         </div>
 
         {/* Footer */}
-        <button className="w-full py-5 bg-muted border-t border-border text-xs font-black text-muted-foreground hover:text-primary hover:bg-white transition-all uppercase tracking-widest italic">
+        <button 
+          onClick={() => {
+            onClose();
+            navigate('/dashboard/notifications');
+          }}
+          className="w-full py-5 bg-muted border-t border-border text-xs font-black text-muted-foreground hover:text-primary hover:bg-white transition-all uppercase tracking-widest italic cursor-pointer"
+        >
           전체 알림 기록 보기
         </button>
       </div>

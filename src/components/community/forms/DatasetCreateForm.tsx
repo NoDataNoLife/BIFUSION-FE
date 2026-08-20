@@ -53,47 +53,32 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
       return;
     }
 
-    if (context === 'ASSET') {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        alert('내 작업실에 데이터셋이 안전하게 비공개로 저장되었습니다! (Mock)');
-        setIsSubmitting(false);
-        onClose();
-      }, 1000);
-      return;
-    }
-
-    if (context === 'EDIT_ASSET') {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        alert('데이터셋 정보가 성공적으로 수정되었습니다! (Mock)');
-        setIsSubmitting(false);
-        onClose();
-      }, 1000);
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       // 1. Upload File
-      if (!selectedFile) return; // TS Type Guard
-      const formData = new FormData();
-      formData.append('files', selectedFile);
+      if (!selectedFile && context !== 'EDIT_ASSET') return; // TS Type Guard
 
-      const uploadRes = await api.post('/files/temp', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      let fileId = 1;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('files', selectedFile);
 
-      const uploadedFiles = uploadRes.data.data;
-      if (!uploadedFiles || uploadedFiles.length === 0) {
-        throw new Error('파일 업로드 응답이 없습니다.');
+        const uploadRes = await api.post('/files/temp', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        const uploadedFiles = uploadRes.data.data;
+        if (!uploadedFiles || uploadedFiles.length === 0) {
+          throw new Error('파일 업로드 응답이 없습니다.');
+        }
+        
+        fileId = uploadedFiles[0].fileId;
       }
-      
-      const fileId = uploadedFiles[0].fileId;
 
-      // 2. Create Dataset
+      // 2. Create Dataset with isPublic
+      const isPublic = context !== 'ASSET';
       await api.post('/community/datasets', {
         title,
         description,
@@ -105,10 +90,15 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
         classes,
         usageExample,
         tags,
-        fileId
+        fileId,
+        isPublic,
       });
 
-      alert('데이터셋이 성공적으로 업로드되었습니다!');
+      alert(
+        isPublic
+          ? '데이터셋이 커뮤니티에 성공적으로 등록되었습니다!'
+          : '데이터셋이 내 자산에 비공개로 안전하게 저장되었습니다!'
+      );
       fetchDatasetList();
       onClose();
     } catch (error) {

@@ -97,8 +97,6 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
               <h1 className="text-3xl font-black text-foreground tracking-tight">{request.project}</h1>
               <p className="text-sm text-muted-foreground mt-2 font-medium flex items-center gap-2">
                 <span className="bg-muted px-2 py-0.5 rounded text-muted-foreground">{request.id}</span>
-                <span>•</span>
-                <span className="text-primary font-bold">{request.dataType}</span>
               </p>
             </div>
             <div className="flex gap-3">

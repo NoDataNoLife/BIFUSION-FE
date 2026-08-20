@@ -234,7 +234,6 @@ export default function ExpertDashboard() {
 
                   <div className="relative aspect-video rounded-2xl overflow-hidden mb-6">
                     <img src={request.thumbnail} alt={request.project} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">{request.dataType}</div>
                   </div>
 
                   <h3 className="text-lg font-black text-foreground mb-2 line-clamp-1">{request.project}</h3>

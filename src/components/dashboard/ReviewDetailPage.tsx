@@ -40,6 +40,10 @@ interface ReviewDetailPageProps {
 export default function ReviewDetailPage({ request, onBack, onApprove, onReject, onSaveDraft }: ReviewDetailPageProps) {
   const [reviewComment, setReviewComment] = useState(request.feedback || '');
   const [selectedImage, setSelectedImage] = useState<ImageDetail | null>(null);
+  const [imageComments, setImageComments] = useState<Record<number, string>>({
+    2: '경계면 노이즈가 약간 발생함',
+    6: '병변 영역 왜곡 없이 잘 보존됨',
+  });
   const [imageComment, setImageComment] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -58,12 +62,22 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
 
   const handleImageClick = (image: ImageDetail) => {
     setSelectedImage(image);
-    setImageComment('');
+    setImageComment(imageComments[image.id] || '');
   };
 
   const handleCloseImageModal = () => {
     setSelectedImage(null);
     setImageComment('');
+  };
+
+  const handleSaveImageComment = () => {
+    if (selectedImage) {
+      setImageComments((prev) => ({
+        ...prev,
+        [selectedImage.id]: imageComment,
+      }));
+    }
+    handleCloseImageModal();
   };
 
   const handleSaveDraft = async () => {
@@ -158,6 +172,11 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
                 className="aspect-square rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer group relative"
               >
                 <img src={image.url} alt={image.fileName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                {imageComments[image.id] && (
+                  <div className="absolute top-3 left-3 px-2 py-1 bg-primary text-white rounded-lg text-[10px] font-black flex items-center gap-1 shadow-md z-10">
+                    <MessageSquare size={12} /> 코멘트 있음
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="bg-card text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">자세히 보기</span>
                 </div>
@@ -207,7 +226,7 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
         )}
       </div>
 
-      {/* Image Modal (Simplified for brevity) */}
+      {/* Image Modal */}
       {selectedImage && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-8" onClick={handleCloseImageModal}>
           <div className="bg-card rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -228,13 +247,21 @@ export default function ReviewDetailPage({ request, onBack, onApprove, onReject,
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">분류 라벨</p>
                   <span className={`inline-block px-3 py-1 rounded-lg text-xs font-black ${selectedImage.label === '정상' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{selectedImage.label}</span>
                 </div>
-                <textarea
-                  value={imageComment}
-                  onChange={(e) => setImageComment(e.target.value)}
-                  placeholder="이미지에 대한 의견..."
-                  className="w-full h-32 p-4 bg-muted border border-transparent rounded-2xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-sm font-medium resize-none"
-                />
-                <button onClick={handleCloseImageModal} className="w-full py-4 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all">코멘트 저장</button>
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">이미지별 검수 의견</p>
+                  <textarea
+                    value={imageComment}
+                    onChange={(e) => setImageComment(e.target.value)}
+                    disabled={request.status === 'completed'}
+                    placeholder={request.status === 'completed' ? '작성된 이미지 코멘트가 없습니다.' : '이 이미지에 대한 피드백을 작성하세요...'}
+                    className="w-full h-32 p-4 bg-muted border border-transparent rounded-2xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-sm font-medium resize-none disabled:opacity-80"
+                  />
+                </div>
+                {request.status === 'completed' ? (
+                  <button onClick={handleCloseImageModal} className="w-full py-4 bg-muted text-foreground hover:bg-gray-200 rounded-xl font-black text-sm transition-all">닫기</button>
+                ) : (
+                  <button onClick={handleSaveImageComment} className="w-full py-4 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all">코멘트 저장</button>
+                )}
               </div>
             </div>
           </div>

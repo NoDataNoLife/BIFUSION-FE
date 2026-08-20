@@ -49,6 +49,47 @@ export interface DatasetDetailResponse extends DatasetListResponse {
   fileName?: string;
 }
 
+export interface RecipeListResponse {
+  recipeId: number;
+  title: string;
+  bannerUrl?: string;
+  author: AuthorInfo;
+  forkCount: number;
+  likeCount: number;
+  isExpertVerified: boolean;
+}
+
+export interface RecipeDetailResponse {
+  recipeId: number;
+  title: string;
+  description: string;
+  bannerUrl?: string;
+  isExpertVerified: boolean;
+  author: AuthorInfo;
+  createdAt: string;
+  rating: number;
+  reviewCount: number;
+  forkCount: number;
+  viewCount: number;
+  downloadCount: number;
+  overview?: {
+    content?: string;
+    features?: string[];
+    recommendations?: string[];
+  };
+  settings?: {
+    model: string;
+    steps: number;
+    sampler: string;
+    cfgScale: number;
+    seed: string;
+    resolution: string;
+    batchSize: number;
+  };
+  inspectionStatus?: string;
+  inspectionResult?: any;
+}
+
 export interface ApplicationResponse {
   applicationId: number;
   applicant: AuthorInfo;
@@ -96,14 +137,17 @@ interface CommunityStore {
   qnaList: ExpertQnAListResponse[];
   recruitmentList: RecruitmentResponse[];
   datasetList: DatasetListResponse[];
+  recipeList: RecipeListResponse[];
 
   qnaDetail: ExpertQnADetailResponse | null;
   recruitmentDetail: RecruitmentDetailResponse | null;
   datasetDetail: DatasetDetailResponse | null;
+  recipeDetail: RecipeDetailResponse | null;
   
   isLoadingQna: boolean;
   isLoadingRecruitment: boolean;
   isLoadingDataset: boolean;
+  isLoadingRecipe: boolean;
   isLoadingDetail: boolean;
   
   error: string | null;
@@ -112,14 +156,21 @@ interface CommunityStore {
   fetchQnaList: (page?: number, size?: number, sort?: string, keyword?: string) => Promise<void>;
   fetchRecruitmentList: (page?: number, size?: number, sort?: string, keyword?: string) => Promise<void>;
   fetchDatasetList: (page?: number, size?: number, sort?: string, keyword?: string) => Promise<void>;
+  fetchRecipeList: (page?: number, size?: number, sort?: string, keyword?: string) => Promise<void>;
   
   fetchQnaDetail: (qnaId: number) => Promise<void>;
   createQnaAnswer: (qnaId: number, content: string) => Promise<void>;
+  deleteQna: (qnaId: number) => Promise<void>;
   
   fetchRecruitmentDetail: (recruitmentId: number) => Promise<void>;
   updateApplicationStatus: (recruitmentId: number, applicationId: number, status: string) => Promise<void>;
+  deleteRecruitment: (recruitmentId: number) => Promise<void>;
   
   fetchDatasetDetail: (datasetId: number) => Promise<void>;
+  deleteDataset: (datasetId: number) => Promise<void>;
+  
+  fetchRecipeDetail: (recipeId: number) => Promise<void>;
+  forkRecipe: (recipeId: number) => Promise<void>;
   
   requestExpertVerification: (targetType: 'RECIPE' | 'DATASET', targetId: number | string, reason: string, reward: number) => Promise<void>;
   deleteRecipeReview: (recipeId: number, reviewId: number) => Promise<void>;
@@ -130,14 +181,17 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   qnaList: [],
   recruitmentList: [],
   datasetList: [],
+  recipeList: [],
 
   qnaDetail: null,
   recruitmentDetail: null,
   datasetDetail: null,
+  recipeDetail: null,
 
   isLoadingQna: false,
   isLoadingRecruitment: false,
   isLoadingDataset: false,
+  isLoadingRecipe: false,
   isLoadingDetail: false,
 
   error: null,
@@ -178,6 +232,18 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
     }
   },
 
+  fetchRecipeList: async (page = 0, size = 10, sort = 'LATEST', keyword = '') => {
+    set({ isLoadingRecipe: true, error: null });
+    try {
+      const response = await api.get<{ data: PageResponse<RecipeListResponse> }>('/community/recipes', {
+        params: { page, size, sort, keyword: keyword || undefined }
+      });
+      set({ recipeList: response.data.data.content, isLoadingRecipe: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch Recipe list', isLoadingRecipe: false });
+    }
+  },
+
   fetchQnaDetail: async (qnaId: number) => {
     set({ isLoadingDetail: true, error: null });
     try {
@@ -199,6 +265,17 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
     }
   },
 
+  deleteQna: async (qnaId: number) => {
+    try {
+      await api.delete(`/community/qna/${qnaId}`);
+      const store = useCommunityStore.getState();
+      await store.fetchQnaList();
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to delete QnA' });
+      throw error;
+    }
+  },
+
   fetchRecruitmentDetail: async (recruitmentId: number) => {
     set({ isLoadingDetail: true, error: null });
     try {
@@ -206,6 +283,28 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
       set({ recruitmentDetail: response.data.data, isLoadingDetail: false });
     } catch (error: any) {
       set({ error: error.message || 'Failed to fetch Recruitment detail', isLoadingDetail: false });
+    }
+  },
+
+  updateApplicationStatus: async (recruitmentId: number, applicationId: number, status: string) => {
+    try {
+      await api.patch(`/community/recruitments/${recruitmentId}/applications/${applicationId}/status`, { status });
+      const store = useCommunityStore.getState();
+      await store.fetchRecruitmentDetail(recruitmentId);
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to update application status' });
+      throw error;
+    }
+  },
+
+  deleteRecruitment: async (recruitmentId: number) => {
+    try {
+      await api.delete(`/community/recruitments/${recruitmentId}`);
+      const store = useCommunityStore.getState();
+      await store.fetchRecruitmentList();
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to delete recruitment' });
+      throw error;
     }
   },
 
@@ -219,14 +318,34 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
     }
   },
 
-  updateApplicationStatus: async (recruitmentId: number, applicationId: number, status: string) => {
+  deleteDataset: async (datasetId: number) => {
     try {
-      await api.patch(`/community/recruitments/${recruitmentId}/applications/${applicationId}/status`, { status });
-      // 상태 변경 후 상세 정보 갱신
+      await api.delete(`/community/datasets/${datasetId}`);
       const store = useCommunityStore.getState();
-      await store.fetchRecruitmentDetail(recruitmentId);
+      await store.fetchDatasetList();
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update application status' });
+      set({ error: error.message || 'Failed to delete dataset' });
+      throw error;
+    }
+  },
+
+  fetchRecipeDetail: async (recipeId: number) => {
+    set({ isLoadingDetail: true, error: null });
+    try {
+      const response = await api.get<{ data: RecipeDetailResponse }>(`/community/recipes/${recipeId}`);
+      set({ recipeDetail: response.data.data, isLoadingDetail: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch Recipe detail', isLoadingDetail: false });
+    }
+  },
+
+  forkRecipe: async (recipeId: number) => {
+    try {
+      await api.post(`/community/recipes/${recipeId}/fork`);
+      const store = useCommunityStore.getState();
+      await store.fetchRecipeDetail(recipeId);
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fork recipe' });
       throw error;
     }
   },
@@ -234,7 +353,6 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   requestExpertVerification: async (targetType: 'RECIPE' | 'DATASET', targetId: number | string, reason: string, reward: number) => {
     try {
       await api.post('/inspections', { targetType, targetId, reason, reward });
-      // 상태 갱신을 위해 디테일 다시 호출할 수 있음 (호출부에서 처리)
     } catch (error: any) {
       set({ error: error.message || 'Failed to request expert verification' });
       throw error;

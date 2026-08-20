@@ -25,6 +25,7 @@ import ExpertPage from './pages/dashboard/ExpertPage';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import CommunityPage from './pages/dashboard/CommunityPage';
 import ActivitiesPage from './pages/dashboard/ActivitiesPage';
+import NotificationsPage from './pages/dashboard/NotificationsPage';
 import OnboardingPage from './pages/OnboardingPage';
 
 // 임시 컴포넌트들
@@ -97,6 +98,7 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="community" element={<CommunityPage />} />
             <Route path="activities" element={<ActivitiesPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             
             <Route path="settings" element={<Placeholder title="Settings" />} />
           </Route>

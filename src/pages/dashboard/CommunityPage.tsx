@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, GitFork, Users, Database, ArrowUpDown, Plus, Award, Heart, CheckCircle, Clock, Building2, Download, Filter, HardDrive } from 'lucide-react';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
@@ -9,7 +9,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useCommunityStore } from '../../store/useCommunityStore';
 import { ALL_RECIPES, type Recipe } from '../../store/mockData';
 import CreatePostModal from '../../components/community/CreatePostModal';
-import { useEffect } from 'react';
 
 // --- Types ---
 interface ShowcasePost extends Recipe {
@@ -21,8 +20,7 @@ interface QAPost {
   status: string; tags: string[]; commentCount: number; hasExpertReply: boolean;
 }
 
-
-// --- Mock Data (데이터셋 제외 - 실제 API 연동 완료) ---
+// --- Mock Fallback Data ---
 const mockShowcasePosts: ShowcasePost[] = ALL_RECIPES.map(r => ({
   ...r,
   likeCount: r.forkedCount * 3
@@ -32,7 +30,6 @@ const mockQAPosts: QAPost[] = [
   { id: 'QA-001', title: 'Diffusion 모델 학습 시 메모리 부족 오류 해결 방법은?', author: '연구자A', authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=userA', status: 'Solved', tags: ['#Error', '#Diffusion'], commentCount: 12, hasExpertReply: true },
 ];
 
-
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'showcase' | 'qa' | 'recruitment' | 'datasets'>('showcase');
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,14 +37,17 @@ export default function CommunityPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { user } = useAuthStore();
   const { 
-    qnaList, datasetList, recruitmentList, 
-    fetchQnaList, fetchDatasetList, fetchRecruitmentList, 
-    isLoadingQna, isLoadingDataset, isLoadingRecruitment 
+    qnaList, datasetList, recruitmentList, recipeList,
+    fetchQnaList, fetchDatasetList, fetchRecruitmentList, fetchRecipeList,
+    isLoadingQna, isLoadingDataset, isLoadingRecruitment, isLoadingRecipe,
+    deleteQna, deleteRecruitment, deleteDataset,
   } = useCommunityStore();
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (activeTab === 'qa') {
+      if (activeTab === 'showcase') {
+        fetchRecipeList(0, 10, 'LATEST', searchQuery);
+      } else if (activeTab === 'qa') {
         fetchQnaList(0, 10, 'LATEST', searchQuery);
       } else if (activeTab === 'datasets') {
         fetchDatasetList(0, 10, 'LATEST', searchQuery);
@@ -57,11 +57,46 @@ export default function CommunityPage() {
     }, 400);
 
     return () => clearTimeout(handler);
-  }, [activeTab, searchQuery, fetchQnaList, fetchDatasetList, fetchRecruitmentList]);
+  }, [activeTab, searchQuery, fetchQnaList, fetchDatasetList, fetchRecruitmentList, fetchRecipeList]);
 
   // --- Sub-page Rendering Logic ---
   if (selectedId) {
     if (activeTab === 'showcase') {
+      const realPost = recipeList.find(p => p.recipeId.toString() === selectedId);
+      if (realPost) {
+        // Map backend RecipeListResponse to Recipe props
+        const mappedRecipe: Recipe = {
+          id: realPost.recipeId.toString(),
+          title: realPost.title,
+          description: '커뮤니티에 공개된 연구 파이프라인 레시피입니다.',
+          author: realPost.author?.nickname || 'Unknown',
+          authorAvatar: realPost.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback',
+          thumbnailUrl: realPost.bannerUrl || 'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600&q=80',
+          createdAt: new Date().toISOString(),
+          rating: 4.8,
+          reviewCount: 0,
+          forkedCount: realPost.forkCount || 0,
+          viewCount: 120,
+          downloadCount: 45,
+          isExpertVerified: realPost.isExpertVerified,
+          isFavorited: false,
+          overview: {
+            content: '고품질 의료 이미지 증강을 위한 diffusion 파이프라인 레시피입니다.',
+            features: ['고해상도 복원', '노이즈 왜곡 최소화'],
+            recommendations: ['폐렴/결절 진단 모델 학습'],
+          },
+          settings: {
+            model: 'BIFUSION Diffusion',
+            steps: 50,
+            sampler: 'Euler a',
+            cfgScale: 7.5,
+            seed: '42',
+            resolution: '512x512',
+            batchSize: 4,
+          },
+        };
+        return <RecipeDetail recipe={mappedRecipe} onBack={() => setSelectedId(null)} isAuthor={realPost.author?.nickname === user?.name} />;
+      }
       const post = mockShowcasePosts.find(p => p.id === selectedId);
       if (post) return <RecipeDetail recipe={post} onBack={() => setSelectedId(null)} isAuthor={post.author === user?.name} />;
     }
@@ -69,9 +104,10 @@ export default function CommunityPage() {
       return <QnaDetail 
         qnaId={Number(selectedId)} 
         onBack={() => setSelectedId(null)} 
-        onDelete={() => {
+        onDelete={async () => {
           if (confirm('정말로 이 질문을 삭제하시겠습니까?')) {
-            alert('삭제되었습니다. (Mock)');
+            await deleteQna(Number(selectedId));
+            alert('질문이 성공적으로 삭제되었습니다.');
             setSelectedId(null);
           }
         }}
@@ -81,9 +117,10 @@ export default function CommunityPage() {
       return <RecruitmentDetail 
         recruitmentId={Number(selectedId)} 
         onBack={() => setSelectedId(null)}
-        onDelete={() => {
+        onDelete={async () => {
           if (confirm('정말로 이 채용 공고를 삭제하시겠습니까?')) {
-            alert('삭제되었습니다. (Mock)');
+            await deleteRecruitment(Number(selectedId));
+            alert('채용 공고가 성공적으로 삭제되었습니다.');
             setSelectedId(null);
           }
         }}
@@ -94,9 +131,10 @@ export default function CommunityPage() {
       if (post) return <CommunityDatasetDetail 
         datasetPost={post} 
         onBack={() => setSelectedId(null)} 
-        onDelete={() => {
+        onDelete={async () => {
           if (confirm('정말로 이 데이터셋을 삭제하시겠습니까?')) {
-            alert('삭제되었습니다. (Mock)');
+            await deleteDataset(Number(selectedId));
+            alert('데이터셋이 성공적으로 삭제되었습니다.');
             setSelectedId(null);
           }
         }}
@@ -115,7 +153,7 @@ export default function CommunityPage() {
           </div>
           <button 
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-3xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95"
+            className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-3xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 cursor-pointer"
           >
             <Plus size={20} /> 새로운 게시글 작성
           </button>
@@ -140,11 +178,11 @@ export default function CommunityPage() {
             <button
               key={tab}
               onClick={() => { setActiveTab(tab); setSelectedId(null); }}
-              className={`pb-6 text-lg font-black transition-all relative whitespace-nowrap ${
+              className={`pb-6 text-lg font-black transition-all relative whitespace-nowrap cursor-pointer ${
                 activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-500'
               }`}
             >
-              {tab === 'showcase' ? '쇼케이스' : tab === 'qa' ? '전문가 Q&A' : tab === 'recruitment' ? '팀원 모집' : '데이터셋'}
+              {tab === 'showcase' ? '쇼케이스 (레시피)' : tab === 'qa' ? '전문가 Q&A' : tab === 'recruitment' ? '팀원 모집' : '데이터셋'}
               {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-1.5 bg-primary rounded-full" />}
             </button>
           ))}
@@ -163,32 +201,70 @@ export default function CommunityPage() {
       {/* Content Grid */}
       <div className="min-h-100">
         {activeTab === 'showcase' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mockShowcasePosts.map(post => (
-              <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-card rounded-[2.5rem] border border-border overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative">
-                <div className="aspect-4/3 overflow-hidden bg-muted">
-                  <ImageWithFallback src={post.thumbnailUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                  {post.isExpertVerified && (
-                    <div className="absolute top-6 right-6 px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
-                      <Award size={14} /> Expert
+          <div className="space-y-6">
+            {isLoadingRecipe ? (
+              <div className="text-center py-10 font-bold text-muted-foreground">레시피 목록을 불러오는 중...</div>
+            ) : recipeList.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recipeList.map(post => (
+                  <div key={post.recipeId} onClick={() => setSelectedId(post.recipeId.toString())} className="group bg-card rounded-[2.5rem] border border-border overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative">
+                    <div className="aspect-4/3 overflow-hidden bg-muted">
+                      <ImageWithFallback 
+                        src={post.bannerUrl || 'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600&q=80'} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      />
+                      {post.isExpertVerified && (
+                        <div className="absolute top-6 right-6 px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
+                          <Award size={14} /> Expert
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="p-8 space-y-6">
-                  <h3 className="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
-                  <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                    <div className="flex items-center gap-3">
-                      <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
-                      <span className="text-sm font-bold text-muted-foreground">{post.author}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkedCount}</span>
-                      <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount}</span>
+                    <div className="p-8 space-y-6">
+                      <h3 className="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
+                      <div className="flex items-center justify-between pt-6 border-t border-border">
+                        <div className="flex items-center gap-3">
+                          <img src={post.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={post.author?.nickname || 'Unknown'} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+                          <span className="text-sm font-bold text-muted-foreground">{post.author?.nickname || 'Unknown'}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
+                          <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkCount || 0}</span>
+                          <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount || 0}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {mockShowcasePosts.map(post => (
+                  <div key={post.id} onClick={() => setSelectedId(post.id)} className="group bg-card rounded-[2.5rem] border border-border overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative">
+                    <div className="aspect-4/3 overflow-hidden bg-muted">
+                      <ImageWithFallback src={post.thumbnailUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      {post.isExpertVerified && (
+                        <div className="absolute top-6 right-6 px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
+                          <Award size={14} /> Expert
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-8 space-y-6">
+                      <h3 className="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
+                      <div className="flex items-center justify-between pt-6 border-t border-border">
+                        <div className="flex items-center gap-3">
+                          <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+                          <span className="text-sm font-bold text-muted-foreground">{post.author}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
+                          <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkedCount}</span>
+                          <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

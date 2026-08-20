@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { 
-  Clock, 
   CheckCircle, 
   XCircle, 
   TrendingUp, 
@@ -248,10 +247,13 @@ export default function ExpertDashboard() {
                       <Eye size={18} className="group-hover/btn:scale-110 transition-transform" /> 검수 계속하기
                     </button>
                   ) : (
-                    <div className={`w-full py-4 rounded-2xl flex items-center justify-center gap-2 font-black text-sm ${request.reviewResult === 'approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                    <button
+                      onClick={() => handleContinueReview(request)}
+                      className={`w-full py-4 rounded-2xl flex items-center justify-center gap-2 font-black text-sm transition-all hover:opacity-90 hover:shadow-md cursor-pointer ${request.reviewResult === 'approved' ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
+                    >
                       {request.reviewResult === 'approved' ? <CheckCircle size={18} /> : <XCircle size={18} />}
-                      {request.reviewResult === 'approved' ? '승인 완료' : '거절됨'}
-                    </div>
+                      <span>{request.reviewResult === 'approved' ? '승인 완료' : '반려됨'} • 검수 결과 보기</span>
+                    </button>
                   )}
                 </div>
               ))}

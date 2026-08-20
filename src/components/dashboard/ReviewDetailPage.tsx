@@ -198,16 +198,27 @@ export default function ReviewDetailPage({
 
         {/* Sample Images */}
         <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
-          <h3 className="text-lg font-bold text-foreground mb-8 tracking-tight">
-            생성된 샘플 이미지{' '}
-            <span className="text-muted-foreground font-medium text-sm ml-2">(8/800)</span>
-          </h3>
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-lg font-bold text-foreground tracking-tight">
+              생성된 샘플 이미지{' '}
+              <span className="text-muted-foreground font-medium text-sm ml-2">(8/800)</span>
+            </h3>
+            {Object.keys(imageComments).length > 0 && (
+              <span className="px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-xl text-xs font-black flex items-center gap-1.5 animate-fade-in">
+                <MessageSquare size={14} className="fill-primary/20" /> 이미지별 코멘트 {Object.keys(imageComments).length}개
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {sampleImages.map((image) => (
               <div
                 key={image.id}
                 onClick={() => handleImageClick(image)}
-                className="aspect-square rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer group relative"
+                className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group relative ${
+                  imageComments[image.id]
+                    ? 'border-primary ring-4 ring-primary/15 shadow-md shadow-primary/10'
+                    : 'border-transparent hover:border-primary/50'
+                }`}
               >
                 <img
                   src={image.url}
@@ -215,13 +226,13 @@ export default function ReviewDetailPage({
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 {imageComments[image.id] && (
-                  <div className="absolute top-3 left-3 px-2 py-1 bg-primary text-white rounded-lg text-[10px] font-black flex items-center gap-1 shadow-md z-10 animate-fade-in">
-                    <MessageSquare size={12} /> 코멘트 있음
+                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-primary text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-lg shadow-primary/30 z-10 animate-fade-in">
+                    <MessageSquare size={12} className="fill-current" /> 코멘트
                   </div>
                 )}
-                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
                   <span className="bg-card text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                    자세히 보기
+                    {request.status === 'completed' ? '코멘트 및 이미지 확인' : '자세히 보기'}
                   </span>
                 </div>
               </div>

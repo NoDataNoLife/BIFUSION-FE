@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   CheckCircle, 
   XCircle, 
@@ -9,6 +9,7 @@ import {
   MessageSquare 
 } from 'lucide-react';
 import ReviewDetailPage from '../../components/dashboard/ReviewDetailPage';
+import { useExpertStore } from '../../store/useExpertStore';
 
 interface ReviewRequest {
   id: string;
@@ -32,7 +33,7 @@ interface ReviewRequest {
   imageComments?: Record<number, string>;
 }
 
-const mockReviewRequests: ReviewRequest[] = [
+const fallbackMockRequests: ReviewRequest[] = [
   {
     id: 'REV-001',
     requester: {
@@ -51,48 +52,66 @@ const mockReviewRequests: ReviewRequest[] = [
     requestDate: '2026-02-02',
     status: 'pending',
   },
-  {
-    id: 'REV-002',
-    requester: {
-      name: '권나현',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kwon',
-      email: 'kwon@biffusion.com',
-    },
-    dataType: 'X-Ray',
-    project: '폐 질환 진단 시스템',
-    thumbnail: 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=400&q=80',
-    parameters: {
-      imagesPerClass: 100,
-      samplingSteps: 150,
-      guidanceScale: 10.0,
-    },
-    requestDate: '2026-02-01',
-    status: 'pending',
-  },
 ];
 
 export default function ExpertDashboard() {
   const [selectedTab, setSelectedTab] = useState<'pending' | 'reviewing' | 'completed'>('pending');
   const [selectedRequest, setSelectedRequest] = useState<ReviewRequest | null>(null);
-  const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>(mockReviewRequests);
   const [showDetailPage, setShowDetailPage] = useState(false);
 
-  const pendingRequests = reviewRequests.filter(r => r.status === 'pending');
-  const reviewingRequests = reviewRequests.filter(r => r.status === 'reviewing');
-  const completedRequests = reviewRequests.filter(r => r.status === 'completed');
+  const { 
+    inspectionList, 
+    fetchInspectionRequests, 
+    startInspection, 
+    isLoading 
+  } = useExpertStore();
 
-  const filteredRequests = selectedTab === 'pending' 
-    ? pendingRequests 
-    : selectedTab === 'reviewing' 
-    ? reviewingRequests 
-    : completedRequests;
+  useEffect(() => {
+    const serverStatus = 
+      selectedTab === 'pending' 
+        ? 'PENDING' 
+        : selectedTab === 'reviewing' 
+        ? 'IN_PROGRESS' 
+        : 'COMPLETED';
+    fetchInspectionRequests(serverStatus);
+  }, [selectedTab, fetchInspectionRequests]);
 
-  const handleStartReview = (requestId: string) => {
-    setReviewRequests(prev => 
-      prev.map(req => 
-        req.id === requestId ? { ...req, status: 'reviewing' as const } : req
-      )
-    );
+  // Map server items to ReviewRequest interface
+  const displayRequests: ReviewRequest[] = 
+    inspectionList.length > 0
+      ? inspectionList.map((item) => ({
+          id: `REV-${item.requestId}`,
+          requester: {
+            name: item.requester?.nickname || '연구자',
+            avatar: item.requester?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=requester',
+            email: 'researcher@biffusion.com',
+          },
+          dataType: item.targetType === 'RECIPE' ? '파이프라인 레시피' : '데이터셋',
+          project: item.title,
+          thumbnail: item.thumbnailUrl || 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80',
+          parameters: {
+            imagesPerClass: 50,
+            samplingSteps: 100,
+            guidanceScale: 7.5,
+          },
+          requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '2026-08-24',
+          status: item.status === 'PENDING' ? 'pending' : item.status === 'IN_PROGRESS' ? 'reviewing' : 'completed',
+          reviewResult: item.status === 'COMPLETED' ? 'approved' : item.status === 'REJECTED' ? 'rejected' : undefined,
+        }))
+      : selectedTab === 'pending'
+      ? fallbackMockRequests
+      : [];
+
+  const handleStartReview = async (requestId: string) => {
+    const numericId = Number(requestId.replace(/\D/g, ''));
+    if (numericId) {
+      try {
+        await startInspection(numericId);
+        await fetchInspectionRequests('IN_PROGRESS');
+      } catch (e) {
+        console.error('Failed to start inspection on server:', e);
+      }
+    }
     setSelectedTab('reviewing');
   };
 
@@ -104,34 +123,25 @@ export default function ExpertDashboard() {
   const handleBackToDashboard = () => {
     setShowDetailPage(false);
     setSelectedRequest(null);
+    const serverStatus = 
+      selectedTab === 'pending' 
+        ? 'PENDING' 
+        : selectedTab === 'reviewing' 
+        ? 'IN_PROGRESS' 
+        : 'COMPLETED';
+    fetchInspectionRequests(serverStatus);
   };
 
-  const handleApprove = (comment: string, imageComments?: Record<number, string>) => {
-    if (selectedRequest) {
-      setReviewRequests(prev => 
-        prev.map(req => 
-          req.id === selectedRequest.id 
-            ? { ...req, status: 'completed' as const, reviewResult: 'approved' as const, feedback: comment, imageComments } 
-            : req
-        )
-      );
-      setShowDetailPage(false);
-      setSelectedRequest(null);
-    }
+  const handleApprove = () => {
+    setShowDetailPage(false);
+    setSelectedRequest(null);
+    setSelectedTab('completed');
   };
 
-  const handleReject = (comment: string, imageComments?: Record<number, string>) => {
-    if (selectedRequest) {
-      setReviewRequests(prev => 
-        prev.map(req => 
-          req.id === selectedRequest.id 
-            ? { ...req, status: 'completed' as const, reviewResult: 'rejected' as const, feedback: comment, imageComments } 
-            : req
-        )
-      );
-      setShowDetailPage(false);
-      setSelectedRequest(null);
-    }
+  const handleReject = () => {
+    setShowDetailPage(false);
+    setSelectedRequest(null);
+    setSelectedTab('completed');
   };
 
   if (showDetailPage && selectedRequest) {
@@ -141,7 +151,6 @@ export default function ExpertDashboard() {
         onBack={handleBackToDashboard}
         onApprove={handleApprove}
         onReject={handleReject}
-        onSaveDraft={(comment) => console.log('Draft saved:', comment)}
       />
     );
   }
@@ -197,7 +206,7 @@ export default function ExpertDashboard() {
               <button
                 key={tab}
                 onClick={() => setSelectedTab(tab)}
-                className={`pb-6 text-sm font-black transition-all relative ${
+                className={`pb-6 text-sm font-black transition-all relative cursor-pointer ${
                   selectedTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-600'
                 }`}
               >
@@ -212,27 +221,29 @@ export default function ExpertDashboard() {
 
         {/* List Content */}
         <div className="p-8">
-          {filteredRequests.length === 0 ? (
+          {isLoading ? (
+            <div className="py-20 text-center font-bold text-muted-foreground">검수 목록을 불러오는 중...</div>
+          ) : displayRequests.length === 0 ? (
             <div className="py-20 text-center space-y-4">
-              <MessageSquare className="w-16 h-16 text-gray-100 mx-auto" />
+              <MessageSquare className="w-16 h-16 text-gray-200 mx-auto" />
               <p className="text-muted-foreground font-bold">해당하는 검수 요청이 없습니다.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {filteredRequests.map((request) => (
-                <div key={request.id} className="group bg-gray-50/50 rounded-3xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-2xl hover:shadow-primary/5 transition-all p-8">
+              {displayRequests.map((request) => (
+                <div key={request.id} className="group bg-muted/40 rounded-3xl border border-transparent hover:border-primary/20 hover:bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all p-8">
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-4">
-                      <img src={request.requester.avatar} alt={request.requester.name} className="w-12 h-12 rounded-2xl ring-4 ring-white" />
+                      <img src={request.requester.avatar} alt={request.requester.name} className="w-12 h-12 rounded-2xl ring-4 ring-muted shadow-xs" />
                       <div>
                         <p className="font-black text-foreground">{request.requester.name}</p>
                         <p className="text-xs text-muted-foreground font-bold tracking-tight">{request.requester.email}</p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 bg-card border border-border rounded-lg text-[10px] font-black text-muted-foreground">{request.id}</span>
+                    <span className="px-3 py-1 bg-card border border-border rounded-lg text-[10px] font-black text-muted-foreground font-mono">{request.id}</span>
                   </div>
 
-                  <div className="relative aspect-video rounded-2xl overflow-hidden mb-6">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden mb-6 bg-muted">
                     <img src={request.thumbnail} alt={request.project} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
 
@@ -240,11 +251,11 @@ export default function ExpertDashboard() {
                   <p className="text-xs text-primary font-bold mb-6">요청일: {request.requestDate}</p>
 
                   {request.status === 'pending' ? (
-                    <button onClick={() => handleStartReview(request.id)} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-primary transition-all flex items-center justify-center gap-2 group/btn">
+                    <button onClick={() => handleStartReview(request.id)} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-primary transition-all flex items-center justify-center gap-2 group/btn cursor-pointer">
                       <Eye size={18} className="group-hover/btn:scale-110 transition-transform" /> 검수 시작하기
                     </button>
                   ) : request.status === 'reviewing' ? (
-                    <button onClick={() => handleContinueReview(request)} className="w-full py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group/btn">
+                    <button onClick={() => handleContinueReview(request)} className="w-full py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group/btn cursor-pointer">
                       <Eye size={18} className="group-hover/btn:scale-110 transition-transform" /> 검수 계속하기
                     </button>
                   ) : (

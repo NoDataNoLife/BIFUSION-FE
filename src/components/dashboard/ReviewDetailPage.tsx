@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, XCircle, MessageSquare, X, Save } from 'lucide-react';
+import { useExpertStore } from '../../store/useExpertStore';
 
 interface ReviewRequest {
   id: string;
@@ -45,6 +46,14 @@ export default function ReviewDetailPage({
   onReject,
   onSaveDraft,
 }: ReviewDetailPageProps) {
+  const { 
+    inspectionDetail, 
+    fetchInspectionDetail, 
+    saveDraftComment, 
+    saveImageComment, 
+    submitInspectionResult 
+  } = useExpertStore();
+
   const [reviewComment, setReviewComment] = useState(request.feedback || '');
   const [selectedImage, setSelectedImage] = useState<ImageDetail | null>(null);
   const [imageComments, setImageComments] = useState<Record<number, string>>(
@@ -54,17 +63,51 @@ export default function ReviewDetailPage({
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  // Mock image data
-  const sampleImages: ImageDetail[] = [
-    { id: 1, fileName: 'chest_xray_001.png', label: '정상', url: request.thumbnail },
-    { id: 2, fileName: 'chest_xray_002.png', label: '이상', url: request.thumbnail },
-    { id: 3, fileName: 'chest_xray_003.png', label: '정상', url: request.thumbnail },
-    { id: 4, fileName: 'chest_xray_004.png', label: '이상', url: request.thumbnail },
-    { id: 5, fileName: 'chest_xray_005.png', label: '정상', url: request.thumbnail },
-    { id: 6, fileName: 'chest_xray_006.png', label: '이상', url: request.thumbnail },
-    { id: 7, fileName: 'chest_xray_007.png', label: '정상', url: request.thumbnail },
-    { id: 8, fileName: 'chest_xray_008.png', label: '이상', url: request.thumbnail },
-  ];
+  const numericId = Number(request.id.replace(/\D/g, ''));
+
+  useEffect(() => {
+    if (numericId) {
+      fetchInspectionDetail(numericId);
+    }
+  }, [numericId, fetchInspectionDetail]);
+
+  useEffect(() => {
+    if (inspectionDetail) {
+      if (inspectionDetail.draftComment && !reviewComment) {
+        setReviewComment(inspectionDetail.draftComment);
+      }
+      if (inspectionDetail.finalComment) {
+        setReviewComment(inspectionDetail.finalComment);
+      }
+      if (inspectionDetail.images && inspectionDetail.images.length > 0) {
+        const initialComments: Record<number, string> = { ...imageComments };
+        inspectionDetail.images.forEach((img) => {
+          if (img.comment) {
+            initialComments[img.imageId] = img.comment;
+          }
+        });
+        setImageComments(initialComments);
+      }
+    }
+  }, [inspectionDetail]);
+
+  // Image list (from real inspectionDetail or fallback sampleImages)
+  const displayImages: ImageDetail[] = 
+    inspectionDetail?.images && inspectionDetail.images.length > 0
+      ? inspectionDetail.images.map((img) => ({
+          id: img.imageId,
+          fileName: `sample_${img.imageId}.png`,
+          label: img.label || '정상',
+          url: img.imageUrl,
+        }))
+      : [
+          { id: 1, fileName: 'chest_xray_001.png', label: '정상', url: request.thumbnail },
+          { id: 2, fileName: 'chest_xray_002.png', label: '이상', url: request.thumbnail },
+          { id: 3, fileName: 'chest_xray_003.png', label: '정상', url: request.thumbnail },
+          { id: 4, fileName: 'chest_xray_004.png', label: '이상', url: request.thumbnail },
+          { id: 5, fileName: 'chest_xray_005.png', label: '정상', url: request.thumbnail },
+          { id: 6, fileName: 'chest_xray_006.png', label: '이상', url: request.thumbnail },
+        ];
 
   const handleImageClick = (image: ImageDetail) => {
     setSelectedImage(image);
@@ -76,29 +119,83 @@ export default function ReviewDetailPage({
     setImageComment('');
   };
 
-  const handleSaveImageComment = () => {
+  const handleSaveImageComment = async () => {
     if (selectedImage) {
       setImageComments((prev) => ({
         ...prev,
         [selectedImage.id]: imageComment,
       }));
+
+      if (numericId) {
+        try {
+          await saveImageComment(numericId, selectedImage.id, imageComment);
+        } catch (e) {
+          console.error('Failed to save image comment to API:', e);
+        }
+      }
     }
     handleCloseImageModal();
   };
 
   const handleSaveDraft = async () => {
-    if (onSaveDraft) {
-      setIsSaving(true);
-      setSaveMessage('');
+    setIsSaving(true);
+    setSaveMessage('');
 
+    if (numericId) {
+      try {
+        await saveDraftComment(numericId, reviewComment);
+        setSaveMessage('최종 코멘트가 임시저장되었습니다.');
+        setTimeout(() => setSaveMessage(''), 3000);
+      } catch (e) {
+        console.error('Failed to save draft comment:', e);
+        setSaveMessage('임시저장에 실패했습니다.');
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
       setTimeout(() => {
-        onSaveDraft(reviewComment, imageComments);
         setIsSaving(false);
         setSaveMessage('임시 저장되었습니다.');
         setTimeout(() => setSaveMessage(''), 3000);
-      }, 500);
+      }, 300);
+    }
+
+    if (onSaveDraft) {
+      onSaveDraft(reviewComment, imageComments);
     }
   };
+
+  const handleApproveClick = async () => {
+    if (!reviewComment.trim()) {
+      alert('검수 종합 의견을 입력해 주세요.');
+      return;
+    }
+    if (numericId) {
+      try {
+        await submitInspectionResult(numericId, 'COMPLETED', reviewComment);
+      } catch (e) {
+        console.error('Failed to submit inspection approval:', e);
+      }
+    }
+    onApprove(reviewComment, imageComments);
+  };
+
+  const handleRejectClick = async () => {
+    if (!reviewComment.trim()) {
+      alert('반려 사유 및 종합 의견을 입력해 주세요.');
+      return;
+    }
+    if (numericId) {
+      try {
+        await submitInspectionResult(numericId, 'REJECTED', reviewComment);
+      } catch (e) {
+        console.error('Failed to submit inspection rejection:', e);
+      }
+    }
+    onReject(reviewComment, imageComments);
+  };
+
+  const commentedCount = Object.values(imageComments).filter((c) => c && c.trim().length > 0).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -107,7 +204,7 @@ export default function ReviewDetailPage({
         <div className="max-w-5xl mx-auto px-8 py-8">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-muted-foreground hover:text-primary mb-6 transition-all group font-bold text-sm"
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary mb-6 transition-all group font-bold text-sm cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             목록으로 돌아가기
@@ -118,9 +215,14 @@ export default function ReviewDetailPage({
                 {request.project}
               </h1>
               <p className="text-sm text-muted-foreground mt-2 font-medium flex items-center gap-2">
-                <span className="bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                <span className="bg-muted px-2 py-0.5 rounded text-muted-foreground font-mono">
                   {request.id}
                 </span>
+                {commentedCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-primary/10 text-primary border border-primary/20">
+                    💬 이미지별 코멘트 {commentedCount}개
+                  </span>
+                )}
               </p>
             </div>
             {request.status !== 'completed' && (
@@ -132,7 +234,8 @@ export default function ReviewDetailPage({
                 )}
                 <button
                   onClick={handleSaveDraft}
-                  className="px-6 py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold hover:bg-muted transition-all text-sm flex items-center gap-2"
+                  disabled={isSaving}
+                  className="px-6 py-2.5 bg-card border border-border text-muted-foreground rounded-xl font-bold hover:bg-muted transition-all text-sm flex items-center gap-2 cursor-pointer"
                 >
                   <Save size={18} /> {isSaving ? '저장 중...' : '임시 저장'}
                 </button>
@@ -151,44 +254,44 @@ export default function ReviewDetailPage({
               <img
                 src={request.requester.avatar}
                 alt={request.requester.name}
-                className="w-14 h-14 rounded-2xl ring-4 ring-gray-50"
+                className="w-14 h-14 rounded-2xl ring-4 ring-muted shadow-xs"
               />
               <div>
                 <p className="font-bold text-foreground text-lg">{request.requester.name}</p>
                 <p className="text-sm text-muted-foreground font-medium">
                   {request.requester.email}
                 </p>
-                <p className="text-xs text-primary font-bold mt-2">
-                  요청일: {request.requestDate}
+                <p className="text-xs text-muted-foreground font-medium mt-1">
+                  요청일시: {request.requestDate}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10">
-            <h3 className="text-lg font-bold text-primary mb-6">데이터 증강 파라미터</h3>
+          <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
+            <h3 className="text-lg font-bold text-foreground mb-6">증강 파라미터</h3>
             <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
-                  Images/Class
+              <div className="p-4 bg-muted rounded-2xl text-center">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                  클래스당 수량
                 </p>
-                <p className="text-2xl font-black text-primary">
+                <p className="text-lg font-black text-foreground">
                   {request.parameters.imagesPerClass}
                 </p>
               </div>
-              <div>
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
-                  Sampling
+              <div className="p-4 bg-muted rounded-2xl text-center">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                  스텝 수
                 </p>
-                <p className="text-2xl font-black text-primary">
+                <p className="text-lg font-black text-foreground">
                   {request.parameters.samplingSteps}
                 </p>
               </div>
-              <div>
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">
-                  Guidance
+              <div className="p-4 bg-muted rounded-2xl text-center">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                  CFG 스케일
                 </p>
-                <p className="text-2xl font-black text-primary">
+                <p className="text-lg font-black text-foreground">
                   {request.parameters.guidanceScale}
                 </p>
               </div>
@@ -196,107 +299,119 @@ export default function ReviewDetailPage({
           </div>
         </div>
 
-        {/* Sample Images */}
-        <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
-          <div className="flex justify-between items-center mb-8">
-            <h3 className="text-lg font-bold text-foreground tracking-tight">
-              생성된 샘플 이미지{' '}
-              <span className="text-muted-foreground font-medium text-sm ml-2">(8/800)</span>
-            </h3>
-            {Object.keys(imageComments).length > 0 && (
-              <span className="px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-xl text-xs font-black flex items-center gap-1.5 animate-fade-in">
-                <MessageSquare size={14} className="fill-primary/20" /> 이미지별 코멘트 {Object.keys(imageComments).length}개
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {sampleImages.map((image) => (
-              <div
-                key={image.id}
-                onClick={() => handleImageClick(image)}
-                className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group relative ${
-                  imageComments[image.id]
-                    ? 'border-primary ring-4 ring-primary/15 shadow-md shadow-primary/10'
-                    : 'border-transparent hover:border-primary/50'
-                }`}
-              >
-                <img
-                  src={image.url}
-                  alt={image.fileName}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                {imageComments[image.id] && (
-                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-primary text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-lg shadow-primary/30 z-10 animate-fade-in">
-                    <MessageSquare size={12} className="fill-current" /> 코멘트
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                  <span className="bg-card text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                    {request.status === 'completed' ? '코멘트 및 이미지 확인' : '자세히 보기'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Comment Section */}
-        <div className="bg-card rounded-3xl p-8 border-2 border-primary shadow-xl shadow-primary/5">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
-              <MessageSquare size={20} />
+        {/* Image Grid Section */}
+        <div className="bg-card rounded-4xl p-10 border border-border shadow-sm space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-black text-foreground">합성 샘플 데이터 정밀 검수</h3>
+              <p className="text-sm text-muted-foreground font-medium mt-1">
+                {request.status === 'completed'
+                  ? '이미지를 클릭하여 작성된 전문가 의견을 조회할 수 있습니다.'
+                  : '이미지를 클릭하여 개별 피드백과 검수 의견을 남겨주세요.'}
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">
-              전문가 최종 검수 코멘트
-            </h3>
-          </div>
-          <textarea
-            value={reviewComment}
-            onChange={(e) => setReviewComment(e.target.value)}
-            disabled={request.status === 'completed'}
-            placeholder={
-              request.status === 'completed'
-                ? '작성된 검수 피드백이 없습니다.'
-                : '이 데이터셋의 품질에 대한 상세한 피드백을 남겨주세요...'
-            }
-            className="w-full h-40 px-6 py-5 bg-muted border border-transparent rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-foreground disabled:opacity-80"
-          />
-        </div>
-
-        {/* Sticky Actions */}
-        {request.status === 'completed' ? (
-          <div
-            className={`w-full py-5 rounded-2xl flex items-center justify-center gap-3 font-black text-base shadow-sm border ${
-              request.reviewResult === 'approved'
-                ? 'bg-green-50 text-green-700 border-green-200'
-                : 'bg-red-50 text-red-700 border-red-200'
-            }`}
-          >
-            {request.reviewResult === 'approved' ? (
-              <CheckCircle size={22} />
-            ) : (
-              <XCircle size={22} />
-            )}
-            <span>
-              검수 완료: {request.reviewResult === 'approved' ? '최종 승인됨' : '반려됨'}
+            <span className="text-xs font-bold text-muted-foreground">
+              총 {displayImages.length}개 샘플
             </span>
           </div>
-        ) : (
-          <div className="flex gap-4 pt-4">
-            <button
-              onClick={() => onReject(reviewComment, imageComments)}
-              className="flex-1 py-5 bg-card border-2 border-red-100 text-red-500 rounded-2xl font-black hover:bg-red-50 transition-all flex items-center justify-center gap-2 active:scale-95"
-            >
-              <XCircle size={20} /> 거절하기
-            </button>
-            <button
-              onClick={() => onApprove(reviewComment, imageComments)}
-              className="flex-1 py-5 bg-primary text-white rounded-2xl font-black hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95"
-            >
-              <CheckCircle size={20} /> 최종 승인하기
-            </button>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {displayImages.map((image) => {
+              const hasComment = Boolean(imageComments[image.id] && imageComments[image.id].trim().length > 0);
+              return (
+                <div
+                  key={image.id}
+                  onClick={() => handleImageClick(image)}
+                  className={`group relative aspect-square bg-muted rounded-2xl overflow-hidden cursor-pointer border-2 transition-all hover:scale-[1.02] ${
+                    hasComment ? 'border-primary ring-2 ring-primary/20 shadow-md' : 'border-transparent hover:border-primary/50'
+                  }`}
+                >
+                  <img
+                    src={image.url}
+                    alt={image.fileName}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                    <span
+                      className={`self-start px-2 py-0.5 rounded text-[10px] font-black text-white ${
+                        image.label === '정상' ? 'bg-green-500' : 'bg-red-500'
+                      }`}
+                    >
+                      {image.label}
+                    </span>
+                    <span className="text-[10px] text-white font-bold flex items-center gap-1">
+                      <MessageSquare size={12} /> {request.status === 'completed' ? '코멘트 보기' : '코멘트 작성'}
+                    </span>
+                  </div>
+
+                  {/* 코멘트 작성 뱃지 */}
+                  {hasComment && (
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-lg flex items-center gap-1">
+                      <MessageSquare size={10} /> 코멘트
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+
+        {/* Final Feedback Section */}
+        <div className="bg-card rounded-4xl p-10 border border-border shadow-sm space-y-6">
+          <h3 className="text-xl font-black text-foreground">
+            {request.status === 'completed' ? '최종 검수 결과 및 총평' : '종합 검수 의견'}
+          </h3>
+
+          {request.status === 'completed' ? (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <span
+                  className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                    request.reviewResult === 'approved'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {request.reviewResult === 'approved' ? (
+                    <>
+                      <CheckCircle size={16} /> 승인 완료
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={16} /> 반려됨
+                    </>
+                  )}
+                </span>
+              </div>
+              <div className="p-6 bg-muted/60 rounded-3xl border border-border text-foreground font-medium text-base leading-relaxed whitespace-pre-wrap">
+                {reviewComment || '작성된 종합 의견이 없습니다.'}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <textarea
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="합성 데이터 품질, 임상적 유의성, 노이즈 패턴 등에 대한 종합적인 평가를 작성하세요..."
+                className="w-full h-40 p-6 bg-muted border border-border rounded-3xl focus:ring-2 focus:ring-primary focus:bg-background transition-all font-medium text-sm resize-none text-foreground"
+              />
+              <div className="flex justify-end gap-4 pt-4 border-t border-border">
+                <button
+                  onClick={handleRejectClick}
+                  className="px-8 py-4 bg-card border border-red-200 text-red-600 rounded-2xl font-black text-sm hover:bg-red-50 transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <XCircle size={20} /> 검수 반려
+                </button>
+                <button
+                  onClick={handleApproveClick}
+                  className="px-10 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
+                >
+                  <CheckCircle size={20} /> 최종 승인
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Image Modal */}
@@ -313,7 +428,7 @@ export default function ReviewDetailPage({
               <h3 className="font-bold text-foreground">이미지 정밀 검수</h3>
               <button
                 onClick={handleCloseImageModal}
-                className="p-2 hover:bg-muted rounded-xl transition-colors"
+                className="p-2 hover:bg-muted rounded-xl transition-colors cursor-pointer"
               >
                 <X size={24} />
               </button>
@@ -374,7 +489,7 @@ export default function ReviewDetailPage({
                         value={imageComment}
                         onChange={(e) => setImageComment(e.target.value)}
                         placeholder="이 이미지에 대한 피드백을 작성하세요..."
-                        className="w-full h-32 p-4 bg-muted border border-transparent rounded-2xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-sm font-medium resize-none text-foreground"
+                        className="w-full h-32 p-4 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-primary focus:bg-background transition-all text-sm font-medium resize-none text-foreground"
                       />
                     </div>
                   )}
@@ -383,14 +498,14 @@ export default function ReviewDetailPage({
                 {request.status === 'completed' ? (
                   <button
                     onClick={handleCloseImageModal}
-                    className="w-full py-4 bg-muted hover:bg-gray-200 text-foreground rounded-xl font-black text-sm transition-all"
+                    className="w-full py-4 bg-muted hover:bg-gray-200 text-foreground rounded-xl font-black text-sm transition-all cursor-pointer"
                   >
                     확인 (닫기)
                   </button>
                 ) : (
                   <button
                     onClick={handleSaveImageComment}
-                    className="w-full py-4 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                    className="w-full py-4 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all cursor-pointer"
                   >
                     코멘트 저장
                   </button>

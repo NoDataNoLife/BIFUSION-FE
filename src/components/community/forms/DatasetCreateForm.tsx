@@ -79,7 +79,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
 
       // 2. Create Dataset with isPublic
       const isPublic = context !== 'ASSET';
-      await api.post('/community/datasets', {
+      await api.post('/datasets', {
         title,
         description,
         category,

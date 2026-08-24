@@ -40,7 +40,7 @@ export default function CommunityPage() {
     qnaList, datasetList, recruitmentList, recipeList,
     fetchQnaList, fetchDatasetList, fetchRecruitmentList, fetchRecipeList,
     isLoadingQna, isLoadingDataset, isLoadingRecruitment, isLoadingRecipe,
-    deleteQna, deleteRecruitment, deleteDataset,
+    deleteQna, deleteRecruitment, deleteDataset, deleteRecipe,
   } = useCommunityStore();
 
   useEffect(() => {
@@ -95,7 +95,20 @@ export default function CommunityPage() {
             batchSize: 4,
           },
         };
-        return <RecipeDetail recipe={mappedRecipe} onBack={() => setSelectedId(null)} isAuthor={realPost.author?.nickname === user?.name} />;
+        return (
+          <RecipeDetail 
+            recipe={mappedRecipe} 
+            onBack={() => setSelectedId(null)} 
+            isAuthor={realPost.author?.nickname === user?.name}
+            onDelete={async () => {
+              if (confirm('정말로 이 레시피를 삭제하시겠습니까?')) {
+                await deleteRecipe(Number(selectedId));
+                alert('레시피가 성공적으로 삭제되었습니다.');
+                setSelectedId(null);
+              }
+            }}
+          />
+        );
       }
       const post = mockShowcasePosts.find(p => p.id === selectedId);
       if (post) return <RecipeDetail recipe={post} onBack={() => setSelectedId(null)} isAuthor={post.author === user?.name} />;

@@ -168,9 +168,11 @@ interface CommunityStore {
   
   fetchDatasetDetail: (datasetId: number) => Promise<void>;
   deleteDataset: (datasetId: number) => Promise<void>;
+  updateDataset: (datasetId: number, payload: { title?: string; description?: string; category?: string; license?: string; tags?: string[]; isPublic?: boolean }) => Promise<void>;
   
   fetchRecipeDetail: (recipeId: number) => Promise<void>;
   forkRecipe: (recipeId: number) => Promise<void>;
+  deleteRecipe: (recipeId: number) => Promise<void>;
   
   requestExpertVerification: (targetType: 'RECIPE' | 'DATASET', targetId: number | string, reason: string, reward: number) => Promise<void>;
   deleteRecipeReview: (recipeId: number, reviewId: number) => Promise<void>;
@@ -311,7 +313,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   fetchDatasetDetail: async (datasetId: number) => {
     set({ isLoadingDetail: true, error: null });
     try {
-      const response = await api.get<{ data: DatasetDetailResponse }>(`/community/datasets/${datasetId}`);
+      const response = await api.get<{ data: DatasetDetailResponse }>(`/datasets/${datasetId}`);
       set({ datasetDetail: response.data.data, isLoadingDetail: false });
     } catch (error: any) {
       set({ error: error.message || 'Failed to fetch Dataset detail', isLoadingDetail: false });
@@ -320,11 +322,23 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
 
   deleteDataset: async (datasetId: number) => {
     try {
-      await api.delete(`/community/datasets/${datasetId}`);
+      await api.delete(`/datasets/${datasetId}`);
       const store = useCommunityStore.getState();
       await store.fetchDatasetList();
     } catch (error: any) {
       set({ error: error.message || 'Failed to delete dataset' });
+      throw error;
+    }
+  },
+
+  updateDataset: async (datasetId: number, payload: { title?: string; description?: string; category?: string; license?: string; tags?: string[]; isPublic?: boolean }) => {
+    try {
+      await api.patch(`/datasets/${datasetId}`, payload);
+      const store = useCommunityStore.getState();
+      await store.fetchDatasetDetail(datasetId);
+      await store.fetchDatasetList();
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to update dataset' });
       throw error;
     }
   },
@@ -336,6 +350,17 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
       set({ recipeDetail: response.data.data, isLoadingDetail: false });
     } catch (error: any) {
       set({ error: error.message || 'Failed to fetch Recipe detail', isLoadingDetail: false });
+    }
+  },
+
+  deleteRecipe: async (recipeId: number) => {
+    try {
+      await api.delete(`/community/recipes/${recipeId}`);
+      const store = useCommunityStore.getState();
+      await store.fetchRecipeList();
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to delete recipe' });
+      throw error;
     }
   },
 

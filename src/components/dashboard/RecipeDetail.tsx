@@ -89,6 +89,15 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               {forked ? <Check className="w-4 h-4" /> : <GitFork className="w-4 h-4" />}
               {forked ? 'Fork됨' : '이 레시피 Fork'}
             </button>
+            {isAuthor && onDelete && (
+              <button 
+                onClick={() => onDelete(recipe.id)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-sm border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                삭제
+              </button>
+            )}
             <button 
               onClick={handleShare}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm shadow-lg ${

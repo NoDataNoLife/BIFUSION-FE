@@ -51,7 +51,8 @@ export default function ReviewDetailPage({
     fetchInspectionDetail, 
     saveDraftComment, 
     saveImageComment, 
-    submitInspectionResult 
+    approveInspection,
+    rejectInspection
   } = useExpertStore();
 
   const [reviewComment, setReviewComment] = useState(request.feedback || '');
@@ -172,7 +173,7 @@ export default function ReviewDetailPage({
     }
     if (numericId) {
       try {
-        await submitInspectionResult(numericId, 'COMPLETED', reviewComment);
+        await approveInspection(numericId, reviewComment);
       } catch (e) {
         console.error('Failed to submit inspection approval:', e);
       }
@@ -187,7 +188,7 @@ export default function ReviewDetailPage({
     }
     if (numericId) {
       try {
-        await submitInspectionResult(numericId, 'REJECTED', reviewComment);
+        await rejectInspection(numericId, reviewComment);
       } catch (e) {
         console.error('Failed to submit inspection rejection:', e);
       }

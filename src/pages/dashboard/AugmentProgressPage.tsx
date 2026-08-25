@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
-  Loader2, 
   XCircle, 
   ChevronRight,
   Activity,
-  Zap,
-  CheckCircle2,
-  AlertTriangle
+  Zap
 } from 'lucide-react';
 
 export default function AugmentProgressPage() {
@@ -58,14 +55,14 @@ export default function AugmentProgressPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header Section */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-gray-900"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -75,7 +72,7 @@ export default function AugmentProgressPage() {
                 <ChevronRight className="w-3 h-3" />
                 <span>Job {jobId}</span>
                 <ChevronRight className="w-3 h-3" />
-                <span className="text-primary font-black italic">Progress</span>
+                <span className="text-primary font-black">Progress</span>
               </nav>
               <h1 className="text-2xl font-black text-foreground tracking-tight">AI 데이터 증강 실행 중</h1>
             </div>
@@ -83,7 +80,7 @@ export default function AugmentProgressPage() {
           
           <button 
             onClick={handleCancel}
-            className="flex items-center gap-2 px-4 py-2 text-red-500 font-black text-sm hover:bg-red-50 rounded-xl transition-all active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 text-red-500 font-black text-sm hover:bg-red-500/10 rounded-xl transition-all active:scale-95 cursor-pointer"
           >
             <XCircle className="w-4 h-4" />
             중단하기
@@ -102,9 +99,9 @@ export default function AugmentProgressPage() {
             <div className="relative z-10 flex flex-col items-center text-center space-y-8">
               {/* Spinning Loader Container */}
               <div className="relative">
-                <div className="w-40 h-40 rounded-full border-8 border-gray-50 border-t-primary animate-spin-slow shadow-inner" />
+                <div className="w-40 h-40 rounded-full border-8 border-muted border-t-primary animate-spin-slow shadow-inner" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-4xl font-black text-foreground tracking-tighter italic tabular-nums">
+                  <span className="text-4xl font-black text-foreground tracking-tighter tabular-nums">
                     {Math.floor(progress)}%
                   </span>
                 </div>

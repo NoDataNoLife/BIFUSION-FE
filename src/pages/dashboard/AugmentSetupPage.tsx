@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
-  Upload, 
-  AlertCircle, 
+  AlertCircle,
   ChevronRight,
   Play,
   FolderUp,
@@ -44,14 +43,14 @@ export default function AugmentSetupPage() {
   const isValid = normalFiles.length >= 5 && anomalyFiles.length >= 5;
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Header Section */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-8 py-6">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-gray-900"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -70,7 +69,7 @@ export default function AugmentSetupPage() {
               <button
                 onClick={handleStartAugmentation}
                 disabled={!isValid}
-                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
                   isValid
                     ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
@@ -86,13 +85,13 @@ export default function AugmentSetupPage() {
 
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
         {/* Info Banner */}
-        <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-6 flex items-start gap-4">
-          <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl shadow-sm">
+        <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 flex items-start gap-4">
+          <div className="p-3 bg-primary/10 text-primary rounded-2xl shadow-sm shrink-0">
             <Info className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-black text-blue-900 text-lg mb-1 tracking-tight">데이터 증강이란?</h3>
-            <p className="text-blue-800/80 font-medium leading-relaxed">
+            <h3 className="font-black text-foreground text-lg mb-1 tracking-tight">데이터 증강이란?</h3>
+            <p className="text-muted-foreground font-medium leading-relaxed text-sm">
               업로드한 소량의 Support 이미지를 기반으로 AI가 추가 학습 데이터를 대량으로 생성하여, 최종 AI 모델의 진단 성능과 강건성을 크게 향상시킵니다.
             </p>
           </div>

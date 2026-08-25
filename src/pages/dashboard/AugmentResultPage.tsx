@@ -64,14 +64,14 @@ export default function AugmentResultPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Header Section */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-8 py-6">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-gray-900"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -81,21 +81,21 @@ export default function AugmentResultPage() {
                 <ChevronRight className="w-3 h-3" />
                 <span>Job {jobId}</span>
                 <ChevronRight className="w-3 h-3" />
-                <span className="text-green-600 font-black italic">Completed</span>
+                <span className="text-emerald-500 font-black">Completed</span>
               </nav>
               <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-                데이터 증강 결과 리포트 <CheckCircle2 className="w-6 h-6 text-green-500" />
+                데이터 증강 결과 리포트 <CheckCircle2 className="w-6 h-6 text-emerald-500" />
               </h1>
             </div>
 
             <div className="ml-auto flex items-center gap-3">
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-2xl font-black text-sm text-foreground hover:bg-muted transition-all shadow-sm active:scale-95">
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-2xl font-black text-sm text-foreground hover:bg-muted transition-all shadow-sm active:scale-95 cursor-pointer">
                 <Download className="w-4 h-4" />
                 NPZ 다운로드
               </button>
               <button 
                 onClick={() => navigate(`/dashboard/projects/${projectId}/train/new-job/setup`)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
               >
                 모델 학습 시작 <Play className="w-4 h-4 fill-current ml-1" />
               </button>
@@ -108,14 +108,13 @@ export default function AugmentResultPage() {
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-            { label: '생성 이미지 수', value: `${stats.total}장`, sub: `Normal ${stats.normal} / Anomaly ${stats.anomaly}`, icon: ImageIcon, color: 'blue' },
-            { label: '총 소요 시간', value: stats.duration, sub: 'GPU 가속 모드 사용', icon: Clock, color: 'purple' },
-            { label: '데이터셋 크기', value: stats.fileSize, sub: '압축된 NPZ 포맷', icon: HardDrive, color: 'green' },
+            { label: '생성 이미지 수', value: `${stats.total}장`, sub: `Normal ${stats.normal} / Anomaly ${stats.anomaly}`, icon: ImageIcon, bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20' },
+            { label: '총 소요 시간', value: stats.duration, sub: 'GPU 가속 모드 사용', icon: Clock, bg: 'bg-purple-500/10', text: 'text-purple-500', border: 'border-purple-500/20' },
+            { label: '데이터셋 크기', value: stats.fileSize, sub: '압축된 NPZ 포맷', icon: HardDrive, bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' },
           ].map((stat, i) => (
-            <div key={i} className="bg-card rounded-4xl p-8 border border-border shadow-sm relative overflow-hidden group">
-              <div className={`absolute top-0 right-0 w-32 h-32 bg-${stat.color}-50 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-${stat.color}-100 transition-colors duration-500`} />
+            <div key={i} className="bg-card rounded-3xl p-7 border border-border shadow-sm relative overflow-hidden group">
               <div className="relative z-10">
-                <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center mb-6`}>
+                <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.text} ${stat.border} border flex items-center justify-center mb-6`}>
                   <stat.icon size={24} />
                 </div>
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{stat.label}</p>

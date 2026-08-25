@@ -33,81 +33,56 @@ interface ReviewRequest {
   imageComments?: Record<number, string>;
 }
 
-const fallbackMockRequests: ReviewRequest[] = [
-  {
-    id: 'REV-001',
-    requester: {
-      name: '염승빈',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yeom',
-      email: 'yeom@biffusion.com',
-    },
-    dataType: 'CT Scan',
-    project: '심장 질환 예측 모델',
-    thumbnail: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80',
-    parameters: {
-      imagesPerClass: 50,
-      samplingSteps: 100,
-      guidanceScale: 7.5,
-    },
-    requestDate: '2026-02-02',
-    status: 'pending',
-  },
-];
-
 export default function ExpertDashboard() {
   const [selectedTab, setSelectedTab] = useState<'pending' | 'reviewing' | 'completed'>('pending');
   const [selectedRequest, setSelectedRequest] = useState<ReviewRequest | null>(null);
   const [showDetailPage, setShowDetailPage] = useState(false);
 
   const { 
-    inspectionList, 
-    fetchInspectionRequests, 
-    startInspection, 
+    groupedTasks, 
+    fetchMyTasks, 
+    startInspectionTask, 
     isLoading 
   } = useExpertStore();
 
   useEffect(() => {
-    const serverStatus = 
-      selectedTab === 'pending' 
-        ? 'PENDING' 
-        : selectedTab === 'reviewing' 
-        ? 'IN_PROGRESS' 
-        : 'COMPLETED';
-    fetchInspectionRequests(serverStatus);
-  }, [selectedTab, fetchInspectionRequests]);
+    fetchMyTasks();
+  }, [fetchMyTasks]);
+
+  const currentTasks = 
+    selectedTab === 'pending'
+      ? groupedTasks.PENDING || []
+      : selectedTab === 'reviewing'
+      ? groupedTasks.IN_PROGRESS || []
+      : groupedTasks.COMPLETED || [];
 
   // Map server items to ReviewRequest interface
-  const displayRequests: ReviewRequest[] = 
-    inspectionList.length > 0
-      ? inspectionList.map((item) => ({
-          id: `REV-${item.requestId}`,
-          requester: {
-            name: item.requester?.nickname || '연구자',
-            avatar: item.requester?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=requester',
-            email: 'researcher@biffusion.com',
-          },
-          dataType: item.targetType === 'RECIPE' ? '파이프라인 레시피' : '데이터셋',
-          project: item.title,
-          thumbnail: item.thumbnailUrl || 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80',
-          parameters: {
-            imagesPerClass: 50,
-            samplingSteps: 100,
-            guidanceScale: 7.5,
-          },
-          requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '2026-08-24',
-          status: item.status === 'PENDING' ? 'pending' : item.status === 'IN_PROGRESS' ? 'reviewing' : 'completed',
-          reviewResult: item.status === 'COMPLETED' ? 'approved' : item.status === 'REJECTED' ? 'rejected' : undefined,
-        }))
-      : selectedTab === 'pending'
-      ? fallbackMockRequests
-      : [];
+  const displayRequests: ReviewRequest[] = currentTasks.map((item) => ({
+    id: item.reviewCode,
+    requester: {
+      name: item.requester?.nickname || '연구자',
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.requester?.nickname || 'expert'}`,
+      email: item.requester?.email || 'researcher@biffusion.com',
+    },
+    dataType: '증강 데이터셋',
+    project: item.projectName || '의료 영상 증강 프로젝트',
+    thumbnail: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80',
+    parameters: {
+      imagesPerClass: 50,
+      samplingSteps: 100,
+      guidanceScale: 7.5,
+    },
+    requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '2026-08-25',
+    status: item.status === 'PENDING' ? 'pending' : item.status === 'IN_PROGRESS' ? 'reviewing' : 'completed',
+    reviewResult: item.reviewResult === 'APPROVED' ? 'approved' : item.reviewResult === 'REJECTED' ? 'rejected' : undefined,
+  }));
 
-  const handleStartReview = async (requestId: string) => {
-    const numericId = Number(requestId.replace(/\D/g, ''));
+  const handleStartReview = async (reviewCode: string) => {
+    const numericId = Number(reviewCode.replace(/\D/g, ''));
     if (numericId) {
       try {
-        await startInspection(numericId);
-        await fetchInspectionRequests('IN_PROGRESS');
+        await startInspectionTask(numericId);
+        await fetchMyTasks();
       } catch (e) {
         console.error('Failed to start inspection on server:', e);
       }
@@ -123,25 +98,21 @@ export default function ExpertDashboard() {
   const handleBackToDashboard = () => {
     setShowDetailPage(false);
     setSelectedRequest(null);
-    const serverStatus = 
-      selectedTab === 'pending' 
-        ? 'PENDING' 
-        : selectedTab === 'reviewing' 
-        ? 'IN_PROGRESS' 
-        : 'COMPLETED';
-    fetchInspectionRequests(serverStatus);
+    fetchMyTasks();
   };
 
   const handleApprove = () => {
     setShowDetailPage(false);
     setSelectedRequest(null);
     setSelectedTab('completed');
+    fetchMyTasks();
   };
 
   const handleReject = () => {
     setShowDetailPage(false);
     setSelectedRequest(null);
     setSelectedTab('completed');
+    fetchMyTasks();
   };
 
   if (showDetailPage && selectedRequest) {
@@ -185,7 +156,9 @@ export default function ExpertDashboard() {
             <CheckCircle size={24} />
           </div>
           <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">검수 완료 건수</p>
-          <p className="text-3xl font-black text-foreground">48 <span className="text-sm font-bold text-muted-foreground ml-1">건</span></p>
+          <p className="text-3xl font-black text-foreground">
+            {(groupedTasks.COMPLETED || []).length} <span className="text-sm font-bold text-muted-foreground ml-1">건</span>
+          </p>
         </div>
 
         <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
@@ -210,7 +183,11 @@ export default function ExpertDashboard() {
                   selectedTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-600'
                 }`}
               >
-                {tab === 'pending' ? '검수 대기' : tab === 'reviewing' ? '검수 중' : '검수 완료'}
+                {tab === 'pending' 
+                  ? `검수 대기 (${(groupedTasks.PENDING || []).length})` 
+                  : tab === 'reviewing' 
+                  ? `검수 중 (${(groupedTasks.IN_PROGRESS || []).length})` 
+                  : `검수 완료 (${(groupedTasks.COMPLETED || []).length})`}
                 {selectedTab === tab && (
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full" />
                 )}

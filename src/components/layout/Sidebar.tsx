@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -20,22 +19,6 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const { user } = useAuthStore();
-  const [isDarkMode, setIsDarkMode] = useState(() =>
-    document.documentElement.classList.contains("dark"),
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   const menuItems = [
     {
@@ -71,9 +54,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <img
-              src={isDarkMode ? "/B_logo_dots.png" : "/B_logo.png"}
+              src="/B_logo.png"
               alt="Bifusion"
-              className="h-9 w-auto object-contain"
+              className="h-9 w-auto object-contain dark:brightness-105 dark:drop-shadow-[0_2px_8px_rgba(240,165,58,0.25)] transition-all"
             />
           </div>
         )}

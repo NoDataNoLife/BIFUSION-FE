@@ -258,7 +258,7 @@ export default function ProjectDetailPage() {
     switch (status) {
       case "Queue":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-bold border border-yellow-100">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-bold border border-yellow-500/20">
             <Clock className="w-3 h-3" />
             대기중
           </span>
@@ -266,7 +266,7 @@ export default function ProjectDetailPage() {
       case "Processing":
         return (
           <div className="flex flex-col gap-1.5 min-w-30">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100 self-start">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-500/20 self-start">
               <Loader className="w-3 h-3 animate-spin" /> {progress}% 진행중
             </span>
             <div className="w-full bg-muted rounded-full h-1.5">
@@ -279,14 +279,14 @@ export default function ProjectDetailPage() {
         );
       case "Completed":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-100">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold border border-green-500/20">
             <CheckCircle className="w-3 h-3" />
             완료됨
           </span>
         );
       case "Failed":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold border border-red-100">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold border border-red-500/20">
             <XCircle className="w-3 h-3" />
             실패
           </span>
@@ -327,14 +327,14 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header Section */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/dashboard/projects")}
-              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-gray-900"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -356,13 +356,13 @@ export default function ProjectDetailPage() {
                     key={member.userId}
                     src={member.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.userId}`}
                     alt={member.nickname || "사용자"}
-                    className="w-8 h-8 rounded-full border-2 border-white ring-1 ring-gray-100 shadow-sm"
+                    className="w-8 h-8 rounded-full border-2 border-border ring-1 ring-border shadow-sm"
                     title={member.nickname || "사용자"}
                   />
                 ))}
                 <button
                   onClick={() => setIsSettingsOpen(true)}
-                  className="w-8 h-8 rounded-full border-2 border-white bg-muted flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors ring-1 ring-gray-100"
+                  className="w-8 h-8 rounded-full border-2 border-border bg-muted flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors ring-1 ring-border"
                 >
                   <Plus className="w-3 h-3" />
                 </button>
@@ -390,7 +390,7 @@ export default function ProjectDetailPage() {
             alt={currentProject?.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-6">
             <div>
               <h2 className="text-3xl font-black text-white tracking-tight">
@@ -411,14 +411,14 @@ export default function ProjectDetailPage() {
               onClick={() =>
                 setSelectedTab(selectedTab === stat.id ? "all" : stat.id)
               }
-              className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group ${
+              className={`p-6 rounded-3xl border-2 transition-all text-left relative overflow-hidden group cursor-pointer ${
                 selectedTab === stat.id
-                  ? `border-${stat.color}-500 bg-${stat.color}-50 shadow-lg shadow-${stat.color}-500/10`
-                  : "border-white bg-card hover:border-gray-200 shadow-sm"
+                  ? `border-${stat.color}-500 bg-${stat.color}-500/10 shadow-lg shadow-${stat.color}-500/10`
+                  : "border-border bg-card hover:border-primary/40 shadow-sm"
               }`}
             >
               <div
-                className={`p-3 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 inline-block mb-4 group-hover:scale-110 transition-transform`}
+                className={`p-3 rounded-2xl bg-${stat.color}-500/10 text-${stat.color}-600 dark:text-${stat.color}-400 inline-block mb-4 group-hover:scale-110 transition-transform`}
               >
                 <stat.icon
                   className={`w-6 h-6 ${stat.id === "processing" ? "animate-spin" : ""}`}
@@ -442,13 +442,13 @@ export default function ProjectDetailPage() {
         {/* Main Content Area */}
         <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
           {/* Filters Header */}
-          <div className="p-6 border-b border-gray-50 bg-background/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-6 border-b border-border bg-muted/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0">
               <button
                 onClick={() => setSelectedTypeFilter("all")}
-                className={`px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${
+                className={`px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap cursor-pointer ${
                   selectedTypeFilter === "all"
-                    ? "bg-gray-900 text-white shadow-md"
+                    ? "bg-primary text-white shadow-md shadow-primary/20"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
@@ -458,7 +458,7 @@ export default function ProjectDetailPage() {
                 <button
                   key={type}
                   onClick={() => setSelectedTypeFilter(type)}
-                  className={`px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-xl text-sm font-black transition-all whitespace-nowrap cursor-pointer ${
                     selectedTypeFilter === type
                       ? "bg-primary text-white shadow-md shadow-primary/20"
                       : "text-muted-foreground hover:bg-muted"
@@ -476,7 +476,7 @@ export default function ProjectDetailPage() {
                 placeholder="작업 ID 또는 담당자 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+                className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-foreground"
               />
             </div>
           </div>
@@ -485,7 +485,7 @@ export default function ProjectDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50/50">
+                <tr className="bg-muted/40">
                   <th className="px-6 py-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest border-b border-border">
                     작업 정보
                   </th>
@@ -504,13 +504,13 @@ export default function ProjectDetailPage() {
                   <th className="px-6 py-4 text-right border-b border-border"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border">
                 {filteredJobs.length > 0 ? (
                   filteredJobs.map((job) => (
                     <tr
                       key={job.id}
                       onClick={() => handleJobClick(job)}
-                      className="group hover:bg-gray-50/80 transition-colors cursor-pointer"
+                      className="group hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-5">
                         <div className="flex flex-col">
@@ -526,10 +526,10 @@ export default function ProjectDetailPage() {
                         <span
                           className={`px-2 py-1 rounded-lg text-[10px] font-black border ${
                             job.type === "Augment"
-                              ? "bg-purple-50 text-purple-600 border-purple-100"
+                              ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
                               : job.type === "Train"
-                                ? "bg-blue-50 text-blue-600 border-blue-100"
-                                : "bg-orange-50 text-orange-600 border-orange-100"
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                                : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20"
                           }`}
                         >
                           {job.type.toUpperCase()}

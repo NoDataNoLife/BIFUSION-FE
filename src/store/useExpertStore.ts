@@ -73,6 +73,8 @@ interface ExpertStore {
   startInspection: (requestId: number) => Promise<void>;
   saveDraftComment: (requestId: number, draftComment: string) => Promise<void>;
   saveImageComment: (requestId: number, imageId: number, comment: string) => Promise<void>;
+  approveInspection: (requestId: number, finalComment: string) => Promise<void>;
+  rejectInspection: (requestId: number, rejectionReason: string) => Promise<void>;
   submitInspectionResult: (requestId: number, status: 'COMPLETED' | 'REJECTED', finalComment: string) => Promise<void>;
 }
 
@@ -132,9 +134,31 @@ export const useExpertStore = create<ExpertStore>((set) => ({
     }
   },
 
+  approveInspection: async (requestId: number, finalComment: string) => {
+    try {
+      await api.post(`/inspections/${requestId}/approve`, { finalComment });
+    } catch (error: any) {
+      set({ error: error.message || '검수 승인 처리에 실패했습니다.' });
+      throw error;
+    }
+  },
+
+  rejectInspection: async (requestId: number, rejectionReason: string) => {
+    try {
+      await api.post(`/inspections/${requestId}/reject`, { rejectionReason });
+    } catch (error: any) {
+      set({ error: error.message || '검수 반려 처리에 실패했습니다.' });
+      throw error;
+    }
+  },
+
   submitInspectionResult: async (requestId: number, status: 'COMPLETED' | 'REJECTED', finalComment: string) => {
     try {
-      await api.post(`/inspections/${requestId}/result`, { status, finalComment });
+      if (status === 'COMPLETED') {
+        await api.post(`/inspections/${requestId}/approve`, { finalComment });
+      } else {
+        await api.post(`/inspections/${requestId}/reject`, { rejectionReason: finalComment });
+      }
     } catch (error: any) {
       set({ error: error.message || '검수 결과 제출에 실패했습니다.' });
       throw error;

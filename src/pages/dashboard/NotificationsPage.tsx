@@ -103,24 +103,24 @@ export default function NotificationsPage() {
   const getNotificationIcon = (type: NotificationItem['type']) => {
     switch (type) {
       case 'AUGMENTATION_SUCCESS':
-        return <div className="p-3 bg-green-50 text-green-600 rounded-2xl"><Sparkles size={20} /></div>;
+        return <div className="p-3 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-2xl"><Sparkles size={20} /></div>;
       case 'AUGMENTATION_FAILED':
-        return <div className="p-3 bg-red-50 text-red-600 rounded-2xl"><XCircle size={20} /></div>;
+        return <div className="p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl"><XCircle size={20} /></div>;
       case 'PROJECT_INVITATION':
       case 'INVITATION_ACCEPTED':
       case 'INVITATION_REJECTED':
-        return <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Users size={20} /></div>;
+        return <div className="p-3 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-2xl"><Users size={20} /></div>;
       case 'EXPERT_APPROVED':
       case 'RECIPE_APPROVED':
       case 'RECIPE_REVIEW_REQUESTED':
-        return <div className="p-3 bg-primary/10 text-primary rounded-2xl"><ShieldCheck size={20} /></div>;
+        return <div className="p-3 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-2xl"><ShieldCheck size={20} /></div>;
       case 'EXPERT_REJECTED':
       case 'RECIPE_REJECTED':
-        return <div className="p-3 bg-orange-50 text-orange-600 rounded-2xl"><Info size={20} /></div>;
+        return <div className="p-3 bg-orange-500/10 text-orange-500 border border-orange-500/20 rounded-2xl"><Info size={20} /></div>;
       case 'RECIPE_REVIEW':
-        return <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl"><MessageSquare size={20} /></div>;
+        return <div className="p-3 bg-purple-500/10 text-purple-500 border border-purple-500/20 rounded-2xl"><MessageSquare size={20} /></div>;
       default:
-        return <div className="p-3 bg-muted text-muted-foreground rounded-2xl"><Bell size={20} /></div>;
+        return <div className="p-3 bg-muted text-muted-foreground border border-border rounded-2xl"><Bell size={20} /></div>;
     }
   };
 
@@ -135,7 +135,6 @@ export default function NotificationsPage() {
   };
 
   const handleDeleteNotification = (id: string) => {
-    // Soft delete (isDeleted flag)
     setNotifications((prev) => prev.filter((item) => item.id !== id));
   };
 
@@ -163,15 +162,15 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.isRead && !n.isDeleted).length;
 
   return (
-    <div className="p-8 space-y-10 max-w-5xl mx-auto">
+    <div className="p-8 space-y-8 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-foreground tracking-tight flex items-center gap-3">
-            <Bell className="text-primary" size={32} /> 전체 알림 센터
+          <h1 className="text-3xl font-black text-foreground tracking-tight">
+            알림 기록
           </h1>
-          <p className="text-muted-foreground font-medium mt-1">
-            증강, 팀 초대, 전문가 검수 및 커뮤니티 소식을 실시간으로 확인하세요
+          <p className="text-muted-foreground mt-1 font-medium text-sm">
+            진행 중인 작업, 팀 협업, 전문가 검증 등 모든 알림을 확인하고 관리하세요.
           </p>
         </div>
 
@@ -179,7 +178,7 @@ export default function NotificationsPage() {
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="flex items-center gap-2 px-5 py-3 bg-muted hover:bg-primary/10 hover:text-primary text-muted-foreground rounded-2xl font-bold text-xs transition-all shadow-xs cursor-pointer active:scale-95"
+              className="flex items-center gap-2 px-5 py-3 bg-card border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-2xl font-bold text-xs transition-all shadow-xs cursor-pointer active:scale-95"
             >
               <CheckCheck size={16} /> 모두 읽음 처리
             </button>
@@ -197,7 +196,7 @@ export default function NotificationsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="알림 제목 또는 내용을 검색하세요..."
-            className="w-full pl-14 pr-6 py-4 bg-card border border-border rounded-3xl shadow-xs text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all font-medium"
+            className="w-full pl-14 pr-6 py-4 bg-card border border-border rounded-3xl shadow-xs text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium"
           />
         </div>
 
@@ -217,7 +216,7 @@ export default function NotificationsPage() {
                 className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
                   selectedCategory === cat.id
                     ? 'bg-primary text-white shadow-md shadow-primary/20 scale-102'
-                    : 'bg-muted text-muted-foreground hover:bg-gray-200'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
                 {cat.label}
@@ -257,7 +256,7 @@ export default function NotificationsPage() {
               className={`p-6 rounded-3xl border transition-all cursor-pointer flex items-start gap-5 group relative ${
                 !item.isRead
                   ? 'bg-card border-primary/30 shadow-md shadow-primary/5 hover:border-primary'
-                  : 'bg-card/70 border-border hover:bg-card hover:border-gray-300'
+                  : 'bg-card/70 border-border hover:bg-card hover:border-border/80'
               }`}
             >
               {/* Unread Indicator Dot */}

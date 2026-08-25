@@ -96,12 +96,13 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
   fetchMyRecipes: async (type: 'MY' | 'FORKED', page = 0, size = 20) => {
     set({ isLoading: true, error: null });
     try {
+      const serverType = type === 'MY' ? 'MINE' : 'FORKED';
       const response = await api.get<{ data: PageResponse<MyRecipeListResponse> }>('/assets/recipes', {
-        params: { type, page, size }
+        params: { type: serverType, page, size }
       });
       set({ myRecipes: response.data.data.content, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || '내 레시피 목록 조회 실패', isLoading: false });
+      set({ myRecipes: [], error: error.message || '내 레시피 목록 조회 실패', isLoading: false });
     }
   },
 }));

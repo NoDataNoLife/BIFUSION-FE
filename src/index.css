@@ -2,43 +2,43 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  /* Brand Colors */
-  --primary: #ea580c;
+  /* Brand Colors (Warm Golden Honey & Coffee) */
+  --primary: #e68a00;
   --primary-foreground: #ffffff;
-  --secondary: #334155;
+  --secondary: #4a3b32;
   --secondary-foreground: #ffffff;
-  --accent: #c2410c;
+  --accent: #8d5a00;
   --accent-foreground: #ffffff;
 
-  /* UI Colors (Clean Warm Alabaster) */
-  --background: #faf9f6;
-  --foreground: #1e293b;
-  --border: #e2e8f0;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  /* UI Colors (Light Mode: Warm Cream & Ivory Linen) */
+  --background: #fdfaf6;
+  --foreground: #2b221b;
+  --border: #ede4da;
+  --muted: #f4ece2;
+  --muted-foreground: #7c6c5e;
   --card: #ffffff;
-  --card-foreground: #1e293b;
+  --card-foreground: #2b221b;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 .dark {
-  /* Deep Premium Obsidian Dark Theme */
-  --background: #090a0f;
-  --foreground: #f8fafc;
-  --border: #1e2433;
-  --muted: #141824;
-  --muted-foreground: #94a3b8;
-  --card: #10141f;
-  --card-foreground: #f8fafc;
+  /* High-End Warm Luxe Espresso & Chocolate Dark Theme */
+  --background: #110e0c;        /* 딥 리치 에스프레소 블랙 (깊이감 있는 따뜻한 톤) */
+  --foreground: #fcf9f5;        /* 크림 아이보리 화이트 (선명하고 맑은 고대비 텍스트) */
+  --border: #2c221a;            /* 섬세한 브론즈 헤어라인 보더 */
+  --muted: #1c1612;             /* 은은한 로스트 다크 서피스 */
+  --muted-foreground: #ab9b8c;  /* 린넨 베이지 보조 텍스트 (답답하지 않은 가독성) */
+  --card: #181310;              /* 벨벳 다크 초콜릿/에스프레소 카드 */
+  --card-foreground: #fcf9f5;
 
-  /* Radiant High-Contrast Brand Amber */
+  /* Brand Primary (Radiant Warm Amber / Gold) */
   --primary: #f59e0b;
-  --primary-foreground: #090a0f;
-  --secondary: #1a2233;
-  --secondary-foreground: #f8fafc;
-  --accent: #fbbf24;
-  --accent-foreground: #090a0f;
+  --primary-foreground: #110e0c;
+  --secondary: #271f19;
+  --secondary-foreground: #fcf9f5;
+  --accent: #d97706;
+  --accent-foreground: #110e0c;
 }
 
 @theme {

@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { 
-  ArrowLeft, 
-  Activity, 
+  Activity,
   Users, 
   TrendingUp, 
   Bell, 
-  Filter, 
   Search,
   ChevronRight,
-  Clock,
-  CheckCircle2,
-  AlertCircle
+  CheckCircle2
 } from 'lucide-react';
 
 // --- Types ---
@@ -102,18 +97,17 @@ const allActivities: ActivityItem[] = [
 ];
 
 export default function ActivitiesPage() {
-  const navigate = useNavigate();
   const [filterType, setFilterType] = useState<'all' | 'job_completed' | 'team_activity' | 'recipe_update'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'job_completed':
-        return <div className="p-2 bg-green-50 text-green-600 rounded-xl border border-green-100"><CheckCircle2 className="w-5 h-5" /></div>;
+        return <div className="p-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl"><CheckCircle2 className="w-5 h-5" /></div>;
       case 'team_activity':
-        return <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100"><Users className="w-5 h-5" /></div>;
+        return <div className="p-2 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-xl"><Users className="w-5 h-5" /></div>;
       case 'recipe_update':
-        return <div className="p-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100"><TrendingUp className="w-5 h-5" /></div>;
+        return <div className="p-2 bg-purple-500/10 text-purple-500 border border-purple-500/20 rounded-xl"><TrendingUp className="w-5 h-5" /></div>;
       default:
         return <div className="p-2 bg-muted text-muted-foreground rounded-xl border border-border"><Bell className="w-5 h-5" /></div>;
     }
@@ -152,7 +146,7 @@ export default function ActivitiesPage() {
             <ChevronRight className="w-3 h-3" />
             <span className="text-primary">Activities</span>
           </nav>
-          <h1 className="text-3xl font-black text-foreground tracking-tight italic">최근 활동 현황</h1>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">최근 활동 현황</h1>
           <p className="text-muted-foreground mt-1 font-medium">BIFUSION 팀의 모든 연구 및 협업 기록</p>
         </div>
 
@@ -164,7 +158,7 @@ export default function ActivitiesPage() {
               placeholder="활동 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+              className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-foreground"
             />
           </div>
         </div>
@@ -174,24 +168,26 @@ export default function ActivitiesPage() {
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
         <button
           onClick={() => setFilterType('all')}
-          className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all whitespace-nowrap ${
-            filterType === 'all' ? 'bg-gray-900 text-white shadow-lg' : 'bg-card text-muted-foreground border border-border hover:border-gray-200'
+          className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all whitespace-nowrap cursor-pointer ${
+            filterType === 'all' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-card text-muted-foreground border border-border hover:text-foreground'
           }`}
         >
           전체 활동
         </button>
-        {[
-          { id: 'job_completed', label: '작업 완료' },
-          { id: 'team_activity', label: '팀 협업' },
-          { id: 'recipe_update', label: '레시피 업데이트' },
-        ].map((type) => (
+        {(
+          [
+            { id: 'job_completed', label: '작업 완료' },
+            { id: 'team_activity', label: '팀 협업' },
+            { id: 'recipe_update', label: '레시피 업데이트' },
+          ] as const
+        ).map((type) => (
           <button
             key={type.id}
-            onClick={() => setFilterType(type.id as any)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all whitespace-nowrap border ${
+            onClick={() => setFilterType(type.id)}
+            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all whitespace-nowrap border cursor-pointer ${
               filterType === type.id 
-                ? `bg-card text-foreground border-gray-900 shadow-md` 
-                : 'bg-card text-muted-foreground border-border hover:border-gray-200'
+                ? `bg-card text-primary border-primary shadow-sm` 
+                : 'bg-card text-muted-foreground border-border hover:text-foreground'
             }`}
           >
             {type.label}
@@ -205,7 +201,7 @@ export default function ActivitiesPage() {
           Object.entries(groupedActivities).map(([date, activities]) => (
             <div key={date} className="relative">
               <div className="sticky top-24 z-10 mb-6">
-                <span className="px-4 py-1.5 bg-gray-900 text-white text-xs font-black rounded-full shadow-lg uppercase tracking-tighter italic">
+                <span className="px-4 py-1.5 bg-card border border-border text-foreground text-xs font-black rounded-full shadow-md uppercase tracking-tight">
                   {formatDate(date)}
                 </span>
               </div>
@@ -214,10 +210,10 @@ export default function ActivitiesPage() {
                 {activities.map((activity) => (
                   <div 
                     key={activity.id}
-                    className="relative group bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
+                    className="relative group bg-card p-6 rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-primary/40 transition-all cursor-pointer"
                   >
                     {/* Timeline Dot */}
-                    <div className="absolute -left-[41px] top-8 w-4 h-4 rounded-full border-4 border-white bg-gray-200 group-hover:bg-primary transition-colors shadow-sm" />
+                    <div className="absolute -left-[41px] top-8 w-4 h-4 rounded-full border-4 border-card bg-muted-foreground/30 group-hover:bg-primary transition-colors shadow-sm" />
                     
                     <div className="flex items-start gap-4">
                       {getActivityIcon(activity.type)}
@@ -228,7 +224,7 @@ export default function ActivitiesPage() {
                             <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded uppercase tracking-widest">{activity.time}</span>
                           </div>
                         </div>
-                        <p className="text-muted-foreground font-medium leading-relaxed group-hover:text-gray-900 transition-colors">
+                        <p className="text-muted-foreground font-medium leading-relaxed group-hover:text-foreground transition-colors">
                           {activity.message}
                         </p>
                       </div>
@@ -236,7 +232,7 @@ export default function ActivitiesPage() {
                         <img 
                           src={activity.avatar} 
                           alt={activity.user} 
-                          className="w-10 h-10 rounded-full border-2 border-white shadow-sm ring-1 ring-gray-100"
+                          className="w-10 h-10 rounded-full border-2 border-card shadow-sm ring-1 ring-border"
                         />
                       </div>
                     </div>

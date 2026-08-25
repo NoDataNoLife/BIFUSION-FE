@@ -3,40 +3,42 @@
 
 :root {
   /* Brand Colors */
-  --primary: #e68a00;
+  --primary: #ea580c;
   --primary-foreground: #ffffff;
-  --secondary: #434d5a;
+  --secondary: #334155;
   --secondary-foreground: #ffffff;
-  --accent: #8d5a00;
+  --accent: #c2410c;
   --accent-foreground: #ffffff;
 
-  /* UI Colors (Light Default) */
-  --background: #fffbf4;
-  --foreground: #434d5a;
-  --border: #e4e4e7;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  /* UI Colors (Clean Warm Alabaster) */
+  --background: #faf9f6;
+  --foreground: #1e293b;
+  --border: #e2e8f0;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --card: #ffffff;
-  --card-foreground: #434d5a;
+  --card-foreground: #1e293b;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 .dark {
-  --background: #141210;
-  --foreground: #f5f0eb;
-  --border: #332d29;
-  --muted: #24201c;
-  --muted-foreground: #a3968d;
-  --card: #1c1815;
-  --card-foreground: #f5f0eb;
+  /* Deep Premium Obsidian Dark Theme */
+  --background: #090a0f;
+  --foreground: #f8fafc;
+  --border: #1e2433;
+  --muted: #141824;
+  --muted-foreground: #94a3b8;
+  --card: #10141f;
+  --card-foreground: #f8fafc;
 
-  --primary: #f0a53a;
-  --primary-foreground: #2b1c0a;
-  --secondary: #2e2824;
-  --secondary-foreground: #f5f0eb;
-  --accent: #c8831d;
-  --accent-foreground: #2b1c0a;
+  /* Radiant High-Contrast Brand Amber */
+  --primary: #f59e0b;
+  --primary-foreground: #090a0f;
+  --secondary: #1a2233;
+  --secondary-foreground: #f8fafc;
+  --accent: #fbbf24;
+  --accent-foreground: #090a0f;
 }
 
 @theme {
@@ -75,7 +77,7 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     transition:
-      background-color 0.3s,
-      color 0.3s;
+      background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

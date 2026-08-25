@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import VerificationRequestModal from '../community/modals/VerificationRequestModal';
 import ExpertVerificationCard from '../community/ExpertVerificationCard';
-import { ArrowLeft, Star, GitFork, Eye, Award, Download, Calendar, MessageCircle, Share2, Check, Trash2, Clock, CheckCircle, AlertCircle, Save, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Star, GitFork, Award, Share2, Check, Trash2, AlertCircle, ShieldCheck } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { useAssetStore } from '../../store/useAssetStore';
 import { type Recipe } from '../../store/mockData';
@@ -27,7 +27,7 @@ interface Review {
   date: string;
 }
 
-export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, isAuthor, onDelete, onVerificationRequest }: RecipeDetailProps) {
+export default function RecipeDetail({ recipe, onBack, onFork, isAuthor, onDelete }: RecipeDetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'config' | 'reviews'>('overview');
   const { toggleFork, isForked } = useAssetStore();
   const forked = isForked(recipe.id);
@@ -37,7 +37,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
   const { user } = useAuthStore();
   const { deleteRecipeReview, requestExpertVerification } = useCommunityStore();
 
-  const reviews: Review[] = [
+  const [reviewList, setReviewList] = useState<Review[]>([
     {
       id: '1',
       author: '김성한',
@@ -54,7 +54,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
       comment: '전반적으로 좋지만, 파라미터 튜닝이 조금 더 필요할 것 같습니다.',
       date: '2025-02-10',
     },
-  ];
+  ]);
 
   const handleForkRecipe = () => {
     toggleFork(recipe.id);
@@ -72,15 +72,15 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group font-bold text-sm">
+          <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group font-bold text-sm cursor-pointer">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Assets로 돌아가기
+            뒤로 가기
           </button>
           
           <div className="flex items-center gap-3">
             <button 
               onClick={handleForkRecipe} 
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm border ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm border cursor-pointer ${
                 forked 
                   ? 'bg-green-50 border-green-200 text-green-600' 
                   : 'bg-card border-border text-foreground hover:bg-muted'
@@ -100,7 +100,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
             )}
             <button 
               onClick={handleShare}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm shadow-lg ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all text-sm shadow-lg cursor-pointer ${
                 copied
                   ? 'bg-green-600 text-white shadow-green-200'
                   : 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
@@ -141,7 +141,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
 
             {/* Author Card */}
             <div className="flex items-center gap-4 p-4 bg-muted rounded-2xl border border-border">
-              <ImageWithFallback src={recipe.authorAvatar} alt={recipe.author} className="w-12 h-12 rounded-xl ring-4 ring-white shadow-sm" />
+              <ImageWithFallback src={recipe.authorAvatar} alt={recipe.author} className="w-12 h-12 rounded-xl ring-4 ring-white shadow-xs" />
               <div>
                 <p className="font-bold text-foreground">{recipe.author}</p>
                 <p className="text-xs text-muted-foreground font-medium">{recipe.createdAt.split('T')[0]} 작성됨</p>
@@ -173,11 +173,11 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-6 text-sm font-black transition-all relative ${
+                className={`pb-6 text-sm font-black transition-all relative cursor-pointer ${
                   activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-600'
                 }`}
               >
-                {tab === 'overview' ? '개요' : tab === 'config' ? '설정 정보' : `리뷰 (${reviews.length})`}
+                {tab === 'overview' ? '개요' : tab === 'config' ? '설정 정보' : `리뷰 (${reviewList.length})`}
                 {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full" />}
               </button>
             ))}
@@ -229,7 +229,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                   <div className="p-8 bg-muted rounded-4xl border border-border space-y-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-black text-foreground">작성자 관리 도구</h3>
-                      <div className="px-4 py-1.5 bg-gray-200 text-muted-foreground rounded-xl text-[10px] font-black uppercase tracking-widest">
+                      <div className="px-4 py-1.5 bg-card border border-border text-muted-foreground rounded-xl text-[10px] font-black uppercase tracking-widest">
                         내 레시피
                       </div>
                     </div>
@@ -237,18 +237,8 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                     <ExpertVerificationCard 
                       status={recipe.verificationStatus || 'NONE'} 
                       onRequestVerification={() => setShowVerificationModal(true)}
-                      onViewResults={() => alert('검증 결과 모달 오픈 (Mock)')}
+                      onViewResults={() => alert('검증 결과 조회')}
                     />
-
-                    <div className="bg-red-50 border border-red-100 rounded-2xl p-6 flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-red-600">위험 구역</p>
-                        <p className="text-sm text-red-400 font-medium">이 레시피를 영구적으로 삭제합니다.</p>
-                      </div>
-                      <button onClick={() => setShowDeleteModal(true)} className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all text-sm flex items-center gap-2">
-                        <Trash2 size={18} /> 레시피 삭제
-                      </button>
-                    </div>
                   </div>
                 )}
               </div>
@@ -259,7 +249,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
                 {Object.entries(recipe.settings).map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center p-6 bg-muted rounded-2xl border border-border">
                     <span className="text-sm font-black text-muted-foreground uppercase tracking-widest">{key}</span>
-                    <span className="font-mono font-bold text-primary bg-card px-4 py-1.5 rounded-lg border border-border shadow-sm">{value}</span>
+                    <span className="font-mono font-bold text-primary bg-card px-4 py-1.5 rounded-lg border border-border shadow-xs">{value}</span>
                   </div>
                 ))}
               </div>
@@ -267,45 +257,49 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
 
             {activeTab === 'reviews' && (
               <div className="space-y-6">
-                {reviews.map(review => (
-                  <div key={review.id} className="p-8 bg-gray-50/50 rounded-3xl border border-border space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-4">
-                        <ImageWithFallback src={review.authorAvatar} alt={review.author} className="w-10 h-10 rounded-xl" />
-                        <div>
-                          <p className="font-bold text-foreground">{review.author}</p>
-                          <div className="flex text-yellow-400 gap-0.5 mt-1">
-                            {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={12} fill={i < review.rating ? 'currentColor' : 'none'} className={i < review.rating ? '' : 'text-muted-foreground'} />)}
+                {reviewList.length > 0 ? (
+                  reviewList.map(review => (
+                    <div key={review.id} className="p-8 bg-muted/40 rounded-3xl border border-border space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-4">
+                          <ImageWithFallback src={review.authorAvatar} alt={review.author} className="w-10 h-10 rounded-xl" />
+                          <div>
+                            <p className="font-bold text-foreground">{review.author}</p>
+                            <div className="flex text-yellow-400 gap-0.5 mt-1">
+                              {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={12} fill={i < review.rating ? 'currentColor' : 'none'} className={i < review.rating ? '' : 'text-muted-foreground'} />)}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-xs text-muted-foreground font-medium">{review.date}</span>
-                        {(isAuthor || user?.name === review.author) && (
-                          <button 
-                            onClick={async () => {
-                              if (confirm('이 리뷰를 삭제하시겠습니까?')) {
-                                try {
-                                  // id string to number conversion if needed, e.g. 'r1' -> 1
-                                  const rId = parseInt(recipe.id.replace(/\D/g, '')) || 1;
-                                  const revId = parseInt(review.id.replace(/\D/g, '')) || 1;
-                                  await deleteRecipeReview(rId, revId);
-                                  alert('리뷰가 삭제되었습니다.');
-                                } catch (e) {
-                                  alert('리뷰 삭제 중 오류가 발생했습니다.');
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs text-muted-foreground font-medium">{review.date}</span>
+                          {(isAuthor || user?.name === review.author) && (
+                            <button 
+                              onClick={async () => {
+                                if (confirm('이 리뷰를 삭제하시겠습니까?')) {
+                                  try {
+                                    const rId = parseInt(recipe.id.replace(/\D/g, '')) || 1;
+                                    const revId = parseInt(review.id.replace(/\D/g, '')) || 1;
+                                    await deleteRecipeReview(rId, revId);
+                                    setReviewList(prev => prev.filter(r => r.id !== review.id));
+                                    alert('리뷰가 삭제되었습니다.');
+                                  } catch {
+                                    alert('리뷰 삭제 중 오류가 발생했습니다.');
+                                  }
                                 }
-                              }
-                            }}
-                            className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-all"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
+                              }}
+                              className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
                       </div>
+                      <p className="text-muted-foreground font-medium leading-relaxed">{review.comment}</p>
                     </div>
-                    <p className="text-muted-foreground font-medium leading-relaxed">{review.comment}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="py-16 text-center text-muted-foreground font-bold">작성된 리뷰가 없습니다.</div>
+                )}
               </div>
             )}
           </div>
@@ -314,7 +308,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
 
       {/* Modals */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in duration-200">
             <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 mx-auto mb-6">
               <AlertCircle size={32} />
@@ -322,8 +316,8 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
             <h2 className="text-2xl font-black text-foreground text-center mb-2">레시피 삭제</h2>
             <p className="text-muted-foreground text-center font-medium mb-8">정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
             <div className="flex gap-4">
-              <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-4 bg-muted text-muted-foreground rounded-2xl font-bold hover:bg-gray-200 transition-all">취소</button>
-              <button onClick={() => { onDelete?.(recipe.id); onBack(); }} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 shadow-xl shadow-red-200 transition-all">삭제하기</button>
+              <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-4 bg-muted text-muted-foreground rounded-2xl font-bold hover:bg-muted transition-all cursor-pointer">취소</button>
+              <button onClick={() => { onDelete?.(recipe.id); onBack(); }} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 shadow-xl shadow-red-200 transition-all cursor-pointer">삭제하기</button>
             </div>
           </div>
         </div>
@@ -338,7 +332,7 @@ export default function RecipeDetail({ recipe, onBack, onFork, onAuthorClick, is
               await requestExpertVerification('RECIPE', recipe.id, reason, reward);
               alert('검증 요청이 완료되었습니다.');
               setShowVerificationModal(false);
-            } catch (error) {
+            } catch {
               alert('검증 요청 실패');
             }
           }}

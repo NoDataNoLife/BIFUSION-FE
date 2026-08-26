@@ -3,6 +3,7 @@ export interface Recipe {
   title: string;
   description: string;
   author: string;
+  authorId?: number | string;
   authorAvatar: string; // UI 유지용
   thumbnailUrl: string;
   createdAt: string;

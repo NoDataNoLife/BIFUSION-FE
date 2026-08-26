@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, GitFork, Users, Database, ArrowUpDown, Plus, Award, Heart, CheckCircle, Clock, Building2, Download, Filter, HardDrive } from 'lucide-react';
 import ImageWithFallback from '../../components/common/ImageWithFallback';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
@@ -22,6 +23,7 @@ const mockShowcasePosts: ShowcasePost[] = ALL_RECIPES.map(r => ({
 }));
 
 export default function CommunityPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'showcase' | 'qa' | 'recruitment' | 'datasets'>('showcase');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -257,9 +259,16 @@ export default function CommunityPage() {
                     <div className="p-8 space-y-6">
                       <h3 className="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
                       <div className="flex items-center justify-between pt-6 border-t border-border">
-                        <div className="flex items-center gap-3">
-                          <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
-                          <span className="text-sm font-bold text-muted-foreground">{post.author}</span>
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/dashboard/profile/2');
+                          }}
+                          className="flex items-center gap-3 hover:opacity-80 cursor-pointer group/author"
+                          title="작성자 프로필 보기"
+                        >
+                          <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full border-2 border-border shadow-sm group-hover/author:ring-2 group-hover/author:ring-primary transition-all" />
+                          <span className="text-sm font-bold text-muted-foreground group-hover/author:text-primary transition-colors">{post.author}</span>
                         </div>
                         <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
                           <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkedCount}</span>
@@ -303,10 +312,17 @@ export default function CommunityPage() {
                       <p className="text-lg font-black text-foreground">{post.answerCount || 0}</p>
                     </div>
                     <div className="w-px h-8 bg-border" />
-                    <div className="flex items-center gap-3">
-                      <img src={post.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={post.author?.nickname || 'Unknown'} className="w-10 h-10 rounded-xl bg-card border border-border" />
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/dashboard/profile/2');
+                      }}
+                      className="flex items-center gap-3 hover:opacity-80 cursor-pointer group/author"
+                      title="작성자 프로필 보기"
+                    >
+                      <img src={post.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={post.author?.nickname || 'Unknown'} className="w-10 h-10 rounded-xl bg-card border border-border group-hover/author:ring-2 group-hover/author:ring-primary transition-all" />
                       <div className="text-left">
-                        <p className="font-bold text-foreground text-sm">{post.author?.nickname || 'Unknown'}</p>
+                        <p className="font-bold text-foreground text-sm group-hover/author:text-primary transition-colors">{post.author?.nickname || 'Unknown'}</p>
                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
                           {new Date(post.createdAt).toLocaleDateString()}
                         </p>
@@ -375,10 +391,17 @@ export default function CommunityPage() {
                       <span className="flex items-center gap-1.5 px-3 py-1 bg-muted/60 border border-border/50 rounded-lg text-primary"><Database size={12} /> {dataset.fileCount || 0} Files</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 border-l border-border pl-8">
-                    <img src={dataset.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={dataset.author?.nickname || 'Unknown'} className="w-12 h-12 rounded-xl" />
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/dashboard/profile/2');
+                    }}
+                    className="flex items-center gap-4 border-l border-border pl-8 hover:opacity-80 cursor-pointer group/author"
+                    title="작성자 프로필 보기"
+                  >
+                    <img src={dataset.author?.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={dataset.author?.nickname || 'Unknown'} className="w-12 h-12 rounded-xl border border-border group-hover/author:ring-2 group-hover/author:ring-primary transition-all" />
                     <div>
-                      <p className="font-bold text-foreground text-sm">{dataset.author?.nickname || 'Unknown'}</p>
+                      <p className="font-bold text-foreground text-sm group-hover/author:text-primary transition-colors">{dataset.author?.nickname || 'Unknown'}</p>
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{dataset.license || 'Custom License'}</p>
                     </div>
                   </div>

@@ -96,6 +96,8 @@ function App() {
             <Route path="assets" element={<AssetsPage />} />
             <Route path="expert" element={<ExpertPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="profile/:userId" element={<ProfilePage />} />
+            <Route path="users/:userId" element={<ProfilePage />} />
             <Route path="community" element={<CommunityPage />} />
             <Route path="activities" element={<ActivitiesPage />} />
             <Route path="notifications" element={<NotificationsPage />} />

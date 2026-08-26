@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import VerificationRequestModal from '../community/modals/VerificationRequestModal';
 import ExpertVerificationCard from '../community/ExpertVerificationCard';
 import { ArrowLeft, Star, GitFork, Award, Share2, Check, Trash2, AlertCircle, ShieldCheck } from 'lucide-react';
@@ -28,6 +29,7 @@ interface Review {
 }
 
 export default function RecipeDetail({ recipe, onBack, onFork, isAuthor, onDelete }: RecipeDetailProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'config' | 'reviews'>('overview');
   const { toggleFork, isForked } = useAssetStore();
   const forked = isForked(recipe.id);
@@ -140,10 +142,13 @@ export default function RecipeDetail({ recipe, onBack, onFork, isAuthor, onDelet
             <p className="text-xl text-muted-foreground font-medium leading-relaxed">{recipe.description}</p>
 
             {/* Author Card */}
-            <div className="flex items-center gap-4 p-4 bg-muted rounded-2xl border border-border">
-              <ImageWithFallback src={recipe.authorAvatar} alt={recipe.author} className="w-12 h-12 rounded-xl ring-4 ring-white shadow-xs" />
+            <div 
+              onClick={() => navigate(recipe.authorId ? `/dashboard/profile/${recipe.authorId}` : '/dashboard/profile')}
+              className="flex items-center gap-4 p-4 bg-muted/40 hover:bg-muted/80 rounded-2xl border border-border transition-all cursor-pointer group"
+            >
+              <ImageWithFallback src={recipe.authorAvatar} alt={recipe.author} className="w-12 h-12 rounded-xl ring-2 ring-border shadow-xs group-hover:scale-105 transition-transform" />
               <div>
-                <p className="font-bold text-foreground">{recipe.author}</p>
+                <p className="font-bold text-foreground group-hover:text-primary transition-colors">{recipe.author}</p>
                 <p className="text-xs text-muted-foreground font-medium">{recipe.createdAt.split('T')[0]} 작성됨</p>
               </div>
             </div>

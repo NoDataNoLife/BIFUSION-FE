@@ -3,10 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Users,
-  TrendingUp,
   HardDrive,
-  Activity,
-  Bell,
   BadgeCheck,
   Award,
   Zap,
@@ -39,54 +36,20 @@ export default function DashboardHome() {
     },
   ];
 
-  const recentActivities = [
-    {
-      id: "ACT-001",
-      type: "job_created",
-      user: "김성한",
-      message: "Augment Job을 생성했습니다 - Lung Cancer Detection 프로젝트",
-      time: "2분 전",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=kim",
-    },
-    {
-      id: "ACT-002",
-      type: "data_upload",
-      user: "조현희",
-      message: "Brain MRI 데이터셋 250개 파일을 업로드했습니다",
-      time: "15분 전",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=cho",
-    },
-  ];
-
   const storageUsage = 35;
   const storageLimit = 100;
   const monthlyAugmentations = 45;
   const augmentationLimit = 100;
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "job_created":
-        return <Plus className="w-4 h-4 text-blue-600" />;
-      case "job_modified":
-        return <Activity className="w-4 h-4 text-orange-600" />;
-      case "job_completed":
-        return <BadgeCheck className="w-4 h-4 text-green-600" />;
-      case "data_upload":
-        return <TrendingUp className="w-4 h-4 text-purple-600" />;
-      default:
-        return <Bell className="w-4 h-4 text-muted-foreground" />;
-    }
-  };
-
   return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-8 space-y-10 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground dark:text-foreground tracking-tight">
+          <h1 className="text-3xl font-black text-foreground tracking-tight">
             대시보드
           </h1>
-          <p className="text-muted-foreground dark:text-muted-foreground mt-1 font-medium">
+          <p className="text-muted-foreground mt-1 font-medium text-sm">
             안녕하세요! 오늘도 좋은 연구 되세요 👋
           </p>
         </div>
@@ -99,234 +62,200 @@ export default function DashboardHome() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <button
           onClick={() => navigate("/dashboard/projects")}
-          className="flex items-center gap-5 p-6 bg-linear-to-br from-primary to-accent text-white rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all text-left"
+          className="flex items-center gap-5 p-6 bg-linear-to-br from-primary to-amber-600 text-white rounded-3xl shadow-lg shadow-primary/20 hover:scale-[1.01] transition-all text-left cursor-pointer"
         >
-          <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+          <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
             <Plus className="w-7 h-7" />
           </div>
           <div>
-            <p className="font-bold text-lg">새 프로젝트 생성</p>
-            <p className="text-sm text-white/80">데이터 증강 시작하기</p>
+            <p className="font-black text-lg">새 프로젝트 생성</p>
+            <p className="text-sm text-white/80 font-medium">데이터 증강 시작하기</p>
           </div>
         </button>
 
         <button
           onClick={() => navigate("/dashboard/community")}
-          className="flex items-center gap-5 p-6 bg-card/90 dark:bg-card/80 border border-border dark:border-border rounded-2xl hover:border-primary/30 hover:shadow-xl hover:shadow-black/5 transition-all text-left group"
+          className="flex items-center gap-5 p-6 bg-card border border-border rounded-3xl hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all text-left group cursor-pointer"
         >
-          <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <Users className="w-7 h-7 text-primary" />
           </div>
           <div>
-            <p className="font-bold text-lg text-foreground dark:text-foreground">
+            <p className="font-black text-lg text-foreground">
               커뮤니티 둘러보기
             </p>
-            <p className="text-sm text-muted-foreground dark:text-muted-foreground font-medium">
-              레시피 공유하기
+            <p className="text-sm text-muted-foreground font-medium">
+              레시피 공유 및 전문가 검수 의뢰
             </p>
           </div>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* 내 프로젝트 현황 */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">
-                  내 프로젝트
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1 font-medium">
-                  진행 중인 프로젝트 {displayProjects.length}개
-                </p>
-              </div>
-              <button
-                onClick={() => navigate("/dashboard/projects")}
-                className="text-primary font-bold hover:underline transition-all text-sm"
+      {/* Main Content Area */}
+      <div className="space-y-10">
+        {/* 내 프로젝트 현황 */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-foreground tracking-tight">
+                내 프로젝트
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">
+                진행 중인 프로젝트 {displayProjects.length}개
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/dashboard/projects")}
+              className="text-primary font-bold hover:underline transition-all text-sm cursor-pointer"
+            >
+              전체 보기 →
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayProjects.map((project) => (
+              <DashboardCard
+                key={project.id}
+                className="overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer group rounded-3xl border border-border"
               >
-                전체 보기 →
-              </button>
-            </div>
+                <div className="relative h-44">
+                  <img
+                    src={project.coverImage}
+                    alt={project.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {displayProjects.map((project) => (
-                <DashboardCard
-                  key={project.id}
-                  className="overflow-hidden hover:shadow-xl hover:shadow-black/5 transition-all cursor-pointer group"
-                >
-                  <div className="relative h-44">
-                    <img
-                      src={project.coverImage}
-                      alt={project.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  </div>
+                <div className="p-6">
+                  <h3 className="font-black text-foreground mb-4 line-clamp-1 text-lg">
+                    {project.name}
+                  </h3>
 
-                  <div className="p-6">
-                    <h3 className="font-bold text-foreground dark:text-foreground mb-4 line-clamp-1 text-lg">
-                      {project.name}
-                    </h3>
-
-                    <div className="flex items-center gap-6 mb-6 text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground font-medium">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        <span>{project.activeJobs} 실행 중</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground font-medium">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                        <span>{project.queuedJobs} 대기 중</span>
-                      </div>
+                  <div className="flex items-center gap-6 mb-6 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground font-medium">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                      <span>{project.activeJobs} 실행 중</span>
                     </div>
-
-                    <div className="flex items-center justify-between pt-5 border-t border-border dark:border-border/70">
-                      <span className="text-xs text-muted-foreground dark:text-muted-foreground font-medium">
-                        {project.lastUpdated}
-                      </span>
-                      <button
-                        onClick={() =>
-                          navigate(`/dashboard/projects/${project.id}`)
-                        }
-                        className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors"
-                      >
-                        프로젝트 열기
-                      </button>
+                    <div className="flex items-center gap-2 text-muted-foreground font-medium">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                      <span>{project.queuedJobs} 대기 중</span>
                     </div>
                   </div>
-                </DashboardCard>
-              ))}
-            </div>
-          </section>
 
-          {/* 리소스 사용량 */}
-          <DashboardCard className="p-8">
-            <h2 className="text-2xl font-bold text-foreground dark:text-foreground mb-8 tracking-tight">
+                  <div className="flex items-center justify-between pt-5 border-t border-border">
+                    <span className="text-xs text-muted-foreground font-medium">
+                      {project.lastUpdated}
+                    </span>
+                    <button
+                      onClick={() =>
+                        navigate(`/dashboard/projects/${project.id}`)
+                      }
+                      className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-black hover:bg-primary/90 transition-colors cursor-pointer"
+                    >
+                      프로젝트 열기
+                    </button>
+                  </div>
+                </div>
+              </DashboardCard>
+            ))}
+          </div>
+        </section>
+
+        {/* 리소스 사용량 */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-2xl font-black text-foreground tracking-tight">
               리소스 사용량
             </h2>
+            <p className="text-sm text-muted-foreground mt-1 font-medium">
+              현재 플랜의 스토리지 및 AI 데이터 증강 리소스 현황입니다.
+            </p>
+          </div>
 
-            <div className="space-y-8">
-              {/* Storage */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <HardDrive className="w-5 h-5 text-primary" />
-                    <span className="font-bold text-foreground dark:text-foreground">
-                      스토리지
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Storage */}
+            <DashboardCard className="p-7 rounded-3xl border border-border space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                    <HardDrive className="w-6 h-6 text-primary" />
                   </div>
-                  <span className="text-sm font-bold text-muted-foreground dark:text-muted-foreground">
-                    {storageUsage}GB{" "}
-                    <span className="text-muted-foreground dark:text-border font-normal">
-                      /
-                    </span>{" "}
-                    {storageLimit}GB
+                  <div>
+                    <h4 className="font-black text-foreground">스토리지</h4>
+                    <p className="text-xs text-muted-foreground font-medium">클라우드 저장 공간</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">사용량</span>
+                  <span className="text-sm font-black text-foreground">
+                    {storageUsage}GB <span className="text-muted-foreground font-normal">/ {storageLimit}GB</span>
                   </span>
                 </div>
-                <div className="w-full h-3 bg-muted dark:bg-muted rounded-full overflow-hidden">
+                <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-full transition-all"
                     style={{ width: `${(storageUsage / storageLimit) * 100}%` }}
                   />
                 </div>
               </div>
+            </DashboardCard>
 
-              {/* Monthly Augmentations */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <Zap className="w-5 h-5 text-primary" />
-                    <span className="font-bold text-foreground dark:text-foreground">
-                      월간 증강 횟수
-                    </span>
+            {/* Monthly Augmentations */}
+            <DashboardCard className="p-7 rounded-3xl border border-border space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-emerald-500" />
                   </div>
-                  <span className="text-sm font-bold text-muted-foreground dark:text-muted-foreground">
-                    {monthlyAugmentations}{" "}
-                    <span className="text-muted-foreground dark:text-border font-normal">
-                      /
-                    </span>{" "}
-                    {augmentationLimit}
+                  <div>
+                    <h4 className="font-black text-foreground">월간 증강</h4>
+                    <p className="text-xs text-muted-foreground font-medium">생성 작업 횟수</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">진행률</span>
+                  <span className="text-sm font-black text-foreground">
+                    {monthlyAugmentations} <span className="text-muted-foreground font-normal">/ {augmentationLimit}회</span>
                   </span>
                 </div>
-                <div className="w-full h-3 bg-muted dark:bg-muted rounded-full overflow-hidden">
+                <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-green-500 rounded-full transition-all"
+                    className="h-full bg-emerald-500 rounded-full transition-all"
                     style={{
                       width: `${(monthlyAugmentations / augmentationLimit) * 100}%`,
                     }}
                   />
                 </div>
               </div>
+            </DashboardCard>
 
-              {/* Rewards */}
-              <div className="p-5 bg-background dark:bg-muted/60 rounded-2xl border border-border dark:border-border/70 flex items-center justify-between transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                    <Award className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground dark:text-foreground">
-                      리워드 포인트
-                    </p>
-                    <p className="text-xs text-muted-foreground dark:text-muted-foreground font-medium">
-                      커뮤니티 활동으로 적립
-                    </p>
-                  </div>
+            {/* Rewards */}
+            <DashboardCard className="p-7 rounded-3xl border border-border flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+                  <Award className="w-7 h-7 text-amber-500" />
                 </div>
-                <span className="text-2xl font-black text-primary">1,250P</span>
+                <div>
+                  <h4 className="font-black text-foreground">리워드 포인트</h4>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                    커뮤니티 및 검수 기여
+                  </p>
+                  <p className="text-2xl font-black text-primary mt-2">1,250P</p>
+                </div>
               </div>
-            </div>
-          </DashboardCard>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-8">
-          {/* 최근 활동 피드 */}
-          <DashboardCard className="p-8">
-            <h2 className="text-xl font-bold text-foreground dark:text-foreground mb-8 tracking-tight">
-              최근 활동
-            </h2>
-
-            <div className="space-y-6">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-4 group">
-                  <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-50 dark:ring-border">
-                    <img
-                      src={activity.avatar}
-                      alt={activity.user}
-                      className="w-full h-full"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {getActivityIcon(activity.type)}
-                      <span className="font-bold text-sm text-foreground dark:text-foreground">
-                        {activity.user}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground dark:text-muted-foreground leading-relaxed line-clamp-2">
-                      {activity.message}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground dark:text-muted-foreground font-medium mt-1.5">
-                      {activity.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => navigate("/dashboard/activities")}
-              className="w-full mt-10 py-3 text-primary font-bold hover:bg-primary/5 rounded-xl transition-all border border-transparent hover:border-primary/10"
-            >
-              모든 활동 보기
-            </button>
-          </DashboardCard>
-        </div>
+            </DashboardCard>
+          </div>
+        </section>
       </div>
     </div>
   );

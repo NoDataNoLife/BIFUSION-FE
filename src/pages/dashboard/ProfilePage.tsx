@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import {
   Award,
   MapPin,
@@ -23,6 +24,7 @@ import {
   Eye,
   EyeOff,
   GripVertical,
+  Mail,
 } from "lucide-react";
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -166,11 +168,49 @@ export default function ProfilePage() {
     applyExpert
   } = useAuthStore();
 
+  const { userId: paramUserId } = useParams();
+  const isOwnProfile = !paramUserId || Number(paramUserId) === user?.userId;
+
+  const [otherUser, setOtherUser] = useState<any>(null);
+
   useEffect(() => {
-    if (user?.userId) {
+    if (isOwnProfile && user?.userId) {
       fetchUserProfile(user.userId);
+    } else if (!isOwnProfile && paramUserId) {
+      api.get(`/users/${paramUserId}`)
+        .then((res) => {
+          if (res.data?.success && res.data?.data) {
+            setOtherUser(res.data.data);
+          }
+        })
+        .catch(() => {
+          setOtherUser({
+            name: `연구자 #${paramUserId}`,
+            nickname: `Researcher_${paramUserId}`,
+            bio: "바이오메디컬 AI 연구 및 데이터 증강을 전문으로 하는 연구자입니다.",
+            organization: "의료인공지능 연구소",
+            websiteUrl: "https://github.com",
+            email: "researcher@bifusion.ai",
+            profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+            role: "RESEARCHER",
+            createdAt: "2026-01-15",
+          });
+        });
     }
-  }, [user?.userId, fetchUserProfile]);
+  }, [isOwnProfile, user?.userId, paramUserId, fetchUserProfile]);
+
+  const activeUser = isOwnProfile ? user : (otherUser || {
+    name: `연구자 #${paramUserId}`,
+    nickname: `Researcher_${paramUserId}`,
+    bio: "바이오메디컬 AI 연구 및 데이터 증강을 전문으로 하는 연구자입니다.",
+    organization: "의료인공지능 연구소",
+    websiteUrl: "https://github.com",
+    email: "researcher@bifusion.ai",
+    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
+    role: "RESEARCHER",
+    createdAt: "2026-01-15",
+  });
+
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -405,13 +445,55 @@ export default function ProfilePage() {
   const [isCommunityPublic, setIsCommunityPublic] = useState(true);
   const [visibleActivityCount, setVisibleActivityCount] = useState(5);
 
+  useEffect(() => {
+    if (isOwnProfile) {
+      api.get('/users/mypage/activities?size=20')
+        .then((res) => {
+          if (res.data?.success && res.data?.data?.items) {
+            const items = res.data.data.items;
+            const mapped: CommunityActivity[] = items.map((it: {
+              activityId: number | string;
+              type: string;
+              title: string;
+              description?: string;
+              createdAt?: string;
+              isPublic?: boolean;
+              likeCount?: number;
+              downloadCount?: number;
+              commentCount?: number;
+            }) => ({
+              id: it.activityId.toString(),
+              type: it.type === 'RECIPE' ? 'showcase' : it.type === 'DATASET' ? 'dataset' : it.type === 'QNA' ? 'qna' : 'recruiting',
+              title: it.title,
+              description: it.description,
+              timestamp: it.createdAt ? new Date(it.createdAt).toLocaleDateString() : '최근',
+              isPublic: it.isPublic ?? true,
+              stats: {
+                likes: it.likeCount,
+                downloads: it.downloadCount,
+                comments: it.commentCount
+              }
+            }));
+            if (mapped.length > 0) {
+              setCommunityActivities(mapped);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOwnProfile]);
+
   const displayedProjects = projects.filter((project) => project.isPublic);
 
-  const displayedActivities = communityActivities.slice(
+  const availableActivities = isOwnProfile
+    ? (isCommunityPublic ? communityActivities : communityActivities.filter((a) => a.isPublic))
+    : communityActivities.filter((a) => a.isPublic);
+
+  const displayedActivities = availableActivities.slice(
     0,
     visibleActivityCount,
   );
-  const hasMoreActivities = visibleActivityCount < communityActivities.length;
+  const hasMoreActivities = visibleActivityCount < availableActivities.length;
   const settingsTabs: Array<{
     id: SettingsTab;
     label: string;
@@ -549,44 +631,48 @@ export default function ProfilePage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-      {/* --- Left Column: Profile Card (Based on Prototype Structure) --- */}
+      {/* --- Left Column: Profile Card --- */}
       <div className="lg:w-1/3 space-y-6">
         <div className="bg-card rounded-3xl p-8 border border-border shadow-sm flex flex-col items-center text-center">
           {/* Avatar Section */}
           <div className="relative mb-6">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageChange}
-              accept="image/*"
-              className="hidden"
-            />
-            <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-gray-50 shadow-inner relative">
+            {isOwnProfile && (
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                accept="image/*"
+                className="hidden"
+              />
+            )}
+            <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-gray-50 dark:ring-border shadow-inner relative">
               {isUploadingImage && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 animate-in fade-in duration-200">
                   <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent" />
                 </div>
               )}
               <ImageWithFallback
-                src={user?.profileImage || "/defaultUserProfile.png"}
-                alt={user?.name}
+                src={activeUser?.profileImage || "/defaultUserProfile.png"}
+                alt={activeUser?.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            <button 
-              onClick={handleImageClick}
-              disabled={isUploadingImage}
-              className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform disabled:opacity-50 disabled:scale-100"
-              title="프로필 사진 수정"
-            >
-              <Edit2 size={18} />
-            </button>
+            {isOwnProfile && (
+              <button 
+                onClick={handleImageClick}
+                disabled={isUploadingImage}
+                className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform disabled:opacity-50 disabled:scale-100 cursor-pointer"
+                title="프로필 사진 수정"
+              >
+                <Edit2 size={18} />
+              </button>
+            )}
           </div>
 
           {/* Basic Info */}
           <div className="space-y-1 mb-6">
             <div className="group relative flex flex-col items-center">
-              {isEditingNickname ? (
+              {isEditingNickname && isOwnProfile ? (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200 mb-1">
                   <input
                     type="text"
@@ -600,7 +686,7 @@ export default function ProfilePage() {
                   <div className="flex gap-1">
                     <button 
                       onClick={handleNicknameUpdate}
-                      className="p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                      className="p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
                       title="저장"
                     >
                       <Check size={20} />
@@ -608,9 +694,9 @@ export default function ProfilePage() {
                     <button 
                       onClick={() => {
                         setIsEditingNickname(false);
-                        setNewNickname(user?.nickname || "");
+                        setNewNickname(activeUser?.nickname || "");
                       }}
-                      className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                       title="취소"
                     >
                       <X size={20} />
@@ -620,27 +706,29 @@ export default function ProfilePage() {
               ) : (
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <h1 className="text-2xl font-black text-foreground tracking-tight">
-                    {user?.nickname || "닉네임을 설정해주세요"}
+                    {activeUser?.nickname || "닉네임을 설정해주세요"}
                   </h1>
-                  <button 
-                    onClick={() => {
-                      setNewNickname(user?.nickname || "");
-                      setIsEditingNickname(true);
-                    }}
-                    className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                    title="닉네임 수정"
-                  >
-                    <Edit2 size={16} />
-                  </button>
+                  {isOwnProfile && (
+                    <button 
+                      onClick={() => {
+                        setNewNickname(activeUser?.nickname || "");
+                        setIsEditingNickname(true);
+                      }}
+                      className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                      title="닉네임 수정"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  )}
                 </div>
               )}
               
               <p className="text-sm text-muted-foreground font-medium">
-                @{user?.name || "researcher"}
+                @{activeUser?.name || "researcher"}
               </p>
             </div>
 
-            {user?.isExpert && (
+            {activeUser?.isExpert && (
               <div className="pt-2">
                 <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 justify-center">
                   <ShieldCheck size={12} /> 전문가 인증됨
@@ -650,25 +738,25 @@ export default function ProfilePage() {
           </div>
 
           {/* Bio Section */}
-          <div className="w-full text-left space-y-2 border-t border-gray-50 pt-6">
+          <div className="w-full text-left space-y-2 border-t border-border pt-6">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 About Me
               </p>
-              {!isEditingBio && (
+              {!isEditingBio && isOwnProfile && (
                 <button 
                   onClick={() => {
-                    setNewBio(user?.bio || "");
+                    setNewBio(activeUser?.bio || "");
                     setIsEditingBio(true);
                   }}
-                  className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                  className="p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                 >
                   <Edit2 size={12} />
                 </button>
               )}
             </div>
             
-            {isEditingBio ? (
+            {isEditingBio && isOwnProfile ? (
               <div className="space-y-2 animate-in fade-in duration-200">
                 <textarea
                   value={newBio}
@@ -681,15 +769,15 @@ export default function ProfilePage() {
                   <button 
                     onClick={() => {
                       setIsEditingBio(false);
-                      setNewBio(user?.bio || "");
+                      setNewBio(activeUser?.bio || "");
                     }}
-                    className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-gray-600 transition-colors"
+                    className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     취소
                   </button>
                   <button 
                     onClick={handleBioUpdate}
-                    className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                    className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors cursor-pointer"
                   >
                     저장하기
                   </button>
@@ -697,19 +785,30 @@ export default function ProfilePage() {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {user?.bio || "자기소개를 입력해주세요."}
+                {activeUser?.bio || "자기소개를 입력해주세요."}
               </p>
             )}
           </div>
 
-          {/* Account Settings Trigger */}
+          {/* Account Settings Trigger / Contact Actions */}
           <div className="w-full pt-8">
-            <button
-              onClick={() => setShowSettingsModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-muted transition-all active:scale-[0.98]"
-            >
-              <SettingsIcon size={16} /> Account Settings
-            </button>
+            {isOwnProfile ? (
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-muted text-muted-foreground rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-muted/80 hover:text-foreground transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <SettingsIcon size={16} /> Account Settings
+              </button>
+            ) : (
+              <div className="space-y-2.5">
+                <a
+                  href={`mailto:${activeUser?.email || 'contact@bifusion.ai'}`}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <Mail size={16} /> 이메일로 문의하기
+                </a>
+              </div>
+            )}
           </div>
         </div>
 
@@ -717,47 +816,49 @@ export default function ProfilePage() {
         <div className="bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4">
           <div className="flex items-center justify-between group h-6">
             <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium flex-1">
-              <MapPin size={18} className="text-primary" />
-              {isEditingOrg ? (
+              <MapPin size={18} className="text-primary shrink-0" />
+              {isEditingOrg && isOwnProfile ? (
                 <input
                   type="text"
                   value={newOrg}
                   onChange={(e) => setNewOrg(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleOrgUpdate()}
                   autoFocus
-                  className="bg-muted border-b border-primary outline-none px-1 w-full"
+                  className="bg-muted border-b border-primary outline-none px-1 w-full text-foreground"
                 />
               ) : (
-                <span className="truncate">{user?.organization || "소속 정보 없음"}</span>
+                <span className="truncate">{activeUser?.organization || "소속 정보 없음"}</span>
               )}
             </div>
-            <div className="flex items-center gap-1">
-              {isEditingOrg ? (
-                <>
-                  <button onClick={handleOrgUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg">
-                    <Check size={14} />
+            {isOwnProfile && (
+              <div className="flex items-center gap-1">
+                {isEditingOrg ? (
+                  <>
+                    <button onClick={handleOrgUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg cursor-pointer">
+                      <Check size={14} />
+                    </button>
+                    <button onClick={() => setIsEditingOrg(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg cursor-pointer">
+                      <X size={14} />
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setNewOrg(activeUser?.organization || "");
+                      setIsEditingOrg(true);
+                    }}
+                    className="p-1 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                  >
+                    <Edit2 size={12} />
                   </button>
-                  <button onClick={() => setIsEditingOrg(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg">
-                    <X size={14} />
-                  </button>
-                </>
-              ) : (
-                <button 
-                  onClick={() => {
-                    setNewOrg(user?.organization || "");
-                    setIsEditingOrg(true);
-                  }}
-                  className="p-1 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <Edit2 size={12} />
-                </button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center justify-between group h-6">
             <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium flex-1">
-              <LinkIcon size={18} className="text-primary" />
-              {isEditingWebsite ? (
+              <LinkIcon size={18} className="text-primary shrink-0" />
+              {isEditingWebsite && isOwnProfile ? (
                 <input
                   type="text"
                   value={newWebsite}
@@ -765,46 +866,48 @@ export default function ProfilePage() {
                   onKeyDown={(e) => e.key === 'Enter' && handleWebsiteUpdate()}
                   autoFocus
                   placeholder="https://example.com"
-                  className="bg-muted border-b border-primary outline-none px-1 w-full"
+                  className="bg-muted border-b border-primary outline-none px-1 w-full text-foreground"
                 />
               ) : (
-                <span className="truncate">{user?.websiteUrl || "웹사이트 정보 없음"}</span>
+                <span className="truncate">{activeUser?.websiteUrl || "웹사이트 정보 없음"}</span>
               )}
             </div>
-            <div className="flex items-center gap-1">
-              {isEditingWebsite ? (
-                <>
-                  <button onClick={handleWebsiteUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg">
-                    <Check size={14} />
+            {isOwnProfile && (
+              <div className="flex items-center gap-1">
+                {isEditingWebsite ? (
+                  <>
+                    <button onClick={handleWebsiteUpdate} className="p-1 text-green-500 hover:bg-green-50 rounded-lg cursor-pointer">
+                      <Check size={14} />
+                    </button>
+                    <button onClick={() => setIsEditingWebsite(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg cursor-pointer">
+                      <X size={14} />
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setNewWebsite(activeUser?.websiteUrl || "");
+                      setIsEditingWebsite(true);
+                    }}
+                    className="p-1 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                  >
+                    <Edit2 size={12} />
                   </button>
-                  <button onClick={() => setIsEditingWebsite(false)} className="p-1 text-red-400 hover:bg-red-50 rounded-lg">
-                    <X size={14} />
-                  </button>
-                </>
-              ) : (
-                <button 
-                  onClick={() => {
-                    setNewWebsite(user?.websiteUrl || "");
-                    setIsEditingWebsite(true);
-                  }}
-                  className="p-1 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <Edit2 size={12} />
-                </button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
-            <MessageSquare size={18} className="text-primary" />
-            {user?.contact || "연락처 정보 없음"}
+            <MessageSquare size={18} className="text-primary shrink-0" />
+            {activeUser?.contact || "연락처 정보 없음"}
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
-            <Calendar size={18} className="text-primary" />{' '}
-            {user?.createdAt ? (
-              isNaN(Date.parse(user.createdAt)) ? (
-                user.createdAt.includes('가입') ? user.createdAt : `Joined ${user.createdAt}`
+            <Calendar size={18} className="text-primary shrink-0" />{' '}
+            {activeUser?.createdAt ? (
+              isNaN(Date.parse(activeUser.createdAt)) ? (
+                activeUser.createdAt.includes('가입') ? activeUser.createdAt : `Joined ${activeUser.createdAt}`
               ) : (
-                `Joined ${new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+                `Joined ${new Date(activeUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
               )
             ) : (
               "Joined ..."
@@ -813,26 +916,28 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* --- Right Column: Content (Based on Prototype Structure) --- */}
+      {/* --- Right Column: Content --- */}
       <div className="flex-1 space-y-8">
         {/* My Projects */}
         <section className="bg-card rounded-4xl border border-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-              <AlertTriangle size={20} className="text-primary" /> 나의 개미집
+              <AlertTriangle size={20} className="text-primary" /> {isOwnProfile ? "나의 개미집" : `${activeUser?.nickname || "연구자"}님의 프로젝트`}
             </h2>
-            <button
-              onClick={openProjectVisibilityModal}
-              className="p-2.5 rounded-xl bg-muted text-muted-foreground hover:bg-muted hover:text-gray-800 transition-colors"
-              aria-label="프로젝트 공개 설정"
-            >
-              <SettingsIcon size={18} />
-            </button>
+            {isOwnProfile && (
+              <button
+                onClick={openProjectVisibilityModal}
+                className="p-2.5 rounded-xl bg-muted text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                aria-label="프로젝트 공개 설정"
+              >
+                <SettingsIcon size={18} />
+              </button>
+            )}
           </div>
 
           {displayedProjects.length === 0 ? (
-            <div className="py-12 flex flex-col items-center justify-center text-center bg-gray-50/50 rounded-2xl border border-dashed border-border">
-              <div className="w-16 h-16 bg-card shadow-sm rounded-full flex items-center justify-center mb-4">
+            <div className="py-12 flex flex-col items-center justify-center text-center bg-card rounded-2xl border border-dashed border-border">
+              <div className="w-16 h-16 bg-muted/60 shadow-sm rounded-full flex items-center justify-center mb-4">
                 <AlertTriangle className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-foreground font-bold mb-1">공개된 프로젝트가 없습니다.</h3>
@@ -843,7 +948,7 @@ export default function ProfilePage() {
               {displayedProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="rounded-xl overflow-hidden border border-border bg-gray-50/40"
+                  className="rounded-xl overflow-hidden border border-border bg-muted/20"
                 >
                   <img
                     src={project.coverImage}
@@ -867,7 +972,7 @@ export default function ProfilePage() {
             <button
               onClick={() => fetchProfileProjects(nextCursor)}
               disabled={isLoadingProjects}
-              className="mt-4 w-full py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors disabled:opacity-50"
+              className="mt-4 w-full py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isLoadingProjects 
                 ? "불러오는 중..." 
@@ -880,20 +985,22 @@ export default function ProfilePage() {
         <section className="bg-card rounded-4xl border border-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-              <TrendingUp size={20} className="text-primary" /> 집단 활동
+              <TrendingUp size={20} className="text-primary" /> {isOwnProfile ? "집단 활동" : `${activeUser?.nickname || "연구자"}님의 공개 활동`}
             </h2>
 
-            <button
-              onClick={() => setIsCommunityPublic((prev) => !prev)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
-                isCommunityPublic
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {isCommunityPublic ? <Eye size={16} /> : <EyeOff size={16} />}
-              {isCommunityPublic ? "공개" : "비공개"}
-            </button>
+            {isOwnProfile && (
+              <button
+                onClick={() => setIsCommunityPublic((prev) => !prev)}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors cursor-pointer ${
+                  isCommunityPublic
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {isCommunityPublic ? <Eye size={16} /> : <EyeOff size={16} />}
+                {isCommunityPublic ? "공개" : "비공개"}
+              </button>
+            )}
           </div>
 
           <div
@@ -905,29 +1012,29 @@ export default function ProfilePage() {
             {displayedActivities.map((activity) => {
               const typeTone =
                 activity.type === "showcase"
-                  ? "bg-purple-100 text-purple-700"
+                  ? "bg-purple-500/10 text-purple-400"
                   : activity.type === "dataset"
-                    ? "bg-blue-100 text-blue-700"
+                    ? "bg-blue-500/10 text-blue-400"
                     : activity.type === "qna"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-orange-100 text-orange-700";
+                      ? "bg-green-500/10 text-green-400"
+                      : "bg-orange-500/10 text-orange-400";
 
               const leftIconTone =
                 activity.type === "showcase"
-                  ? "bg-purple-100 text-purple-600"
+                  ? "bg-purple-500/10 text-purple-400"
                   : activity.type === "dataset"
-                    ? "bg-blue-100 text-blue-600"
+                    ? "bg-blue-500/10 text-blue-400"
                     : activity.type === "qna"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-orange-100 text-orange-600";
+                      ? "bg-green-500/10 text-green-400"
+                      : "bg-orange-500/10 text-orange-400";
 
               return (
                 <div
                   key={activity.id}
                   className={`p-5 rounded-2xl border transition-all ${
                     activity.isPublic && isCommunityPublic
-                      ? "border-primary/20 bg-card"
-                      : "border-border bg-gray-50/50"
+                      ? "border-border bg-card hover:border-primary/30"
+                      : "border-border/60 bg-muted/20"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -958,22 +1065,24 @@ export default function ProfilePage() {
                           )}
                         </div>
 
-                        <button
-                          onClick={() => toggleActivityVisibility(activity.id)}
-                          disabled={!isCommunityPublic}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                            activity.isPublic
-                              ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground"
-                          } ${!isCommunityPublic ? "cursor-not-allowed opacity-50" : ""}`}
-                        >
-                          {activity.isPublic ? (
-                            <Eye size={13} />
-                          ) : (
-                            <EyeOff size={13} />
-                          )}
-                          {activity.isPublic ? "공개" : "비공개"}
-                        </button>
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => toggleActivityVisibility(activity.id)}
+                            disabled={!isCommunityPublic}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                              activity.isPublic
+                                ? "bg-primary/10 text-primary"
+                                : "bg-muted text-muted-foreground"
+                            } ${!isCommunityPublic ? "cursor-not-allowed opacity-50" : ""}`}
+                          >
+                            {activity.isPublic ? (
+                              <Eye size={13} />
+                            ) : (
+                              <EyeOff size={13} />
+                            )}
+                            {activity.isPublic ? "공개" : "비공개"}
+                          </button>
+                        )}
                       </div>
 
                       <p className="text-sm text-muted-foreground line-clamp-2">

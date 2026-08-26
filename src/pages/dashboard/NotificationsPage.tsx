@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Bell, 
@@ -15,90 +15,34 @@ import {
   XCircle,
   Clock
 } from 'lucide-react';
-
-export interface NotificationItem {
-  id: string;
-  type: 
-    | 'AUGMENTATION_SUCCESS' 
-    | 'AUGMENTATION_FAILED' 
-    | 'PROJECT_INVITATION' 
-    | 'INVITATION_ACCEPTED' 
-    | 'INVITATION_REJECTED' 
-    | 'EXPERT_APPROVED' 
-    | 'EXPERT_REJECTED' 
-    | 'RECIPE_REVIEW_REQUESTED' 
-    | 'RECIPE_APPROVED' 
-    | 'RECIPE_REJECTED' 
-    | 'RECIPE_REVIEW' 
-    | 'SYSTEM';
-  category: 'AUGMENTATION' | 'PROJECT' | 'EXPERT' | 'COMMUNITY' | 'SYSTEM';
-  title: string;
-  description: string;
-  timestamp: string;
-  isRead: boolean;
-  isDeleted?: boolean;
-  actionUrl?: string;
-}
-
-const initialNotifications: NotificationItem[] = [
-  {
-    id: 'notif-001',
-    type: 'RECIPE_APPROVED',
-    category: 'EXPERT',
-    title: '레시피 검수 승인 완료',
-    description: '요청하신 "고해상도 흉부 CT 노이즈 감소 파이프라인"의 전문가 검수가 최종 승인되었습니다.',
-    timestamp: '10분 전',
-    isRead: false,
-    actionUrl: '/dashboard/expert',
-  },
-  {
-    id: 'notif-002',
-    type: 'PROJECT_INVITATION',
-    category: 'PROJECT',
-    title: '새로운 팀 프로젝트 초대',
-    description: '김연구자님이 "폐 질환 AI 진단 멀티모달 프로젝트" 팀원으로 초대했습니다.',
-    timestamp: '1시간 전',
-    isRead: false,
-    actionUrl: '/dashboard/community',
-  },
-  {
-    id: 'notif-003',
-    type: 'AUGMENTATION_SUCCESS',
-    category: 'AUGMENTATION',
-    title: '데이터 증강 작업 완료',
-    description: 'Job #AUG-8921의 합성 데이터 500장이 성공적으로 생성 및 저장되었습니다.',
-    timestamp: '3시간 전',
-    isRead: true,
-    actionUrl: '/dashboard/assets',
-  },
-  {
-    id: 'notif-004',
-    type: 'RECIPE_REVIEW',
-    category: 'COMMUNITY',
-    title: '새로운 레시피 리뷰/댓글',
-    description: '이선우님이 회원님의 연구 쇼케이스에 새로운 검증 피드백을 남겼습니다.',
-    timestamp: '어제',
-    isRead: true,
-    actionUrl: '/dashboard/community',
-  },
-  {
-    id: 'notif-005',
-    type: 'EXPERT_APPROVED',
-    category: 'EXPERT',
-    title: '의료 전문가 인증 승인',
-    description: '제출하신 전문의 자격 증빙이 승인되어 이제 검수관으로 활동하실 수 있습니다.',
-    timestamp: '2일 전',
-    isRead: true,
-    actionUrl: '/dashboard/expert',
-  },
-];
+import { useNotificationStore, type NotificationItem, type NotificationCategory } from '../../store/useNotificationStore';
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
+  const { 
+    notifications, 
+    unreadCount, 
+    fetchNotifications, 
+    markAsRead, 
+    markAllAsRead, 
+    hardDeleteNotification 
+  } = useNotificationStore();
+
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterUnreadOnly, setFilterUnreadOnly] = useState<boolean>(false);
+
+  const loadNotifications = useCallback(() => {
+    fetchNotifications({
+      category: selectedCategory !== 'ALL' ? (selectedCategory as NotificationCategory) : undefined,
+      isRead: filterUnreadOnly ? false : undefined,
+      keyword: searchQuery.trim() || undefined,
+    });
+  }, [fetchNotifications, selectedCategory, filterUnreadOnly, searchQuery]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   const getNotificationIcon = (type: NotificationItem['type']) => {
     switch (type) {
@@ -112,54 +56,86 @@ export default function NotificationsPage() {
         return <div className="p-3 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-2xl"><Users size={20} /></div>;
       case 'EXPERT_APPROVED':
       case 'RECIPE_APPROVED':
-      case 'RECIPE_REVIEW_REQUESTED':
+      case 'DATASET_VERIFIED':
+      case 'AUGMENTATION_INSPECTION_APPROVED':
         return <div className="p-3 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-2xl"><ShieldCheck size={20} /></div>;
       case 'EXPERT_REJECTED':
       case 'RECIPE_REJECTED':
+      case 'DATASET_VERIFY_REJECTED':
+      case 'AUGMENTATION_INSPECTION_REJECTED':
         return <div className="p-3 bg-orange-500/10 text-orange-500 border border-orange-500/20 rounded-2xl"><Info size={20} /></div>;
       case 'RECIPE_REVIEW':
+      case 'QNA_ANSWERED':
+      case 'RECRUITMENT_APPLY':
+      case 'RECRUITMENT_ACCEPTED':
+      case 'RECRUITMENT_REJECTED':
         return <div className="p-3 bg-purple-500/10 text-purple-500 border border-purple-500/20 rounded-2xl"><MessageSquare size={20} /></div>;
       default:
         return <div className="p-3 bg-muted text-muted-foreground border border-border rounded-2xl"><Bell size={20} /></div>;
     }
   };
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, isRead: true } : item))
-    );
-  };
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
-  };
-
-  const handleDeleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((item) => item.id !== id));
+  const resolveTargetLink = (item: NotificationItem) => {
+    switch (item.type) {
+      case 'AUGMENTATION_SUCCESS':
+      case 'AUGMENTATION_FAILED':
+        return item.targetId ? `/dashboard/projects/${item.targetId}` : '/dashboard/projects';
+      case 'PROJECT_INVITATION':
+      case 'INVITATION_ACCEPTED':
+      case 'INVITATION_REJECTED':
+        return '/dashboard/projects';
+      case 'EXPERT_APPROVED':
+      case 'EXPERT_REJECTED':
+        return '/dashboard/profile';
+      case 'AUGMENTATION_INSPECTION_APPROVED':
+      case 'AUGMENTATION_INSPECTION_REJECTED':
+      case 'RECIPE_REVIEW_REQUESTED':
+      case 'RECIPE_APPROVED':
+      case 'RECIPE_REJECTED':
+        return '/dashboard/expert';
+      case 'RECIPE_REVIEW':
+      case 'QNA_ANSWERED':
+      case 'RECRUITMENT_APPLY':
+      case 'RECRUITMENT_ACCEPTED':
+      case 'RECRUITMENT_REJECTED':
+        return '/dashboard/community';
+      default:
+        return undefined;
+    }
   };
 
   const handleNotificationClick = (item: NotificationItem) => {
-    handleMarkAsRead(item.id);
-    if (item.actionUrl) {
-      navigate(item.actionUrl);
+    markAsRead(item.notificationId);
+    const link = resolveTargetLink(item);
+    if (link) {
+      navigate(link);
+    }
+  };
+
+  const getRelativeTime = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      const diff = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+      if (diff < 60) return '방금 전';
+      if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+      return date.toLocaleDateString();
+    } catch {
+      return '';
     }
   };
 
   const filteredNotifications = notifications.filter((item) => {
-    if (item.isDeleted) return false;
     if (filterUnreadOnly && item.isRead) return false;
-    if (selectedCategory !== 'ALL' && item.category !== selectedCategory) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
         item.title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q)
+        item.content.toLowerCase().includes(q)
       );
     }
     return true;
   });
-
-  const unreadCount = notifications.filter((n) => !n.isRead && !n.isDeleted).length;
 
   return (
     <div className="p-8 space-y-8 max-w-5xl mx-auto">
@@ -174,10 +150,11 @@ export default function NotificationsPage() {
           </p>
         </div>
 
+        {/* Top Actions */}
         <div className="flex items-center gap-3">
           {unreadCount > 0 && (
             <button
-              onClick={handleMarkAllAsRead}
+              onClick={() => markAllAsRead()}
               className="flex items-center gap-2 px-5 py-3 bg-card border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-2xl font-bold text-xs transition-all shadow-xs cursor-pointer active:scale-95"
             >
               <CheckCheck size={16} /> 모두 읽음 처리
@@ -205,7 +182,7 @@ export default function NotificationsPage() {
           <div className="flex flex-wrap gap-2">
             {[
               { id: 'ALL', label: '전체' },
-              { id: 'EXPERT', label: '전문가/검수' },
+              { id: 'EXPERT_INSPECTION', label: '전문가/검수' },
               { id: 'AUGMENTATION', label: '데이터 증강' },
               { id: 'PROJECT', label: '팀/프로젝트' },
               { id: 'COMMUNITY', label: '커뮤니티' },
@@ -251,7 +228,7 @@ export default function NotificationsPage() {
         ) : (
           filteredNotifications.map((item) => (
             <div
-              key={item.id}
+              key={item.notificationId}
               onClick={() => handleNotificationClick(item)}
               className={`p-6 rounded-3xl border transition-all cursor-pointer flex items-start gap-5 group relative ${
                 !item.isRead
@@ -278,14 +255,14 @@ export default function NotificationsPage() {
                     {item.title}
                   </h3>
                   <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                    <Clock size={12} /> {item.timestamp}
+                    <Clock size={12} /> {getRelativeTime(item.createdAt)}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground font-medium leading-relaxed mb-3">
-                  {item.description}
+                  {item.content}
                 </p>
 
-                {item.actionUrl && (
+                {resolveTargetLink(item) && (
                   <span className="inline-flex items-center gap-1 text-xs font-black text-primary group-hover:underline">
                     바로가기 <ArrowRight size={13} />
                   </span>
@@ -298,10 +275,10 @@ export default function NotificationsPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleMarkAsRead(item.id);
+                      markAsRead(item.notificationId);
                     }}
                     title="읽음 표시"
-                    className="p-2.5 bg-muted hover:bg-green-50 hover:text-green-600 rounded-xl text-muted-foreground transition-colors cursor-pointer"
+                    className="p-2.5 bg-muted hover:bg-emerald-500/10 hover:text-emerald-500 rounded-xl text-muted-foreground transition-colors cursor-pointer"
                   >
                     <Check size={16} />
                   </button>
@@ -309,10 +286,10 @@ export default function NotificationsPage() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteNotification(item.id);
+                    hardDeleteNotification(item.notificationId);
                   }}
-                  title="알림 삭제"
-                  className="p-2.5 bg-muted hover:bg-red-50 hover:text-red-600 rounded-xl text-muted-foreground transition-colors cursor-pointer"
+                  title="알림 삭제 (영구 삭제)"
+                  className="p-2.5 bg-muted hover:bg-red-500/10 hover:text-red-500 rounded-xl text-muted-foreground transition-colors cursor-pointer"
                 >
                   <Trash2 size={16} />
                 </button>

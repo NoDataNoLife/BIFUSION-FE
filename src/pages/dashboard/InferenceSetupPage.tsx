@@ -4,11 +4,8 @@ import {
   ArrowLeft, 
   Upload, 
   ChevronRight,
-  Play,
-  Settings2,
   FileImage,
-  Info,
-  CheckCircle2
+  Info
 } from 'lucide-react';
 
 export default function InferenceSetupPage() {
@@ -40,13 +37,13 @@ export default function InferenceSetupPage() {
   const canStart = selectedModel && uploadedFiles.length > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-8 py-6 flex items-center gap-4">
           <button 
             onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-            className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground"
+            className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -64,8 +61,8 @@ export default function InferenceSetupPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-8 py-8">
-        <div className="bg-card rounded-[2.5rem] border border-border shadow-sm p-12 space-y-10">
-          <p className="text-muted-foreground font-medium italic">학습된 모델로 새로운 이미지를 분류합니다</p>
+        <div className="bg-card rounded-4xl border border-border shadow-sm p-10 md:p-12 space-y-10">
+          <p className="text-muted-foreground font-medium">학습된 모델로 새로운 이미지를 분류합니다</p>
 
           {/* Model Selection */}
           <div className="space-y-4">
@@ -75,7 +72,7 @@ export default function InferenceSetupPage() {
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="w-full px-5 py-4 bg-muted border border-transparent rounded-2xl font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all appearance-none"
+              className="w-full px-5 py-4 bg-muted border border-border rounded-2xl font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
             >
               <option value="">학습 완료된 모델을 선택하세요</option>
               {availableModels.map((model) => (
@@ -97,11 +94,11 @@ export default function InferenceSetupPage() {
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); if(e.dataTransfer.files) setUploadedFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]); }}
               className={`border-2 border-dashed rounded-4xl p-16 text-center transition-all cursor-pointer group ${
-                isDragging ? 'border-primary bg-primary/5' : 'border-border bg-muted hover:border-primary/50'
+                isDragging ? 'border-primary bg-primary/5' : 'border-border bg-muted/40 hover:border-primary/50'
               }`}
             >
               <div className="flex flex-col items-center justify-center">
-                <div className="w-20 h-20 bg-card rounded-3xl flex items-center justify-center shadow-sm mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-20 h-20 bg-card border border-border rounded-3xl flex items-center justify-center shadow-sm mb-6 group-hover:scale-110 transition-transform">
                   <FileImage className={`w-10 h-10 ${uploadedFiles.length > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
                 </div>
                 <p className="text-xl font-black text-foreground mb-2 tracking-tight">파일 선택 또는 드래그 & 드롭</p>
@@ -117,24 +114,24 @@ export default function InferenceSetupPage() {
                 />
                 <label
                   htmlFor="file-upload"
-                  className="px-8 py-3 bg-gray-900 text-white rounded-xl font-black text-sm hover:bg-gray-800 transition-all shadow-lg active:scale-95 cursor-pointer"
+                  className="px-8 py-3.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
                 >
                   파일 찾아보기
                 </label>
               </div>
             </div>
 
-            {/* Uploaded Files List (Prototype style) */}
+            {/* Uploaded Files List */}
             {uploadedFiles.length > 0 && (
-              <div className="mt-6 p-6 bg-muted rounded-3xl border border-border space-y-3">
+              <div className="mt-6 p-6 bg-muted/50 rounded-3xl border border-border space-y-3">
                 <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">
-                  업로드된 파일: <span className="text-primary">{uploadedFiles.length}개</span>
+                  업로드된 파일: <span className="text-primary font-bold">{uploadedFiles.length}개</span>
                 </p>
                 <div className="max-h-40 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                   {uploadedFiles.slice(0, 5).map((file, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm font-bold text-foreground bg-card rounded-xl p-3 shadow-sm border border-gray-100/50">
+                    <div key={index} className="flex items-center justify-between text-sm font-bold text-foreground bg-card rounded-xl p-3 shadow-sm border border-border">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary/5 rounded-lg flex items-center justify-center text-primary">
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
                           <Upload className="w-4 h-4" />
                         </div>
                         <span className="truncate max-w-[200px]">{file.name}</span>
@@ -150,13 +147,13 @@ export default function InferenceSetupPage() {
             )}
           </div>
 
-          {/* Optional: Include Labels (Blue Box) */}
-          <div className="p-8 bg-blue-50/50 border border-blue-100 rounded-4xl">
+          {/* Optional: Include Labels */}
+          <div className="p-7 bg-muted/40 border border-border rounded-3xl">
             <label className="flex items-start gap-4 cursor-pointer group">
               <div className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                includeLabels ? 'bg-blue-600 border-blue-600' : 'bg-card border-blue-200'
+                includeLabels ? 'bg-primary border-primary text-white' : 'bg-card border-border'
               }`}>
-                {includeLabels && <div className="w-2 h-2 bg-card rounded-full" />}
+                {includeLabels && <div className="w-2 h-2 bg-white rounded-full" />}
               </div>
               <input
                 type="checkbox"
@@ -165,8 +162,10 @@ export default function InferenceSetupPage() {
                 className="hidden"
               />
               <div className="space-y-1">
-                <p className="text-lg font-black text-blue-900 tracking-tight italic">이미지 라벨 포함 (선택 사항)</p>
-                <p className="text-sm font-medium text-blue-800/60 leading-relaxed">
+                <p className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
+                  <Info size={16} className="text-primary" /> 이미지 라벨 포함 (선택 사항)
+                </p>
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                   라벨이 있으면 예측 정확도를 함께 분석하여 리포트에 표시합니다.<br />
                   없어도 AI 추론은 정상적으로 수행됩니다.
                 </p>
@@ -175,20 +174,20 @@ export default function InferenceSetupPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-4 pt-6 border-t border-gray-50">
+          <div className="flex justify-end gap-4 pt-6 border-t border-border">
             <button
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="px-8 py-4 bg-card border border-border text-muted-foreground rounded-2xl font-black text-sm hover:bg-muted transition-all"
+              className="px-8 py-4 bg-muted text-muted-foreground rounded-2xl font-black text-sm hover:text-foreground transition-all cursor-pointer"
             >
               취소
             </button>
             <button
               onClick={handleStartInference}
               disabled={!canStart}
-              className={`px-10 py-4 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${
+              className={`px-10 py-4 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
                 canStart
                   ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
-                  : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none opacity-50'
               }`}
             >
               추론 시작하기

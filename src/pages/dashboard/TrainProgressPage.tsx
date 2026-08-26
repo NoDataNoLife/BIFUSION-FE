@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
-  XCircle, 
   ChevronRight
 } from 'lucide-react';
 
@@ -43,14 +42,14 @@ export default function TrainProgressPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground"
+              className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -68,9 +67,9 @@ export default function TrainProgressPage() {
         </div>
       </div>
 
-      {/* Main Content (Strict prototype structure) */}
+      {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full bg-card rounded-[3rem] border border-border shadow-2xl shadow-primary/5 p-16 space-y-12">
+        <div className="max-w-2xl w-full bg-card rounded-4xl border border-border shadow-2xl shadow-primary/5 p-12 md:p-16 space-y-12">
           <h1 className="text-3xl font-black text-foreground text-center tracking-tight">모델 학습 중</h1>
 
           {/* Progress Bar Container */}
@@ -86,8 +85,8 @@ export default function TrainProgressPage() {
             </p>
           </div>
 
-          {/* Current Step (Gray box from prototype) */}
-          <div className="bg-muted rounded-3xl p-10 border border-border text-center space-y-2">
+          {/* Current Step */}
+          <div className="bg-muted/50 rounded-3xl p-8 md:p-10 border border-border text-center space-y-2">
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">현재 단계</p>
             <p className="text-2xl font-black text-foreground tracking-tight">
               Episode 생성 중... <span className="text-primary italic ml-2">({currentEpisode}/{totalEpisodes})</span>
@@ -98,7 +97,7 @@ export default function TrainProgressPage() {
           <div className="flex justify-center pt-4">
             <button
               onClick={handleCancel}
-              className="px-10 py-4 border-2 border-red-100 text-red-500 rounded-2xl font-black text-sm hover:bg-red-50 hover:border-red-200 transition-all active:scale-95"
+              className="px-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-black text-sm hover:bg-red-500/10 transition-all active:scale-95 cursor-pointer"
             >
               작업 취소하기
             </button>

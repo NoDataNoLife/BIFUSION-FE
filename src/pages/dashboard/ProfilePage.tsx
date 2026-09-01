@@ -181,6 +181,25 @@ export default function ProfilePage() {
         .then((res) => {
           if (res.data?.success && res.data?.data) {
             setOtherUser(res.data.data);
+            if (res.data.data.publicActivities && Array.isArray(res.data.data.publicActivities)) {
+              const mapped = res.data.data.publicActivities.map((it: any) => ({
+                id: it.id?.toString() || Math.random().toString(),
+                type: it.activityType?.toLowerCase() === 'project' ? 'showcase' : (it.activityType?.toLowerCase() || 'showcase'),
+                title: it.title || '활동 내역',
+                description: it.description || (it.myRole ? `역할: ${it.myRole}` : ''),
+                timestamp: it.createdAt ? new Date(it.createdAt).toLocaleDateString() : '최근',
+                isExpertVerified: it.expertVerified || false,
+                isPublic: true,
+                stats: {
+                  likes: it.likeCount,
+                  downloads: it.downloadCount,
+                  comments: it.commentCount
+                }
+              }));
+              if (mapped.length > 0) {
+                setCommunityActivities(mapped);
+              }
+            }
           }
         })
         .catch(() => {

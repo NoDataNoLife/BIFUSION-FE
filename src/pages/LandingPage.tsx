@@ -58,10 +58,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div>
-      <h1>LANDING TEST</h1>
-
-      <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 transition-colors font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 transition-colors font-sans overflow-x-hidden">
         {/* 1. HERO SECTION */}
         <section className="container mx-auto px-6 lg:px-8 py-20 lg:py-28">
           <div className="relative lg:min-h-[640px] lg:w-[1120px] lg:max-w-full lg:mx-auto">
@@ -283,7 +280,6 @@ export default function LandingPage() {
           </div>
           <p className="font-medium">© 2026 bifusion. All rights reserved.</p>
         </footer>
-      </div>
     </div>
   );
 }

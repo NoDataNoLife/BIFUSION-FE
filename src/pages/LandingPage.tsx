@@ -52,8 +52,7 @@ export default function LandingPage() {
     }
 
     // 백엔드 명세에 따른 실제 구글 로그인 엔드포인트
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+    const baseUrl = import.meta.env.VITE_API_URL || "https://bifusion.duckdns.org";
     window.location.href = `${baseUrl}/oauth2/authorization/google`;
   };
 

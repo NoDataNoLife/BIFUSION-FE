@@ -52,16 +52,12 @@ export default function LandingPage() {
     }
 
     // 백엔드 명세에 따른 실제 구글 로그인 엔드포인트
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+    const baseUrl = import.meta.env.VITE_API_URL || "https://bifusion.duckdns.org";
     window.location.href = `${baseUrl}/oauth2/authorization/google`;
   };
 
   return (
-    <div>
-      <h1>LANDING TEST</h1>
-
-      <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 transition-colors font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 transition-colors font-sans overflow-x-hidden">
         {/* 1. HERO SECTION */}
         <section className="container mx-auto px-6 lg:px-8 py-20 lg:py-28">
           <div className="relative lg:min-h-[640px] lg:w-[1120px] lg:max-w-full lg:mx-auto">
@@ -283,7 +279,6 @@ export default function LandingPage() {
           </div>
           <p className="font-medium">© 2026 bifusion. All rights reserved.</p>
         </footer>
-      </div>
     </div>
   );
 }

@@ -60,7 +60,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 transition-colors font-sans overflow-x-hidden">
         {/* 1. HERO SECTION */}
         <section className="container mx-auto px-6 lg:px-8 py-20 lg:py-28">
-          <div className="relative lg:min-h-[640px] lg:w-[1120px] lg:max-w-full lg:mx-auto">
+          <div className="relative lg:min-h-[640px] lg:w-[1000px] lg:max-w-full lg:mx-auto">
             <div className="w-full lg:max-w-[500px] lg:absolute lg:left-0 lg:top-1/2 lg:-translate-y-1/2 z-10">
               <div className="bg-card border border-border rounded-3xl px-8 py-10 lg:px-12 lg:py-12 shadow-xl transition-colors">
                 <header className="mb-10">

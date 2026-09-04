@@ -36,6 +36,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // 세션 확인용(/users/me) 요청이 401이면 단순히 비로그인 상태이므로 리프레시나 강제 리로드 불필요
+    if (originalRequest?.url?.includes('/users/me')) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -46,7 +51,9 @@ api.interceptors.response.use(
         console.error('Refresh token expired or invalid');
         // Zustand 상태까지 완전히 초기화
         useAuthStore.getState().logout();
-        window.location.href = '/';
+        if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/oauth2')) {
+          window.location.href = '/';
+        }
         return Promise.reject(refreshError);
       }
     }

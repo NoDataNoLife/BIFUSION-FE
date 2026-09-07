@@ -1,4 +1,5 @@
 import HeroCover from "../components/landing/HeroCover";
+import FeatureCards from "../components/landing/FeatureCards";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
@@ -134,31 +135,20 @@ export default function LandingPage() {
         {/* FEATURE GRID */}
         <section className="bg-muted/30 border-y border-border py-24 px-6 transition-colors">
           <div className="container mx-auto">
-            <div className="text-center max-w-2xl mx-auto mb-20">
-              <h2 className="text-3xl lg:text-4xl font-bold font-hbios mb-4">
-                Core Capabilities
+            <div className="flex flex-col items-center text-center pt-[96px]">
+              <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29]">
+                주요 기능
+              </div>
+
+              <h2 className="mt-6 font-hbios text-[48px] leading-[48px] text-[#101828]">
+                의료 AI에 필요한 모든 것
               </h2>
-              <p className="text-muted-foreground transition-colors">
-                bifusion이 제공하는 혁신적인 의료 AI 개발 환경의 핵심
-                기능입니다.
+
+              <p className="mt-4 font-hbios text-[20px] leading-[28px] text-[#4A5565]">
+                의료 연구자와 의료 AI 개발자를 위해 특별히 설계된 강력한 기능
               </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              <FeatureCard
-                icon={<Zap className="text-primary" size={28} />}
-                title="Data Augmentation"
-                desc="의료 이미지에 특화된 고성능 증강 알고리즘을 통해 부족한 학습 데이터를 효과적으로 확장합니다."
-              />
-              <FeatureCard
-                icon={<Shield className="text-primary" size={28} />}
-                title="Private & Secure"
-                desc="병원의 민감한 데이터를 외부 유출 없이 안전하게 학습시킬 수 있는 독립적인 보안 환경을 제공합니다."
-              />
-              <FeatureCard
-                icon={<Share2 className="text-primary" size={28} />}
-                title="Recipe Community"
-                desc="최적의 학습 결과를 낳는 '증강 레시피'를 연구자들과 공유하고 자유롭게 포크할 수 있습니다."
-              />
+
+              <FeatureCards />
             </div>
           </div>
         </section>

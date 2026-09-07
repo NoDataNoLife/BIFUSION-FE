@@ -44,18 +44,14 @@ const Placeholder = ({ title }: { title: string }) => (
 );
 
 function App() {
-  const { isAuthenticated, isInitialized, fetchUser, setInitialized } =
-    useAuthStore();
+  const { isAuthenticated, isInitialized, fetchUser } = useAuthStore();
 
   useEffect(() => {
-    if (isInitialized) return;
-
-    if (isAuthenticated) {
+    // 앱이 처음 로드될 때만 세션 체크 (쿠키 기반 인증 확인)
+    if (!isInitialized) {
       fetchUser();
-    } else {
-      setInitialized(true);
     }
-  }, [isInitialized, isAuthenticated, fetchUser, setInitialized]);
+  }, [isInitialized, fetchUser]);
 
   if (!isInitialized) {
     // 초기화 중에는 로딩 표시

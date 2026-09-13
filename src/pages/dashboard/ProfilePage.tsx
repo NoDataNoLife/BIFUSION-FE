@@ -171,6 +171,11 @@ export default function ProfilePage() {
   const { userId: paramUserId } = useParams();
   const isOwnProfile = !paramUserId || Number(paramUserId) === user?.userId;
 
+  const [communityActivities, setCommunityActivities] =
+    useState<CommunityActivity[]>(initialActivities);
+  const [isCommunityPublic, setIsCommunityPublic] = useState(true);
+  const [visibleActivityCount, setVisibleActivityCount] = useState(5);
+
   const [otherUser, setOtherUser] = useState<any>(null);
 
   useEffect(() => {
@@ -459,14 +464,9 @@ export default function ProfilePage() {
     fetchProfileProjects();
   }, [fetchProfileProjects]);
 
-  const [communityActivities, setCommunityActivities] =
-    useState<CommunityActivity[]>(initialActivities);
-  const [isCommunityPublic, setIsCommunityPublic] = useState(true);
-  const [visibleActivityCount, setVisibleActivityCount] = useState(5);
-
   useEffect(() => {
     if (isOwnProfile) {
-      api.get('/users/mypage/activities?size=20')
+      api.get('/mypage/activities?size=20')
         .then((res) => {
           if (res.data?.success && res.data?.data?.items) {
             const items = res.data.data.items;
@@ -498,7 +498,9 @@ export default function ProfilePage() {
             }
           }
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.warn('Failed to load mypage activities, using fallback:', err);
+        });
     }
   }, [isOwnProfile]);
 
@@ -618,14 +620,50 @@ export default function ProfilePage() {
     setDraggingProjectId(null);
   };
 
-  const toggleActivityVisibility = (activityId: string) => {
+  const toggleActivityVisibility = async (activityId: string) => {
+    const target = communityActivities.find((activity) => activity.id === activityId);
+    if (!target) return;
+
+    const newPublic = !target.isPublic;
+    const beType =
+      target.type === 'showcase'
+        ? 'RECIPE'
+        : target.type === 'dataset'
+        ? 'DATASET'
+        : target.type === 'qna'
+        ? 'QNA'
+        : 'RECRUITMENT';
+
+    // Optimistic update
     setCommunityActivities((prev) =>
       prev.map((activity) =>
         activity.id === activityId
-          ? { ...activity, isPublic: !activity.isPublic }
+          ? { ...activity, isPublic: newPublic }
           : activity,
       ),
     );
+
+    try {
+      await api.patch('/users/me/activities/visibility', {
+        items: [
+          {
+            type: beType,
+            id: Number(activityId),
+            isPublic: newPublic,
+          },
+        ],
+      });
+    } catch (err) {
+      console.error('Failed to update activity visibility:', err);
+      // Rollback
+      setCommunityActivities((prev) =>
+        prev.map((activity) =>
+          activity.id === activityId
+            ? { ...activity, isPublic: !newPublic }
+            : activity,
+        ),
+      );
+    }
   };
 
   const loadMoreActivities = () => {

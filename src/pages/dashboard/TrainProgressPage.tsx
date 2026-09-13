@@ -1,42 +1,34 @@
-import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   ChevronRight
 } from 'lucide-react';
+import { useJobPolling } from '../../hooks/useJobPolling';
 
 export default function TrainProgressPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
-  
-  const [progress, setProgress] = useState(0);
-  const [currentEpisode, setCurrentEpisode] = useState(0);
   const totalEpisodes = 200;
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            navigate(`/dashboard/projects/${projectId}/train/${jobId}/result`);
-          }, 1000);
-          return 100;
-        }
-        return prev + 1;
-      });
+  const { progress, currentStep, cancel } = useJobPolling({
+    jobId,
+    intervalMs: 1500,
+    onComplete: () => {
+      setTimeout(() => {
+        navigate(`/dashboard/projects/${projectId}/train/${jobId}/result`);
+      }, 1000);
+    },
+    onError: (err) => {
+      alert(`학습 실패: ${err}`);
+      navigate(`/dashboard/projects/${projectId}`);
+    },
+  });
 
-      setCurrentEpisode(prev => {
-        if (prev >= totalEpisodes) return totalEpisodes;
-        return prev + 2;
-      });
-    }, 150);
+  const currentEpisode = Math.min(totalEpisodes, Math.floor((progress / 100) * totalEpisodes));
 
-    return () => clearInterval(interval);
-  }, [projectId, jobId, navigate]);
-
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (confirm('정말로 학습을 취소하시겠습니까?')) {
+      await cancel();
       navigate(`/dashboard/projects/${projectId}`);
     }
   };
@@ -89,7 +81,7 @@ export default function TrainProgressPage() {
           <div className="bg-muted/50 rounded-3xl p-8 md:p-10 border border-border text-center space-y-2">
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">현재 단계</p>
             <p className="text-2xl font-black text-foreground tracking-tight">
-              Episode 생성 중... <span className="text-primary italic ml-2">({currentEpisode}/{totalEpisodes})</span>
+              {currentStep || `Episode 생성 중... (${currentEpisode}/${totalEpisodes})`}
             </p>
           </div>
 

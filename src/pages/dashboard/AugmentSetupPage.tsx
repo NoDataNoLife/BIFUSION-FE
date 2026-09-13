@@ -11,9 +11,12 @@ import {
   Info
 } from 'lucide-react';
 
+import { useJobStore } from '../../store/useJobStore';
+
 export default function AugmentSetupPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
+  const { createJob, isLoading } = useJobStore();
 
   const [imagesPerClass, setImagesPerClass] = useState('10');
   const [samplingSteps, setSamplingSteps] = useState('100');
@@ -35,9 +38,25 @@ export default function AugmentSetupPage() {
     }
   };
 
-  const handleStartAugmentation = () => {
-    // 실제 구현 시 백엔드 API 호출 후 Progress 페이지로 이동
-    navigate(`/dashboard/projects/${projectId}/jobs/${jobId}/progress`);
+  const handleStartAugmentation = async () => {
+    try {
+      const job = await createJob(projectId || '1', 'AUGMENTATION', {
+        imagesPerClass: Number(imagesPerClass),
+        num_samples_per_class: Number(imagesPerClass),
+        samplingSteps: Number(samplingSteps),
+        sampling_steps: Number(samplingSteps),
+        guidanceScale: parseFloat(guidanceScale),
+        guidance_scale: parseFloat(guidanceScale),
+        seed: fixedSeed ? '42' : undefined,
+        normalCount: normalFiles.length,
+        anomalyCount: anomalyFiles.length,
+      });
+
+      navigate(`/dashboard/projects/${projectId}/jobs/${job.jobId}/progress`);
+    } catch (err) {
+      console.error('Failed to create augmentation job:', err);
+      navigate(`/dashboard/projects/${projectId}/jobs/${jobId || 'JOB-001'}/progress`);
+    }
   };
 
   const isValid = normalFiles.length >= 5 && anomalyFiles.length >= 5;

@@ -168,7 +168,22 @@ interface CommunityStore {
   
   fetchDatasetDetail: (datasetId: number) => Promise<void>;
   deleteDataset: (datasetId: number) => Promise<void>;
-  updateDataset: (datasetId: number, payload: { title?: string; description?: string; category?: string; license?: string; tags?: string[]; isPublic?: boolean }) => Promise<void>;
+  updateDataset: (
+    datasetId: number, 
+    payload: { 
+      title: string; 
+      description: string; 
+      category?: string; 
+      license?: string; 
+      format?: string;
+      imageType?: string;
+      resolution?: string;
+      classes?: string;
+      usageExample?: string;
+      tags?: string[]; 
+      fileId?: number;
+    }
+  ) => Promise<void>;
   
   fetchRecipeDetail: (recipeId: number) => Promise<void>;
   forkRecipe: (recipeId: number) => Promise<void>;
@@ -331,9 +346,24 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
     }
   },
 
-  updateDataset: async (datasetId: number, payload: { title?: string; description?: string; category?: string; license?: string; tags?: string[]; isPublic?: boolean }) => {
+  updateDataset: async (
+    datasetId: number, 
+    payload: { 
+      title: string; 
+      description: string; 
+      category?: string; 
+      license?: string; 
+      format?: string;
+      imageType?: string;
+      resolution?: string;
+      classes?: string;
+      usageExample?: string;
+      tags?: string[]; 
+      fileId?: number;
+    }
+  ) => {
     try {
-      await api.patch(`/datasets/${datasetId}`, payload);
+      await api.put(`/datasets/${datasetId}/upload`, payload);
       const store = useCommunityStore.getState();
       await store.fetchDatasetDetail(datasetId);
       await store.fetchDatasetList();

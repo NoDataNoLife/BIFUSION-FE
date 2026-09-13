@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useJobStore, type JobDetail } from '../store/useJobStore';
 
 interface UseJobPollingOptions {
@@ -17,20 +17,25 @@ export function useJobPolling({
   onError,
 }: UseJobPollingOptions) {
   const { currentJob, fetchJobStatus, cancelJob } = useJobStore();
-  const [isPolling, setIsPolling] = useState(false);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
 
-  onCompleteRef.current = onComplete;
-  onErrorRef.current = onError;
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onErrorRef.current = onError;
+  });
+
+  const isPolling = Boolean(
+    jobId &&
+    enabled &&
+    (!currentJob || currentJob.status === 'RUNNING' || currentJob.status === 'PENDING') &&
+    (currentJob?.progress ?? 0) < 100
+  );
 
   useEffect(() => {
     if (!jobId || !enabled) {
-      setIsPolling(false);
       return;
     }
-
-    setIsPolling(true);
 
     // Initial fetch
     fetchJobStatus(jobId);
@@ -40,11 +45,9 @@ export function useJobPolling({
         const job = await fetchJobStatus(jobId);
         if (job.status === 'SUCCESS' || job.status === 'COMPLETED' || job.progress >= 100) {
           clearInterval(timer);
-          setIsPolling(false);
           onCompleteRef.current?.(job);
         } else if (job.status === 'FAILED' || job.status === 'CANCELLED') {
           clearInterval(timer);
-          setIsPolling(false);
           onErrorRef.current?.(job.error || '작업이 중단되었습니다.');
         }
       } catch (err) {
@@ -54,7 +57,6 @@ export function useJobPolling({
 
     return () => {
       clearInterval(timer);
-      setIsPolling(false);
     };
   }, [jobId, intervalMs, enabled, fetchJobStatus]);
 

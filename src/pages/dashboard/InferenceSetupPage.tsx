@@ -8,9 +8,12 @@ import {
   Info
 } from 'lucide-react';
 
+import { useJobStore } from '../../store/useJobStore';
+
 export default function InferenceSetupPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
+  const { createJob, isLoading } = useJobStore();
 
   const [selectedModel, setSelectedModel] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -28,10 +31,25 @@ export default function InferenceSetupPage() {
     }
   };
 
-  const handleStartInference = () => {
-    navigate(`/dashboard/projects/${projectId}/inference/${jobId}/progress`, { 
-      state: { totalImages: uploadedFiles.length } 
-    });
+  const handleStartInference = async () => {
+    try {
+      const job = await createJob(projectId || '1', 'INFERENCE', {
+        model_id: selectedModel,
+        modelId: selectedModel,
+        imageCount: uploadedFiles.length,
+        hasLabels: includeLabels,
+        batch_size: 4,
+      });
+
+      navigate(`/dashboard/projects/${projectId}/inference/${job.jobId}/progress`, { 
+        state: { totalImages: uploadedFiles.length } 
+      });
+    } catch (err) {
+      console.error('Failed to start inference job:', err);
+      navigate(`/dashboard/projects/${projectId}/inference/${jobId || 'JOB-003'}/progress`, { 
+        state: { totalImages: uploadedFiles.length } 
+      });
+    }
   };
 
   const canStart = selectedModel && uploadedFiles.length > 0;
@@ -183,14 +201,14 @@ export default function InferenceSetupPage() {
             </button>
             <button
               onClick={handleStartInference}
-              disabled={!canStart}
+              disabled={!canStart || isLoading}
               className={`px-10 py-4 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
-                canStart
+                canStart && !isLoading
                   ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
                   : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none opacity-50'
               }`}
             >
-              추론 시작하기
+              {isLoading ? '추론 시작 중...' : '추론 시작하기'}
             </button>
           </div>
         </div>

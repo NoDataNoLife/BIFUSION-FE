@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -7,49 +6,32 @@ import {
   Activity,
   Zap
 } from 'lucide-react';
+import { useJobPolling } from '../../hooks/useJobPolling';
 
 export default function AugmentProgressPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
-  
-  const [progress, setProgress] = useState(0);
-  const [currentClass, setCurrentClass] = useState<'Normal' | 'Anomaly'>('Normal');
-  const [message, setMessage] = useState('데이터 증강 작업을 준비 중입니다...');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        const next = prev + (Math.random() * 5);
-        if (next >= 100) {
-          clearInterval(interval);
-          setMessage('작업이 완료되었습니다! 결과를 정리하고 있습니다...');
-          setTimeout(() => {
-            navigate(`/dashboard/projects/${projectId}/jobs/${jobId}/result`);
-          }, 1500);
-          return 100;
-        }
-        
-        // Update messages and class based on progress
-        if (next < 10) setMessage('파라미터를 로드하고 있습니다...');
-        else if (next < 50) {
-          setCurrentClass('Normal');
-          setMessage(`Normal 클래스 이미지 생성 중... (${Math.floor((next / 50) * 100)}%)`);
-        }
-        else if (next < 95) {
-          setCurrentClass('Anomaly');
-          setMessage(`Anomaly 클래스 이미지 생성 중... (${Math.floor(((next - 50) / 45) * 100)}%)`);
-        }
-        else setMessage('생성된 이미지를 저장하고 데이터셋을 구성 중입니다...');
-        
-        return next;
-      });
-    }, 500);
+  const { progress, currentStep, cancel } = useJobPolling({
+    jobId,
+    intervalMs: 1500,
+    onComplete: () => {
+      setTimeout(() => {
+        navigate(`/dashboard/projects/${projectId}/jobs/${jobId}/result`);
+      }, 1200);
+    },
+    onError: (err) => {
+      alert(`작업 실패: ${err}`);
+      navigate(`/dashboard/projects/${projectId}`);
+    },
+  });
 
-    return () => clearInterval(interval);
-  }, [projectId, jobId, navigate]);
+  const currentClass: 'Normal' | 'Anomaly' = progress >= 50 ? 'Anomaly' : 'Normal';
+  const message = currentStep || (progress >= 100 ? '작업이 완료되었습니다! 결과를 정리하고 있습니다...' : '데이터 증강 실행 중...');
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (confirm('진행 중인 증강 작업을 중단하시겠습니까? 지금까지의 데이터는 저장되지 않습니다.')) {
+      await cancel();
       navigate(`/dashboard/projects/${projectId}`);
     }
   };

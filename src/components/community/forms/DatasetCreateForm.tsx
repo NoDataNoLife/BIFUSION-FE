@@ -1,11 +1,28 @@
 import React, { useState } from 'react';
 import { useCommunityStore } from '../../../store/useCommunityStore';
+import { useAssetStore } from '../../../store/useAssetStore';
 import api from '../../../lib/axios';
+
+interface DatasetInitialData {
+  datasetId?: number | string;
+  id?: number | string;
+  title?: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  license?: string;
+  format?: string;
+  imageType?: string;
+  resolution?: string;
+  classes?: string;
+  usageExample?: string;
+  tags?: string[];
+}
 
 interface DatasetCreateFormProps {
   onClose: () => void;
   context?: 'COMMUNITY' | 'ASSET' | 'EDIT_ASSET';
-  initialData?: any;
+  initialData?: DatasetInitialData;
 }
 
 export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', initialData }: DatasetCreateFormProps) {
@@ -24,7 +41,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { fetchDatasetList } = useCommunityStore();
+  const { fetchDatasetList, updateDataset } = useCommunityStore();
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -49,16 +66,13 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim() || (!selectedFile && context !== 'EDIT_ASSET')) {
-      alert('제목, 설명, 그리고 업로드할 파일을 반드시 지정해야 합니다.');
+      alert('제목, 설명, 그리고 업로드할 파일을 지정해야 합니다.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // 1. Upload File
-      if (!selectedFile && context !== 'EDIT_ASSET') return; // TS Type Guard
-
-      let fileId = 1;
+      let fileId: number | undefined = undefined;
       if (selectedFile) {
         const formData = new FormData();
         formData.append('files', selectedFile);
@@ -77,6 +91,37 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
         fileId = uploadedFiles[0].fileId;
       }
 
+      if (context === 'EDIT_ASSET') {
+        const datasetId = initialData?.datasetId || initialData?.id;
+        if (!datasetId) {
+          throw new Error('수정할 데이터셋 ID를 찾을 수 없습니다.');
+        }
+
+        await updateDataset(Number(datasetId), {
+          title,
+          description,
+          category: category || undefined,
+          license: license || undefined,
+          format: format || undefined,
+          imageType: imageType || undefined,
+          resolution: resolution || undefined,
+          classes: classes || undefined,
+          usageExample: usageExample || undefined,
+          tags,
+          fileId,
+        });
+
+        try {
+          await useAssetStore.getState().fetchMyDatasets('UPLOADED');
+        } catch {
+          // ignore if not in asset view
+        }
+
+        alert('데이터셋이 성공적으로 수정되었습니다!');
+        onClose();
+        return;
+      }
+
       // 2. Create Dataset with isPublic
       const isPublic = context !== 'ASSET';
       await api.post('/datasets', {
@@ -90,7 +135,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
         classes,
         usageExample,
         tags,
-        fileId,
+        fileId: fileId ?? 1,
         isPublic,
       });
 
@@ -100,11 +145,16 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
           : '데이터셋이 내 자산에 비공개로 안전하게 저장되었습니다!'
       );
       fetchDatasetList();
+      try {
+        await useAssetStore.getState().fetchMyDatasets('UPLOADED');
+      } catch {
+        // ignore
+      }
       onClose();
     } catch (error) {
       console.error(error);
       const err = error as { response?: { data?: { message?: string } }, message?: string };
-      alert('업로드에 실패했습니다: ' + (err.response?.data?.message || err.message));
+      alert((context === 'EDIT_ASSET' ? '수정에 실패했습니다: ' : '업로드에 실패했습니다: ') + (err.response?.data?.message || err.message));
     } finally {
       setIsSubmitting(false);
     }
@@ -212,12 +262,19 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-foreground mb-2">데이터 파일 첨부 <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-bold text-foreground mb-2">
+            데이터 파일 첨부 {context !== 'EDIT_ASSET' && <span className="text-red-500">*</span>}
+            {context === 'EDIT_ASSET' && (
+              <span className="text-xs text-muted-foreground font-normal ml-2">
+                (파일을 새로 변경할 때만 선택해주세요)
+              </span>
+            )}
+          </label>
           <input 
             type="file" 
             onChange={handleFileChange}
             className="block w-full text-sm text-muted-foreground file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer" 
-            required
+            required={context !== 'EDIT_ASSET'}
           />
         </div>
 

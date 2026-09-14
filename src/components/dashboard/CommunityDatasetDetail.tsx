@@ -44,7 +44,7 @@ export default function CommunityDatasetDetail({ datasetPost, onBack, onDelete }
   const [isDownloading, setIsDownloading] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const { user } = useAuthStore();
-  const { getDatasetDownloadUrl } = useCommunityStore();
+  const { getDatasetDownloadUrl, requestExpertVerification, fetchDatasetDetail } = useCommunityStore();
   const isAuthor = user?.userId === datasetPost?.author.userId;
 
   const sampleFiles: FileItem[] = [
@@ -262,10 +262,16 @@ export default function CommunityDatasetDetail({ datasetPost, onBack, onDelete }
         <VerificationRequestModal
           assetTitle={datasetPost.title}
           onClose={() => setShowVerificationModal(false)}
-          onSubmit={(reason, reward) => {
-            console.log("Verification requested:", { reason, reward });
-            // TODO: Call API
-            setShowVerificationModal(false);
+          onSubmit={async (reason, reward) => {
+            try {
+              await requestExpertVerification('DATASET', datasetPost.datasetId, reason, reward);
+              alert('검증 요청이 완료되었습니다.');
+              fetchDatasetDetail(datasetPost.datasetId);
+              setShowVerificationModal(false);
+            } catch (error) {
+              console.error('Failed to request verification:', error);
+              alert('검증 요청 실패');
+            }
           }}
         />
       )}

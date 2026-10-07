@@ -3,317 +3,281 @@ import FeatureCards from "../components/landing/FeatureCards";
 import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
-import { Zap, Shield, Share2, Terminal } from "lucide-react";
 
 function Workflow() {
   const workflowRef = useRef<HTMLDivElement>(null);
   const antRef = useRef<HTMLImageElement>(null);
+  const wallRef = useRef<HTMLDivElement>(null);
 
-  // 클릭 전 / 클릭 후
   const droppedRef = useRef(false);
-
-  // 낙하 진행도
   const dropProgressRef = useRef(0);
-
-  // 걷기 진행도
+  const landingProgressRef = useRef(0);
   const walkProgressRef = useRef(0);
-
-  // 현재 개미 프레임
   const antFrameRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
+  const wallHitRef = useRef(false);
+
+  const ROAD_Y = 70;
 
   useEffect(() => {
+    if (!antRef.current) return;
+
     let frameId = 0;
 
     const animate = (time: number) => {
-      if (!antRef.current) {
-        frameId = requestAnimationFrame(animate);
-        return;
-      }
+      if (!antRef.current) return;
 
-      /*
-       * ==========================
-       * 개미 다리 움직임
-       * ==========================
-       *
-       * 8bitant / 8bitant2 번갈아 표시
-       */
-      if (time - lastFrameTimeRef.current > 140) {
-        antFrameRef.current = antFrameRef.current === 0 ? 1 : 0;
-
-        antRef.current.src =
-          antFrameRef.current === 0 ? "/8bitant.png" : "/8bitant2.png";
-
-        lastFrameTimeRef.current = time;
-      }
-
-      /*
-       * ==========================
-       * 1. 클릭 전
-       * ==========================
-       *
-       * 공중에서 아둥바둥
-       */
+      // ==========================
+      // 0. 대기 상태
+      // ==========================
       if (!droppedRef.current) {
         antRef.current.style.left = "7%";
         antRef.current.style.top = "24%";
+        antRef.current.style.zIndex = "60";
+        antRef.current.style.transform = "translate(-50%, -50%) rotate(0deg)";
+        antRef.current.style.clipPath = "none";
+        antRef.current.style.display = "block";
+
+        if (time - lastFrameTimeRef.current > 140) {
+          antFrameRef.current = antFrameRef.current === 0 ? 1 : 0;
+          lastFrameTimeRef.current = time;
+
+          antRef.current.src =
+            antFrameRef.current === 0 ? "/8bitant.png" : "/8bitant2.png";
+        }
+      }
+
+      // ==========================
+      // 1. 떨어지기
+      // ==========================
+      else if (dropProgressRef.current < 1) {
+        dropProgressRef.current += 0.06;
+
+        const t = Math.min(dropProgressRef.current, 1);
+
+        const startY = 24;
+        const endY = ROAD_Y;
+
+        const y = startY + (endY - startY) * t;
+
+        antRef.current.style.left = "7%";
+        antRef.current.style.top = `${y}%`;
+        antRef.current.style.zIndex = "60";
+        antRef.current.style.transform = "translate(-50%, -50%) rotate(0deg)";
+      }
+
+      // ==========================
+      // 2. 착지
+      // ==========================
+      else if (landingProgressRef.current < 1) {
+        landingProgressRef.current += 0.08;
+
+        const t = Math.min(landingProgressRef.current, 1);
+
+        let squash = 1;
+
+        if (t < 0.5) {
+          squash = 1 - t * 0.44;
+        } else {
+          squash = 0.78 + (t - 0.5) * 0.44;
+        }
+
+        antRef.current.style.left = "7%";
+        antRef.current.style.top = `${ROAD_Y}%`;
+        antRef.current.style.zIndex = "60";
+        antRef.current.style.transform = `
+          translate(-50%, -50%)
+          scaleX(${1 / squash})
+          scaleY(${squash})
+        `;
+      }
+
+      // ==========================
+      // 3. 걷기
+      // ==========================
+      else {
+        walkProgressRef.current += 0.001;
+
+        const p = walkProgressRef.current;
+
+        let x = 7;
+        let y = ROAD_Y;
+        let rotation = 0;
+        let zIndex = 40;
+
+        // ==========================
+        // 1번
+        // ==========================
+        if (p < 0.22) {
+          const t = p / 0.22;
+
+          if (t < 0.25) {
+            const q = t / 0.25;
+
+            x = 7;
+            y = ROAD_Y - q * 18;
+            rotation = -90;
+          } else if (t < 0.75) {
+            const q = (t - 0.25) / 0.5;
+
+            x = 7 + q * 18;
+            y = ROAD_Y - 18;
+            rotation = 0;
+          } else {
+            const q = (t - 0.75) / 0.25;
+
+            x = 25;
+            y = ROAD_Y - 18 + q * 18;
+            rotation = 90;
+          }
+
+          zIndex = 40;
+        }
+
+        // ==========================
+        // 2번
+        // ==========================
+        else if (p < 0.44) {
+          const t = (p - 0.22) / 0.22;
+
+          if (t < 0.32) {
+            const q = t / 0.32;
+
+            x = 25 + q * 5;
+            y = ROAD_Y;
+            rotation = 0;
+          } else {
+            const q = (t - 0.32) / 0.68;
+
+            x = 30 + q * 24;
+            y = ROAD_Y - Math.sin(Math.PI * q) * 28;
+            rotation = Math.sin(Math.PI * q) * 18;
+          }
+
+          zIndex = 40;
+        }
+
+        // ==========================
+        // 3번
+        // ==========================
+        else if (p < 0.7) {
+          const t = (p - 0.44) / 0.26;
+
+          x = 54 + t * 24;
+          y = ROAD_Y;
+          zIndex = 10;
+          rotation = 0;
+        }
+
+        // ==========================
+        // 4번 접근
+        // ==========================
+        else if (p < 0.79) {
+          const t = (p - 0.7) / 0.09;
+
+          x = 78 + t * 12;
+          y = ROAD_Y;
+          zIndex = 10;
+          rotation = 0;
+        }
+
+        // ==========================
+        // 4번 제자리 점프
+        // ==========================
+        else if (p < 0.88) {
+          const t = (p - 0.79) / 0.09;
+
+          // ★ x = 90 고정
+          x = 90;
+
+          // ★ 위쪽으로 점프
+          y = ROAD_Y - Math.sin(Math.PI * t) * 32;
+
+          zIndex = 10;
+          rotation = 0;
+
+          // ==========================
+          // ★★★ wall 충돌 ★★★
+          // ==========================
+          // 개미가 wall에 실제로 닿는 시점
+          // → 점프의 약 45% 지점부터 wall이 위로 튀어오름
+          if (t >= 0.4 && !wallHitRef.current) {
+            wallHitRef.current = true;
+
+            if (wallRef.current) {
+              wallRef.current.animate(
+                [
+                  // 현재 원래 위치
+                  {
+                    transform: "translateY(0)",
+                  },
+
+                  // ★ 충돌과 동시에 위로
+                  {
+                    transform: "translateY(-32px)",
+                  },
+
+                  // 살짝 내려옴
+                  {
+                    transform: "translateY(-24px)",
+                  },
+
+                  // 원래 위치 복귀
+                  {
+                    transform: "translateY(0)",
+                  },
+                ],
+                {
+                  duration: 420,
+                  easing: "cubic-bezier(0.2, 0.8, 0.3, 1)",
+                },
+              );
+            }
+          }
+        }
+
+        // ==========================
+        // 5. 4번 통과
+        // ==========================
+        else {
+          const t = Math.min((p - 0.88) / 0.12, 1);
+
+          x = 90 + t * 12;
+          y = ROAD_Y;
+          zIndex = 40;
+          rotation = 0;
+
+          if (t > 0.45) {
+            const disappear = (t - 0.45) / 0.55;
+
+            antRef.current.style.clipPath = `
+              inset(
+                0
+                ${disappear * 100}%
+                0
+                0
+              )
+            `;
+          } else {
+            antRef.current.style.clipPath = "none";
+          }
+
+          if (t >= 1) {
+            antRef.current.style.display = "none";
+          }
+        }
+
+        // ==========================
+        // 실제 개미 위치 적용
+        // ==========================
+        antRef.current.style.left = `${x}%`;
+        antRef.current.style.top = `${y}%`;
+        antRef.current.style.zIndex = `${zIndex}`;
 
         antRef.current.style.transform = `
           translate(-50%, -50%)
+          rotate(${rotation}deg)
         `;
-
-        antRef.current.style.clipPath = "none";
-      } else {
-        /*
-         * ==========================
-         * 2. 클릭 후
-         * ==========================
-         */
-        /*
-         * --------------------------
-         * 낙하
-         * --------------------------
-         */
-        if (dropProgressRef.current < 1) {
-          dropProgressRef.current += 0.012;
-
-          const dropProgress = Math.min(dropProgressRef.current, 1);
-
-          /*
-           * 낙하가 자연스럽게 가속/감속
-           */
-          const dropEase = 1 - Math.pow(1 - dropProgress, 3);
-
-          const startY = 24;
-          const endY = 73;
-
-          const currentY = startY + (endY - startY) * dropEase;
-
-          antRef.current.style.left = "7%";
-          antRef.current.style.top = `${currentY}%`;
-
-          antRef.current.style.transform = `
-            translate(-50%, -50%)
-          `;
-
-          antRef.current.style.clipPath = "none";
-        } else {
-          /*
-           * --------------------------
-           * 낙하 완료 → 걷기
-           * --------------------------
-           */
-          /*
-           * 아주 느린 속도로 이동
-           */
-          walkProgressRef.current += 0.00032;
-
-          /*
-           * 전체 이동 진행도
-           */
-          const progress = Math.min(walkProgressRef.current, 1);
-
-          /*
-           * ==========================
-           * 개미의 전체 경로
-           * ==========================
-           *
-           * 0.00 ~ 0.18
-           * → 직선 위로 1번 통과
-           *
-           * 0.18 ~ 0.40
-           * → 2번 사각형 동선
-           *
-           * 0.40 ~ 0.72
-           * → 3번 통과
-           *
-           * 0.72 ~ 0.88
-           * → 4번 wall 점프
-           *
-           * 0.88 ~ 1.00
-           * → 오른쪽 포털로 빨려 들어감
-           */
-
-          let x = 7;
-          let y = 73;
-
-          let rotation = 0;
-
-          /*
-           * ==========================
-           * STEP 1
-           * ==========================
-           *
-           * 직선 위를 그냥 이동
-           */
-          if (progress < 0.18) {
-            const p = progress / 0.18;
-
-            x = 7 + (23 - 7) * p;
-            y = 73;
-            rotation = 0;
-          } else if (progress < 0.4) {
-            /*
-             * ==========================
-             * STEP 2
-             * ==========================
-             *
-             * 완전 직각 동선
-             *
-             *       ┌───────────┐
-             *       │           │
-             * ──────┘           └──────
-             *
-             * 1. 위로
-             * 2. 오른쪽으로
-             * 3. 아래로
-             */
-            const p = (progress - 0.18) / (0.4 - 0.18);
-
-            /*
-             * 구간 1: 위로
-             */
-            if (p < 0.25) {
-              const local = p / 0.25;
-
-              x = 23;
-              y = 73 - 24 * local;
-
-              // 머리가 위를 향함
-              rotation = -90;
-            } else if (p < 0.75) {
-              /*
-               * 구간 2: 오른쪽
-               */
-              const local = (p - 0.25) / 0.5;
-
-              x = 23 + 15 * local;
-              y = 49;
-
-              // 머리가 오른쪽
-              rotation = 0;
-            } else {
-              /*
-               * 구간 3: 아래
-               */
-              const local = (p - 0.75) / 0.25;
-
-              x = 38;
-              y = 49 + 24 * local;
-
-              // 머리가 아래를 향함
-              rotation = 90;
-            }
-          } else if (progress < 0.72) {
-            /*
-             * ==========================
-             * STEP 3
-             * ==========================
-             *
-             * 다시 직선 위
-             */
-            const p = (progress - 0.4) / (0.72 - 0.4);
-
-            x = 38 + (66 - 38) * p;
-            y = 73;
-            rotation = 0;
-          } else if (progress < 0.88) {
-            /*
-             * ==========================
-             * STEP 4
-             * ==========================
-             *
-             * wall 중앙까지 직선
-             * → 위로 직각 점프
-             * → 잠깐 정지
-             * → 아래로 직각 하강
-             */
-            const p = (progress - 0.72) / (0.88 - 0.72);
-
-            /*
-             * 1. wall 바로 아래까지
-             */
-            if (p < 0.35) {
-              const local = p / 0.35;
-
-              x = 66 + (90 - 66) * local;
-              y = 73;
-              rotation = 0;
-            } else if (p < 0.55) {
-              /*
-               * 2. wall 위로 올라감
-               */
-              const local = (p - 0.35) / 0.2;
-
-              x = 90;
-              y = 73 - 30 * local;
-
-              // 머리가 위
-              rotation = -90;
-            } else if (p < 0.68) {
-              /*
-               * 3. wall 위에서 잠깐 정지
-               */
-              x = 90;
-              y = 43;
-
-              rotation = -90;
-            } else {
-              /*
-               * 4. 다시 아래로 내려옴
-               */
-              const local = (p - 0.68) / 0.32;
-
-              x = 90;
-              y = 43 + 30 * local;
-
-              // 머리가 아래
-              rotation = 90;
-            }
-          } else {
-            /*
-             * ==========================
-             * STEP 5
-             * ==========================
-             *
-             * 직선 끝으로 이동
-             * → 머리부터 포털에 빨려 들어감
-             */
-            const p = (progress - 0.88) / (1 - 0.88);
-
-            x = 90 + 7 * p;
-            y = 73;
-            rotation = 0;
-
-            /*
-             * 마지막 40%에서
-             * 개미의 오른쪽(머리)부터 사라짐
-             */
-            if (p > 0.6) {
-              const disappearProgress = (p - 0.6) / 0.4;
-
-              antRef.current.style.clipPath = `inset(0 ${
-                disappearProgress * 100
-              }% 0 0)`;
-            } else {
-              antRef.current.style.clipPath = "none";
-            }
-          }
-
-          /*
-           * ==========================
-           * 실제 위치 적용
-           * ==========================
-           */
-          antRef.current.style.left = `${x}%`;
-
-          antRef.current.style.top = `${y}%`;
-
-          antRef.current.style.transform = `
-            translate(-50%, -50%)
-            rotate(${rotation}deg)
-          `;
-        }
       }
 
       frameId = requestAnimationFrame(animate);
@@ -326,11 +290,9 @@ function Workflow() {
     };
   }, []);
 
-  /*
-   * ==========================
-   * 개미 클릭
-   * ==========================
-   */
+  // ==========================
+  // 개미 클릭
+  // ==========================
   const handleAntClick = () => {
     if (droppedRef.current) return;
 
@@ -407,7 +369,6 @@ function Workflow() {
 
       {/* =========================
           1번
-          숫자 + 텍스트
       ========================== */}
 
       <div
@@ -450,7 +411,6 @@ function Workflow() {
           업로드
         </div>
 
-        {/* 텍스트의 '드' 부분을 살짝 가림 */}
         <img
           src="/grass.png"
           alt=""
@@ -468,8 +428,6 @@ function Workflow() {
 
       {/* =========================
           2번
-          텍스트 + 숫자
-          선을 관통
       ========================== */}
 
       <div
@@ -514,7 +472,6 @@ function Workflow() {
 
       {/* =========================
           3번
-          숫자 + 텍스트 + 풀숲
       ========================== */}
 
       <div
@@ -556,85 +513,102 @@ function Workflow() {
           전문가 검토
         </div>
 
-        {/* 풀숲 2개 */}
-        <div className="absolute left-[...] top-[...] z-30 flex items-end justify-center translate-y-[10px]">
-          <img src="/grass.png" className="w-[...]" />
-          <img src="/grass.png" className="w-[...] -ml-[12px]" />
+        <div
+          className="
+            absolute
+            left-[50%]
+            top-[100%]
+            z-30
+            flex
+            -translate-x-1/2
+            translate-y-[-30px]
+            items-end
+            justify-center
+          "
+        >
+          <img src="/grass.png" alt="" className="w-[50px]" />
+
+          <img src="/grass.png" alt="" className="w-[50px] -ml-[12px]" />
         </div>
       </div>
 
       {/* =========================
-    4번
-    wall + 숫자 + 텍스트
-========================== */}
+          4번
+      ========================== */}
 
       <div
         className="
-    absolute
-    left-[90%]
-    bottom-[27%]
-    z-20
-    flex
-    -translate-x-1/2
-    flex-col
-    items-center
-    justify-end
-    text-center
-  "
+          absolute
+          left-[90%]
+          bottom-[27%]
+          z-20
+          flex
+          -translate-x-1/2
+          flex-col
+          items-center
+          justify-end
+          text-center
+        "
       >
-        {/* wall */}
-        <img
-          src="/wall.png"
-          alt=""
+        {/* ★ wall 기준 위치는 그대로 고정 */}
+        <div
           className="
-      mb-[5px]
-      w-[76px]
-      object-contain
-    "
-        />
+            mb-[5px]
+            translate-y-[55px]
+          "
+        >
+          {/* ★ 이 wrapper만 충돌 시 위로 움직임 */}
+          <div ref={wallRef}>
+            <img
+              src="/wall.png"
+              alt=""
+              className="
+                w-[100px]
+                object-contain
+              "
+            />
+          </div>
+        </div>
 
-        {/* 숫자 + 텍스트 */}
         <div className="relative flex flex-col items-center justify-center">
-          {/* 숫자 */}
           <div
             className="
-        font-hbios
-        text-[120px]
-        leading-[120px]
-        text-[#4A5565]
-      "
+              font-hbios
+              text-[120px]
+              leading-[120px]
+              text-[#4A5565]
+              translate-y-[20px]
+            "
           >
             4
           </div>
 
-          {/* 텍스트 */}
           <div
             className="
-        mt-[0px]
-        whitespace-nowrap
-        font-hbios
-        text-[27px]
-        leading-[28px]
-        text-[#4A5565]
-      "
+              mt-[0px]
+              whitespace-nowrap
+              font-hbios
+              text-[27px]
+              leading-[28px]
+              text-[#4A5565]
+            "
           >
             다운로드 및
             <br />
             배포
           </div>
 
-          {/* 풀숲 */}
           <img
             src="/grass.png"
             alt=""
             className="
-        absolute
-        left-[100%]
-        bottom-[0px]
-        ml-[5px]
-        w-[50px]
-        object-contain
-      "
+              absolute
+              left-[70%]
+              bottom-[-11px]
+              ml-[5px]
+              w-[50px]
+              object-contain
+            "
           />
         </div>
       </div>
@@ -670,14 +644,16 @@ export default function LandingPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+
     const hasUrlToken =
       params.get("accessToken") ||
       params.get("access_token") ||
       params.get("token");
 
     if (hasUrlToken) {
-      // URL에 토큰이 있는 경우 (OAuth2 리다이렉트 상황)
-      navigate(`/oauth2/redirect${location.search}`, { replace: true });
+      navigate(`/oauth2/redirect${location.search}`, {
+        replace: true,
+      });
     }
   }, [location, navigate]);
 
@@ -692,6 +668,7 @@ export default function LandingPage() {
 
     if (isMock) {
       console.warn("개발 모드: Mock 로그인을 진행합니다.");
+
       const mockResponse = {
         accessToken: "mock-access-token",
         refreshToken: "mock-refresh-token",
@@ -705,14 +682,15 @@ export default function LandingPage() {
           updatedAt: new Date().toISOString(),
         },
       };
+
       login(mockResponse);
       navigate("/dashboard");
       return;
     }
 
-    // 백엔드 명세에 따른 실제 구글 로그인 엔드포인트
     const baseUrl =
       import.meta.env.VITE_API_URL || "https://bifusion.duckdns.org";
+
     window.location.href = `${baseUrl}/oauth2/authorization/google`;
   };
 
@@ -728,16 +706,20 @@ export default function LandingPage() {
                   <span className="text-[#101114] dark:text-foreground">
                     D0 y0u w
                   </span>
+
                   <span className="text-primary">ANT</span>
+
                   <span className="flex items-end gap-1 whitespace-nowrap">
                     <img
                       src="/logo1.png"
                       alt="Logo1"
                       className="h-12 lg:h-16 w-auto object-contain"
                     />
+
                     <span className="text-primary">?</span>
                   </span>
                 </h1>
+
                 <p className="text-muted-foreground text-base leading-relaxed transition-colors">
                   {isAuthenticated
                     ? "환영합니다! 이미 로그인되어 있습니다."
@@ -768,12 +750,14 @@ export default function LandingPage() {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
+
                   <span className="text-base font-bold">
                     {isAuthenticated
                       ? "대시보드로 이동하기"
                       : "Google로 시작하기"}
                   </span>
                 </button>
+
                 <p className="text-[11px] text-center text-muted-foreground font-medium leading-relaxed transition-colors">
                   안전한 연구 환경에서 빠르게 워크스페이스를 시작하세요.
                 </p>
@@ -811,7 +795,6 @@ export default function LandingPage() {
       {/* PROCESS FLOW */}
       <section className="py-24 px-6">
         <div className="container mx-auto">
-          {/* 상단 텍스트 */}
           <div className="flex flex-col items-center text-center">
             <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29]">
               작동 방식
@@ -826,7 +809,6 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* WORKFLOW */}
           <Workflow />
         </div>
       </section>
@@ -838,16 +820,19 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold font-hbios mb-4">
               Workspace Preview
             </h2>
+
             <p className="text-[#f7f2e8]/70">
               복잡한 과정을 직관적인 인터페이스로 해결하세요.
             </p>
           </div>
+
           <div className="max-w-6xl mx-auto bg-card rounded-t-2xl shadow-2xl overflow-hidden border border-[#f7f2e8]/15 transition-colors">
             <div className="bg-muted h-10 border-b border-border flex items-center px-4 gap-2 transition-colors">
               <div className="w-3 h-3 rounded-full bg-red-400" />
               <div className="w-3 h-3 rounded-full bg-yellow-400" />
               <div className="w-3 h-3 rounded-full bg-green-400" />
             </div>
+
             <div className="aspect-video bg-background flex items-center justify-center transition-colors">
               <span className="text-muted-foreground font-hbios text-sm tracking-widest italic opacity-50">
                 bifusion_dashboard_preview.png
@@ -864,10 +849,12 @@ export default function LandingPage() {
             Ready to{" "}
             <span className="text-primary italic transition-colors">Fuse?</span>
           </h2>
+
           <p className="text-muted-foreground text-xl mb-12 leading-relaxed transition-colors">
             더 빠르고 안전한 의료 AI 연구의 시작. <br />
             지금 바로 bifusion 워크스페이스에 참여하세요.
           </p>
+
           <button
             onClick={handleGoogleLogin}
             className="h-20 px-12 bg-card border-2 border-border rounded-3xl flex items-center justify-center gap-4 hover:bg-muted transition-all mx-auto active:scale-[0.98]"
@@ -890,6 +877,7 @@ export default function LandingPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
+
             <span className="text-xl font-bold text-foreground transition-colors">
               Sign in with Google
             </span>
@@ -904,10 +892,12 @@ export default function LandingPage() {
             alt="Bifusion Logo"
             className="h-6 w-auto object-contain"
           />
+
           <span className="font-bold text-foreground tracking-tight transition-colors">
             bifusion
           </span>
         </div>
+
         <p className="font-medium">© 2026 bifusion. All rights reserved.</p>
       </footer>
     </div>
@@ -928,9 +918,11 @@ function FeatureCard({
       <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center transition-colors">
         {icon}
       </div>
+
       <h3 className="text-xl font-bold font-hbios tracking-tight transition-colors">
         {title}
       </h3>
+
       <p className="text-muted-foreground leading-relaxed text-sm transition-colors">
         {desc}
       </p>
@@ -952,10 +944,12 @@ function ProcessStep({
       <div className="text-primary/20 font-hbios text-4xl font-black transition-colors group-hover:text-primary/50">
         {number}
       </div>
+
       <div className="space-y-1 pt-1">
         <h4 className="font-bold text-lg font-hbios transition-colors">
           {title}
         </h4>
+
         <p className="text-muted-foreground text-sm leading-relaxed transition-colors">
           {desc}
         </p>

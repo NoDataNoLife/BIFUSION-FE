@@ -1,46 +1,35 @@
-import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, 
   ChevronRight
 } from 'lucide-react';
+import { useJobPolling } from '../../hooks/useJobPolling';
 
 export default function InferenceProgressPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const totalImages = location.state?.totalImages || 50;
-  
-  const [progress, setProgress] = useState(0);
-  const [processedImages, setProcessedImages] = useState(0);
 
-  useEffect(() => {
-    const duration = 5000; // 5 seconds
-    const interval = 100;
-    const steps = duration / interval;
-    const progressIncrement = 100 / steps;
-    const imageIncrement = totalImages / steps;
+  const { progress, currentStep, cancel } = useJobPolling({
+    jobId,
+    intervalMs: 1500,
+    onComplete: () => {
+      setTimeout(() => {
+        navigate(`/dashboard/projects/${projectId}/inference/${jobId}/result`, { state: { totalImages } });
+      }, 1000);
+    },
+    onError: (err) => {
+      alert(`추론 실패: ${err}`);
+      navigate(`/dashboard/projects/${projectId}`);
+    },
+  });
 
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => {
-            navigate(`/dashboard/projects/${projectId}/inference/${jobId}/result`, { state: { totalImages } });
-          }, 1000);
-          return 100;
-        }
-        return Math.min(prev + progressIncrement, 100);
-      });
+  const processedImages = Math.min(totalImages, Math.floor((progress / 100) * totalImages));
 
-      setProcessedImages(prev => Math.min(prev + imageIncrement, totalImages));
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [projectId, jobId, navigate, totalImages]);
-
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (confirm('정말로 추론을 취소하시겠습니까?')) {
+      await cancel();
       navigate(`/dashboard/projects/${projectId}`);
     }
   };
@@ -93,7 +82,7 @@ export default function InferenceProgressPage() {
           <div className="bg-muted/50 rounded-3xl p-8 md:p-10 border border-border text-center space-y-2">
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">현재 상태</p>
             <p className="text-2xl font-black text-foreground tracking-tight">
-              추론 중... <span className="text-primary italic ml-2">({Math.floor(processedImages)}/{totalImages} 이미지)</span>
+              {currentStep || `추론 중...`} <span className="text-primary italic ml-2">({Math.floor(processedImages)}/{totalImages} 이미지)</span>
             </p>
           </div>
 

@@ -7,9 +7,12 @@ import {
   Info
 } from 'lucide-react';
 
+import { useJobStore } from '../../store/useJobStore';
+
 export default function TrainSetupPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
+  const { createJob, isLoading } = useJobStore();
 
   const [selectedAugmentData, setSelectedAugmentData] = useState('');
   const [kShot, setKShot] = useState<1 | 3 | 5 | 10>(5);
@@ -22,8 +25,23 @@ export default function TrainSetupPage() {
     }
   };
 
-  const handleStartTrain = () => {
-    navigate(`/dashboard/projects/${projectId}/train/${jobId}/progress`);
+  const handleStartTrain = async () => {
+    try {
+      const job = await createJob(projectId || '1', 'TRAINING', {
+        dataset_id: selectedAugmentData,
+        datasetId: selectedAugmentData,
+        k_shot: kShot,
+        kShot: kShot,
+        epochs: 30,
+        queryCount: queryFiles.length,
+        has_query_labels: includeQueryLabel,
+      });
+
+      navigate(`/dashboard/projects/${projectId}/train/${job.jobId}/progress`);
+    } catch (err) {
+      console.error('Failed to start training job:', err);
+      navigate(`/dashboard/projects/${projectId}/train/${jobId || 'JOB-002'}/progress`);
+    }
   };
 
   const isValid = selectedAugmentData && queryFiles.length > 0;
@@ -83,7 +101,7 @@ export default function TrainSetupPage() {
                 <button
                   key={shot}
                   type="button"
-                  onClick={() => setKShot(shot as any)}
+                  onClick={() => setKShot(shot as 1 | 3 | 5 | 10)}
                   className={`flex-1 py-4 rounded-2xl font-black text-sm transition-all border-2 cursor-pointer ${
                     kShot === shot
                       ? 'bg-primary/10 border-primary text-primary shadow-sm'
@@ -99,35 +117,44 @@ export default function TrainSetupPage() {
             </p>
           </div>
 
-          {/* Query Image Upload */}
+          {/* Query Files Upload */}
           <div className="space-y-4">
             <label className="block text-sm font-black text-foreground uppercase tracking-widest">
-              Query 이미지 업로드 <span className="text-red-500">*</span>
+              Query 이미지 첨부 <span className="text-red-500">*</span>
             </label>
-            <label className="block group">
-              <div className={`border-2 border-dashed rounded-4xl p-12 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
-                queryFiles.length > 0 ? 'border-primary/50 bg-primary/5' : 'border-border bg-muted/40 hover:border-primary/50 hover:bg-primary/5'
-              }`}>
-                <div className="w-16 h-16 bg-card border border-border rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                  <Upload className={`w-8 h-8 ${queryFiles.length > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
+            <div className="p-8 border-2 border-dashed border-border rounded-3xl hover:border-primary/50 transition-all bg-muted/20 text-center relative group">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleQueryFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+              <div className="flex flex-col items-center gap-3">
+                <div className="p-4 bg-primary/10 text-primary rounded-2xl group-hover:scale-110 transition-transform">
+                  <Upload className="w-6 h-6" />
                 </div>
-                <p className="font-black text-foreground mb-1">파일 선택 또는 드래그 & 드롭</p>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">JPG, PNG (128×128 권장)</p>
-                <input type="file" accept="image/*" multiple onChange={handleQueryFileChange} className="hidden" />
+                <div>
+                  <p className="text-sm font-bold text-foreground">
+                    {queryFiles.length > 0 ? (
+                      <span className="text-primary font-black">{queryFiles.length}개의 Query 이미지 선택됨</span>
+                    ) : (
+                      '클릭하거나 이미지를 드래그하여 업로드하세요'
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-medium mt-1">
+                    Few-Shot 평가에 사용할 쿼리 이미지들 (권장: 10장 이상)
+                  </p>
+                </div>
               </div>
-            </label>
-            {queryFiles.length > 0 && (
-              <p className="text-sm font-bold text-primary px-2 italic">
-                {queryFiles.length}장의 이미지가 선택되었습니다.
-              </p>
-            )}
+            </div>
           </div>
 
-          {/* Query Label Option */}
-          <div className="bg-muted/40 border border-border rounded-3xl p-7">
-            <label className="flex items-start gap-4 cursor-pointer group">
-              <div className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                includeQueryLabel ? 'bg-primary border-primary text-white' : 'bg-card border-border'
+          {/* Query Labels Toggle */}
+          <div className="p-6 bg-muted/30 border border-border rounded-3xl">
+            <label className="flex items-start gap-4 cursor-pointer">
+              <div className={`mt-1 w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
+                includeQueryLabel ? 'bg-primary border-primary text-white' : 'border-muted-foreground/40 bg-background'
               }`}>
                 {includeQueryLabel && <div className="w-2 h-2 bg-white rounded-full" />}
               </div>
@@ -159,14 +186,14 @@ export default function TrainSetupPage() {
             </button>
             <button
               onClick={handleStartTrain}
-              disabled={!isValid}
+              disabled={!isValid || isLoading}
               className={`px-10 py-4 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
-                isValid
+                isValid && !isLoading
                   ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
                   : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none opacity-50'
               }`}
             >
-              학습 시작하기
+              {isLoading ? '학습 시작 중...' : '학습 시작하기'}
             </button>
           </div>
         </div>

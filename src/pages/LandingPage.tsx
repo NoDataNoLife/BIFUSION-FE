@@ -7,362 +7,277 @@ import { useAuthStore } from "../store/useAuthStore";
 function Workflow() {
   const workflowRef = useRef<HTMLDivElement>(null);
   const antRef = useRef<HTMLImageElement>(null);
-  const wallRef = useRef<HTMLImageElement>(null);
+  const wallRef = useRef<HTMLDivElement>(null);
 
-  // 클릭 전 / 클릭 후
   const droppedRef = useRef(false);
-
-  // 낙하 진행도
   const dropProgressRef = useRef(0);
-
-  // 착지 후 찌부리는 진행도
   const landingProgressRef = useRef(0);
-
-  // 걷기 진행도
   const walkProgressRef = useRef(0);
-
-  // 현재 개미 프레임
   const antFrameRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
-
-  // 벽 충돌 효과가 시작됐는지
   const wallHitRef = useRef(false);
 
-  // 개미가 직선 길을 걸을 때의 Y 위치
   const ROAD_Y = 70;
 
   useEffect(() => {
+    if (!antRef.current) return;
+
     let frameId = 0;
 
     const animate = (time: number) => {
-      if (!antRef.current) {
-        frameId = requestAnimationFrame(animate);
-        return;
-      }
+      if (!antRef.current) return;
 
-      /*
-       * ==========================
-       * 개미 다리 움직임
-       * ==========================
-       */
-      if (time - lastFrameTimeRef.current > 140) {
-        antFrameRef.current = antFrameRef.current === 0 ? 1 : 0;
-
-        antRef.current.src =
-          antFrameRef.current === 0 ? "/8bitant.png" : "/8bitant2.png";
-
-        lastFrameTimeRef.current = time;
-      }
-
-      /*
-       * ==========================
-       * 1. 클릭 전
-       * ==========================
-       */
+      // ==========================
+      // 0. 대기 상태
+      // ==========================
       if (!droppedRef.current) {
         antRef.current.style.left = "7%";
         antRef.current.style.top = "24%";
+        antRef.current.style.zIndex = "60";
+        antRef.current.style.transform = "translate(-50%, -50%) rotate(0deg)";
+        antRef.current.style.clipPath = "none";
+        antRef.current.style.display = "block";
+
+        if (time - lastFrameTimeRef.current > 140) {
+          antFrameRef.current = antFrameRef.current === 0 ? 1 : 0;
+          lastFrameTimeRef.current = time;
+
+          antRef.current.src =
+            antFrameRef.current === 0 ? "/8bitant.png" : "/8bitant2.png";
+        }
+      }
+
+      // ==========================
+      // 1. 떨어지기
+      // ==========================
+      else if (dropProgressRef.current < 1) {
+        dropProgressRef.current += 0.06;
+
+        const t = Math.min(dropProgressRef.current, 1);
+
+        const startY = 24;
+        const endY = ROAD_Y;
+
+        const y = startY + (endY - startY) * t;
+
+        antRef.current.style.left = "7%";
+        antRef.current.style.top = `${y}%`;
+        antRef.current.style.zIndex = "60";
+        antRef.current.style.transform = "translate(-50%, -50%) rotate(0deg)";
+      }
+
+      // ==========================
+      // 2. 착지
+      // ==========================
+      else if (landingProgressRef.current < 1) {
+        landingProgressRef.current += 0.08;
+
+        const t = Math.min(landingProgressRef.current, 1);
+
+        let squash = 1;
+
+        if (t < 0.5) {
+          squash = 1 - t * 0.44;
+        } else {
+          squash = 0.78 + (t - 0.5) * 0.44;
+        }
+
+        antRef.current.style.left = "7%";
+        antRef.current.style.top = `${ROAD_Y}%`;
+        antRef.current.style.zIndex = "60";
+        antRef.current.style.transform = `
+          translate(-50%, -50%)
+          scaleX(${1 / squash})
+          scaleY(${squash})
+        `;
+      }
+
+      // ==========================
+      // 3. 걷기
+      // ==========================
+      else {
+        walkProgressRef.current += 0.001;
+
+        const p = walkProgressRef.current;
+
+        let x = 7;
+        let y = ROAD_Y;
+        let rotation = 0;
+        let zIndex = 40;
+
+        // ==========================
+        // 1번
+        // ==========================
+        if (p < 0.22) {
+          const t = p / 0.22;
+
+          if (t < 0.25) {
+            const q = t / 0.25;
+
+            x = 7;
+            y = ROAD_Y - q * 18;
+            rotation = -90;
+          } else if (t < 0.75) {
+            const q = (t - 0.25) / 0.5;
+
+            x = 7 + q * 18;
+            y = ROAD_Y - 18;
+            rotation = 0;
+          } else {
+            const q = (t - 0.75) / 0.25;
+
+            x = 25;
+            y = ROAD_Y - 18 + q * 18;
+            rotation = 90;
+          }
+
+          zIndex = 40;
+        }
+
+        // ==========================
+        // 2번
+        // ==========================
+        else if (p < 0.44) {
+          const t = (p - 0.22) / 0.22;
+
+          if (t < 0.32) {
+            const q = t / 0.32;
+
+            x = 25 + q * 5;
+            y = ROAD_Y;
+            rotation = 0;
+          } else {
+            const q = (t - 0.32) / 0.68;
+
+            x = 30 + q * 24;
+            y = ROAD_Y - Math.sin(Math.PI * q) * 28;
+            rotation = Math.sin(Math.PI * q) * 18;
+          }
+
+          zIndex = 40;
+        }
+
+        // ==========================
+        // 3번
+        // ==========================
+        else if (p < 0.7) {
+          const t = (p - 0.44) / 0.26;
+
+          x = 54 + t * 24;
+          y = ROAD_Y;
+          zIndex = 10;
+          rotation = 0;
+        }
+
+        // ==========================
+        // 4번 접근
+        // ==========================
+        else if (p < 0.79) {
+          const t = (p - 0.7) / 0.09;
+
+          x = 78 + t * 12;
+          y = ROAD_Y;
+          zIndex = 10;
+          rotation = 0;
+        }
+
+        // ==========================
+        // 4번 제자리 점프
+        // ==========================
+        else if (p < 0.88) {
+          const t = (p - 0.79) / 0.09;
+
+          // ★ x = 90 고정
+          x = 90;
+
+          // ★ 위쪽으로 점프
+          y = ROAD_Y - Math.sin(Math.PI * t) * 32;
+
+          zIndex = 10;
+          rotation = 0;
+
+          // ==========================
+          // ★★★ wall 충돌 ★★★
+          // ==========================
+          // 개미가 wall에 실제로 닿는 시점
+          // → 점프의 약 45% 지점부터 wall이 위로 튀어오름
+          if (t >= 0.4 && !wallHitRef.current) {
+            wallHitRef.current = true;
+
+            if (wallRef.current) {
+              wallRef.current.animate(
+                [
+                  // 현재 원래 위치
+                  {
+                    transform: "translateY(0)",
+                  },
+
+                  // ★ 충돌과 동시에 위로
+                  {
+                    transform: "translateY(-32px)",
+                  },
+
+                  // 살짝 내려옴
+                  {
+                    transform: "translateY(-24px)",
+                  },
+
+                  // 원래 위치 복귀
+                  {
+                    transform: "translateY(0)",
+                  },
+                ],
+                {
+                  duration: 420,
+                  easing: "cubic-bezier(0.2, 0.8, 0.3, 1)",
+                },
+              );
+            }
+          }
+        }
+
+        // ==========================
+        // 5. 4번 통과
+        // ==========================
+        else {
+          const t = Math.min((p - 0.88) / 0.12, 1);
+
+          x = 90 + t * 12;
+          y = ROAD_Y;
+          zIndex = 40;
+          rotation = 0;
+
+          if (t > 0.45) {
+            const disappear = (t - 0.45) / 0.55;
+
+            antRef.current.style.clipPath = `
+              inset(
+                0
+                ${disappear * 100}%
+                0
+                0
+              )
+            `;
+          } else {
+            antRef.current.style.clipPath = "none";
+          }
+
+          if (t >= 1) {
+            antRef.current.style.display = "none";
+          }
+        }
+
+        // ==========================
+        // 실제 개미 위치 적용
+        // ==========================
+        antRef.current.style.left = `${x}%`;
+        antRef.current.style.top = `${y}%`;
+        antRef.current.style.zIndex = `${zIndex}`;
 
         antRef.current.style.transform = `
           translate(-50%, -50%)
+          rotate(${rotation}deg)
         `;
-
-        antRef.current.style.zIndex = "60";
-        antRef.current.style.clipPath = "none";
-      } else {
-        /*
-         * ==========================
-         * 2. 낙하
-         * ==========================
-         */
-        if (dropProgressRef.current < 1) {
-          dropProgressRef.current += 0.06;
-
-          const dropProgress = Math.min(dropProgressRef.current, 1);
-
-          const startY = 24;
-          const endY = ROAD_Y;
-
-          const currentY = startY + (endY - startY) * dropProgress;
-
-          antRef.current.style.left = "7%";
-          antRef.current.style.top = `${currentY}%`;
-
-          antRef.current.style.transform = `
-            translate(-50%, -50%)
-          `;
-
-          antRef.current.style.zIndex = "60";
-          antRef.current.style.clipPath = "none";
-        } else if (landingProgressRef.current < 1) {
-          /*
-           * ==========================
-           * 3. 착지
-           * ==========================
-           *
-           * 툭
-           * ↓
-           * 찌부
-           * ↓
-           * 복원
-           * ↓
-           * 걷기
-           */
-          landingProgressRef.current += 0.08;
-
-          const p = Math.min(landingProgressRef.current, 1);
-
-          let squash = 1;
-
-          if (p < 0.35) {
-            const local = p / 0.35;
-
-            squash = 1 - 0.22 * local;
-          } else {
-            const local = (p - 0.35) / 0.65;
-
-            squash = 0.78 + 0.22 * local;
-          }
-
-          antRef.current.style.left = "7%";
-          antRef.current.style.top = `${ROAD_Y}%`;
-
-          antRef.current.style.transform = `
-            translate(-50%, -50%)
-            scaleY(${squash})
-            scaleX(${1 + (1 - squash) * 0.35})
-          `;
-
-          antRef.current.style.zIndex = "60";
-          antRef.current.style.clipPath = "none";
-        } else {
-          /*
-           * ==========================
-           * 4. 걷기
-           * ==========================
-           */
-
-          walkProgressRef.current += 0.001;
-
-          const p = walkProgressRef.current;
-
-          let x = 7;
-          let y = ROAD_Y;
-          let rotation = 0;
-          let zIndex = 40;
-
-          /*
-           * ========================================
-           * 1번
-           *
-           * 1번 요소 바깥쪽을 따라 이동
-           *
-           * 중요한 점:
-           * 마지막에는 다시 ROAD_Y로 내려와서
-           * 직선 길로 복귀
-           * ========================================
-           */
-          if (p < 0.22) {
-            const t = p / 0.22;
-
-            if (t < 0.25) {
-              // 왼쪽 아래 → 왼쪽 위
-              const q = t / 0.25;
-
-              x = 7;
-              y = ROAD_Y - q * 18;
-
-              rotation = -90;
-            } else if (t < 0.75) {
-              // 왼쪽 위 → 오른쪽 위
-              const q = (t - 0.25) / 0.5;
-
-              x = 7 + q * 18;
-              y = ROAD_Y - 18;
-
-              rotation = 0;
-            } else {
-              // 오른쪽 위 → 오른쪽 아래
-              const q = (t - 0.75) / 0.25;
-
-              x = 25;
-              y = ROAD_Y - 18 + q * 18;
-
-              rotation = 90;
-            }
-
-            zIndex = 40;
-          } else if (p < 0.44) {
-            const t = (p - 0.22) / 0.22;
-
-            if (t < 0.32) {
-              // 1번을 지난 뒤 잠깐 직선 이동
-              const q = t / 0.32;
-
-              x = 25 + q * 5;
-              y = ROAD_Y;
-              rotation = 0;
-            } else {
-              // 2번 요소에 닿지 않도록 조금 뒤에서 시작해서
-              // 가로로 길게 둥글게 점프
-              const q = (t - 0.32) / 0.68;
-
-              x = 30 + q * 24;
-              y = ROAD_Y - Math.sin(Math.PI * q) * 28;
-              rotation = Math.sin(Math.PI * q) * 18;
-            }
-
-            zIndex = 40;
-          } else if (p < 0.7) {
-            /*
-             * ========================================
-             * 3번
-             *
-             * 여기서는 절대 위아래로 움직이지 않음.
-             *
-             * 그냥 ROAD_Y 그대로 직선으로 걸어감.
-             *
-             * 풀숲보다 뒤에 위치
-             * ========================================
-             */
-            const t = (p - 0.44) / 0.26;
-            x = 46 + t * 32;
-            y = ROAD_Y;
-            zIndex = 10;
-            rotation = 0;
-          } else if (p < 0.7) {
-            const t = (p - 0.44) / 0.26;
-
-            x = 54 + t * 24;
-            y = ROAD_Y;
-            zIndex = 10;
-            rotation = 0;
-          } else if (p < 0.88) {
-            const t = (p - 0.79) / 0.09;
-
-            x = 90;
-            y = ROAD_Y - Math.sin(Math.PI * t) * 34;
-            zIndex = 10;
-            rotation = Math.sin(Math.PI * t) * 10;
-
-            if (t >= 0.48 && t <= 0.52 && !wallHitRef.current) {
-              wallHitRef.current = true;
-
-              if (wallRef.current) {
-                wallRef.current.animate(
-                  [
-                    {
-                      transform: "translateY(55px) translateX(0) rotate(0deg)",
-                    },
-                    {
-                      transform:
-                        "translateY(53.5px) translateX(0) rotate(-0.15deg)",
-                    },
-                    {
-                      transform:
-                        "translateY(54px) translateX(0) rotate(0.1deg)",
-                    },
-                    {
-                      transform: "translateY(55px) translateX(0) rotate(0deg)",
-                    },
-                  ],
-                  {
-                    duration: 240,
-                    easing: "ease-out",
-                  },
-                );
-              }
-            }
-          } // 4번 접근
-          else if (p < 0.78) {
-            const t = (p - 0.7) / 0.08;
-
-            // 도로 위에서 wall 정중앙 하단까지 직선 이동
-            x = 78 + t * 12;
-            y = ROAD_Y;
-            zIndex = 10;
-            rotation = 0;
-          }
-
-          // 4번 제자리 점프
-          else if (p < 0.86) {
-            const t = (p - 0.78) / 0.08;
-
-            // wall.png 정중앙 하단에서 수직 점프
-            x = 90;
-            y = ROAD_Y - Math.sin(Math.PI * t) * 34;
-
-            zIndex = 10;
-            rotation = Math.sin(Math.PI * t) * 15;
-
-            if (t >= 0.45 && t <= 0.55 && !wallHitRef.current) {
-              wallHitRef.current = true;
-
-              if (wallRef.current) {
-                wallRef.current.animate(
-                  [
-                    { transform: "translateY(55px) translateX(0)" },
-                    {
-                      transform:
-                        "translateY(53px) translateX(0) rotate(-0.2deg)",
-                    },
-                    {
-                      transform:
-                        "translateY(54px) translateX(0) rotate(0.1deg)",
-                    },
-                    { transform: "translateY(55px) translateX(0) rotate(0)" },
-                  ],
-                  {
-                    duration: 260,
-                    easing: "cubic-bezier(0.2, 0.8, 0.3, 1)",
-                  },
-                );
-              }
-            }
-          } else {
-            const t = Math.min((p - 0.88) / 0.12, 1);
-
-            // 4번을 지나 오른쪽으로 이동
-            x = 90 + t * 10;
-            y = ROAD_Y;
-            zIndex = 40;
-            rotation = 0;
-
-            // 개미의 대가리부터 포털에 빨려 들어가듯 사라짐
-            if (t > 0.45) {
-              const disappear = (t - 0.45) / 0.55;
-
-              antRef.current.style.clipPath = `
-  inset(
-    0
-    ${disappear * 100}%
-    0
-    0
-  )
-`;
-            } else {
-              antRef.current.style.clipPath = "none";
-            }
-
-            if (t >= 1) {
-              antRef.current.style.display = "none";
-            }
-          }
-
-          /*
-           * ========================================
-           * 실제 개미 위치 적용
-           * ========================================
-           */
-          antRef.current.style.left = `${x}%`;
-          antRef.current.style.top = `${y}%`;
-          antRef.current.style.zIndex = `${zIndex}`;
-
-          antRef.current.style.transform = `
-            translate(-50%, -50%)
-            rotate(${rotation}deg)
-          `;
-        }
       }
 
       frameId = requestAnimationFrame(animate);
@@ -375,11 +290,9 @@ function Workflow() {
     };
   }, []);
 
-  /*
-   * ==========================
-   * 개미 클릭
-   * ==========================
-   */
+  // ==========================
+  // 개미 클릭
+  // ==========================
   const handleAntClick = () => {
     if (droppedRef.current) return;
 
@@ -600,7 +513,6 @@ function Workflow() {
           전문가 검토
         </div>
 
-        {/* 3번 풀숲 - translate-y-[-30px] 고정 */}
         <div
           className="
             absolute
@@ -638,17 +550,25 @@ function Workflow() {
           text-center
         "
       >
-        <img
-          ref={wallRef}
-          src="/wall.png"
-          alt=""
+        {/* ★ wall 기준 위치는 그대로 고정 */}
+        <div
           className="
             mb-[5px]
-            w-[100px]
-            object-contain
             translate-y-[55px]
           "
-        />
+        >
+          {/* ★ 이 wrapper만 충돌 시 위로 움직임 */}
+          <div ref={wallRef}>
+            <img
+              src="/wall.png"
+              alt=""
+              className="
+                w-[100px]
+                object-contain
+              "
+            />
+          </div>
+        </div>
 
         <div className="relative flex flex-col items-center justify-center">
           <div

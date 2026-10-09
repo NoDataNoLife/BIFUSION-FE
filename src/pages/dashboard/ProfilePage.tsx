@@ -493,9 +493,7 @@ export default function ProfilePage() {
                 comments: it.commentCount
               }
             }));
-            if (mapped.length > 0) {
-              setCommunityActivities(mapped);
-            }
+            setCommunityActivities(mapped);
           }
         })
         .catch((err) => {
@@ -1066,6 +1064,12 @@ export default function ProfilePage() {
             }`}
             onScroll={handleActivityScroll}
           >
+            {displayedActivities.length === 0 && (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                표시할 커뮤니티 활동이 없습니다.
+              </p>
+            )}
+
             {displayedActivities.map((activity) => {
               const typeTone =
                 activity.type === "showcase"

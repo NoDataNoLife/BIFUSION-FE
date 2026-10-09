@@ -130,7 +130,7 @@ export const useNotificationStore = create<NotificationState>((set) => ({
           notifications: items,
           totalElements: pageData.totalElements ?? items.length,
           totalPages: pageData.totalPages ?? 1,
-          currentPage: pageData.number ?? 0,
+          currentPage: pageData.page ?? 0,
           unreadCount: items.filter((n) => !n.isRead).length,
           isLoading: false,
         });

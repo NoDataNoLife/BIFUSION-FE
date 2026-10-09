@@ -228,7 +228,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const formData = new FormData();
           formData.append('certificationFile', file);
-          const response = await api.post('/users/me/expert', formData, {
+          const response = await api.post('/experts/me', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },

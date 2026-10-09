@@ -1,0 +1,201 @@
+{
+  "date": "2026-10-09",
+  "branch": "codex/fe-api-quick-fixes",
+  "checks": [
+    "인증: 올바른 주소·파일 필드·대기 상태",
+    "인증: 실패 시 성공 상태로 변경하지 않음",
+    "알림: 서버 page=2 유지·빈 목록 반영",
+    "활동: 빈 응답이 기존 예시 목록을 비움",
+    "활동: 실제 항목 매핑 유지",
+    "활동: 타인 프로필에서 본인 활동 요청하지 않음",
+    "활동: 빈 화면 안내 문구 포함"
+  ],
+  "scope": "실제 FE 함수에 모의 서버 응답을 넣은 검사. 운영 서버·브라우저 시연·배포는 미검증.",
+  "typecheck": {
+    "baseline": 36,
+    "after": 36,
+    "newErrors": 0,
+    "remaining": [
+      {
+        "file": "src/components/community/CreatePostModal.tsx",
+        "code": 6133,
+        "message": "'React' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/community/CreatePostModal.tsx",
+        "code": 6133,
+        "message": "'ChevronRight' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/community/forms/ShowcaseCreateForm.tsx",
+        "code": 6133,
+        "message": "'Plus' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/community/forms/ShowcaseCreateForm.tsx",
+        "code": 6133,
+        "message": "'setBatchSize' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'HardDrive' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'X' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'Tag' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'Clock' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'Award' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'CheckCircle' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'AlertCircle' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'onUpdate' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'isLoadingDetail' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'newName' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'setNewName' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'newDescription' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'setNewDescription' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'newTags' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 6133,
+        "message": "'setNewTags' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/AssetDatasetDetail.tsx",
+        "code": 2322,
+        "message": "Type '{ status: any; onRequestClick: () => void; onResultClick: () => void; }' is not assignable to type 'IntrinsicAttributes & ExpertVerificationCardProps'.   Property 'onRequestClick' does not exist on type 'IntrinsicAttributes & ExpertVerificationCardProps'."
+      },
+      {
+        "file": "src/components/dashboard/CreateAssetModal.tsx",
+        "code": 6133,
+        "message": "'React' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/QnaDetail.tsx",
+        "code": 6133,
+        "message": "'X' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/QnaDetail.tsx",
+        "code": 6133,
+        "message": "'Check' is declared but its value is never read."
+      },
+      {
+        "file": "src/components/dashboard/ReviewDetailPage.tsx",
+        "code": 2339,
+        "message": "Property 'draftComment' does not exist on type 'InspectionDetailResponse'."
+      },
+      {
+        "file": "src/components/dashboard/ReviewDetailPage.tsx",
+        "code": 2339,
+        "message": "Property 'draftComment' does not exist on type 'InspectionDetailResponse'."
+      },
+      {
+        "file": "src/components/dashboard/ReviewDetailPage.tsx",
+        "code": 2339,
+        "message": "Property 'finalComment' does not exist on type 'InspectionDetailResponse'."
+      },
+      {
+        "file": "src/components/dashboard/ReviewDetailPage.tsx",
+        "code": 2339,
+        "message": "Property 'finalComment' does not exist on type 'InspectionDetailResponse'."
+      },
+      {
+        "file": "src/pages/dashboard/AugmentResultPage.tsx",
+        "code": 6133,
+        "message": "'React' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/dashboard/AugmentSetupPage.tsx",
+        "code": 6133,
+        "message": "'isLoading' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/dashboard/InferenceResultPage.tsx",
+        "code": 6133,
+        "message": "'React' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/dashboard/InferenceResultPage.tsx",
+        "code": 6133,
+        "message": "'totalImages' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/dashboard/ProjectsPage.tsx",
+        "code": 6133,
+        "message": "'userInfo' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/dashboard/TrainResultPage.tsx",
+        "code": 6133,
+        "message": "'React' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/LandingPage.tsx",
+        "code": 6133,
+        "message": "'FeatureCard' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/LandingPage.tsx",
+        "code": 6133,
+        "message": "'ProcessStep' is declared but its value is never read."
+      },
+      {
+        "file": "src/pages/TestPage.tsx",
+        "code": 6133,
+        "message": "'cn' is declared but its value is never read."
+      }
+    ]
+  }
+}

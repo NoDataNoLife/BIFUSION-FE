@@ -1,6 +1,6 @@
 {
   "date": "2026-10-09",
-  "branch": "codex/fe-api-quick-fixes",
+  "branch": "fix/fe-api-quick-fixes",
   "checks": [
     "인증: 올바른 주소·파일 필드·대기 상태",
     "인증: 실패 시 성공 상태로 변경하지 않음",

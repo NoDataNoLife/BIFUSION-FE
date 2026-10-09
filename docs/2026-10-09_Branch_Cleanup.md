@@ -45,7 +45,7 @@
 | 원격 main | 기준 브랜치 |
 | 로컬 main | 미공유 문서 커밋 `c3fd5e6`과 병합 기록 `69ec301` 보존 |
 | 로컬·원격 fix/dataset-download-logic | 원격 main에 포함되지 않은 작업 있음 |
-| codex/fe-api-quick-fixes | 이번 수정·문서 작업 브랜치 |
+| fix/fe-api-quick-fixes | 이번 수정·문서 작업 브랜치 |
 
 로컬 main은 원격과 다른 이력이 있으므로 강제 초기화하지 않았습니다. 이번 작업은 최신 원격 main에서 시작했습니다.
 

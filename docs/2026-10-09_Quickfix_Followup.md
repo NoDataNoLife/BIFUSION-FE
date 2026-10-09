@@ -2,7 +2,7 @@
 
 [회의 준비 자료로 돌아가기](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)
 
-**작업 브랜치:** `codex/fe-api-quick-fixes`  
+**작업 브랜치:** `fix/fe-api-quick-fixes`  
 **기준 코드:** 원격 main `faaaf424`  
 작업 브랜치의 변경이며 main 병합·운영 서버 배포 완료와 구분합니다.
 

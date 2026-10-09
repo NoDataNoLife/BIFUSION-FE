@@ -11,7 +11,7 @@
 | 알림 페이지 | 서버 응답의 `page`를 현재 페이지로 저장 | 다음 페이지 화면 연결·오류 처리 |
 | 내 활동 빈 목록 | 빈 응답도 반영하고 ‘활동 없음’ 문구 표시 | 오류 시 예시 처리·다음 목록·노출값 구분 |
 
-수정은 `codex/fe-api-quick-fixes` 브랜치에 있습니다. main 병합·운영 배포 여부와 구분하세요.  
+수정은 `fix/fe-api-quick-fixes` 브랜치에 있습니다. main 병합·운영 배포 여부와 구분하세요.  
 [수정·검증 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Quickfix_Followup.md)
 
 > **현재 결론**  

@@ -1,5 +1,7 @@
 # BIFUSION-FE 초기 환경 세팅 및 트러블슈팅 로그
 
+현재 AI 연동·팀 공유 자료는 [문서 안내](docs/README.md)를 참고하세요.
+
 이 문서는 프로젝트의 초기 스타일 시스템(Tailwind CSS v4 + shadcn/ui 기반) 구축 과정과 발생했던 주요 이슈 및 해결 방법을 기록합니다.
 
 ## 0. vite+react preview 확인 방법

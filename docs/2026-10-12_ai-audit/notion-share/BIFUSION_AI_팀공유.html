@@ -1,0 +1,55 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BIFUSION AI 연동 — 팀 공유</title><style>body{max-width:940px;margin:40px auto;padding:0 24px;font:16px/1.8 "Malgun Gothic",sans-serif;color:#223449}h1{font-size:30px}h2{margin-top:44px;font-size:25px}h3{margin-top:26px;font-size:19px}img{max-width:100%;height:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #d8e0ea;padding:9px 12px;text-align:left}th{background:#edf3fa}blockquote{border-left:4px solid #4f7fb6;background:#f4f7fb;margin:12px 0;padding:8px 16px}li{margin:5px 0}code{background:#edf1f5;padding:2px 5px}hr{border:0;border-top:1px solid #d8e0ea;margin:32px 0}a{color:#225e9d}</style></head><body><h1>BIFUSION AI 연동 — 한눈에 보기</h1>
+<blockquote><strong>이번 목표:</strong> 실제 이미지로 증강 → 학습 → 추론을 끝내고, 새로고침 후에도 결과를 다시 보기.</blockquote>
+<blockquote></blockquote>
+<blockquote>2026.10.12 코드 기준 · <strong>GPU 실행 시험 전</strong></blockquote>
+<h2>1. 우리가 연결할 서비스</h2>
+<p><img src="assets/01_architecture.png" alt="서버별 역할과 현재 연결 상태"></p>
+<p><strong>FE는 화면, BE는 서비스 관리, ML은 AI 계산을 맡습니다.</strong> 점선은 추가 연결이 필요한 부분입니다.</p>
+<h2>2. 지금 어디까지 왔나?</h2>
+<table><thead><tr><th>항목</th><th>현재 상태</th><th>다음 행동</th></tr></thead><tbody>
+<tr><td>AI 코드·API</td><td>있음</td><td>실제 모델·GPU로 시험</td></tr>
+<tr><td>프론트 화면</td><td>시안·모의 동작 있음</td><td>실제 이미지·결과 연결</td></tr>
+<tr><td>백엔드 Job</td><td>AI 실행 연결 필요</td><td>작업·파일·상태 저장</td></tr>
+<tr><td>이미지 제한</td><td>문서와 검증이 다름</td><td>공통 제한 정하기</td></tr>
+<tr><td>결과 파일</td><td>S3와 로컬 읽기가 어긋남</td><td>다음 단계에서 읽기 연결</td></tr>
+</tbody></table>
+<p><strong>Job</strong>은 증강 한 번, 학습 한 번처럼 사용자가 실행한 작업 한 건입니다. <strong>API</strong>는 화면과 서버가 요청·결과를 주고받는 통로입니다.</p>
+<h2>3. 이번에 할 일 — 이 순서로</h2>
+<p><img src="assets/02_pipeline.png" alt="증강·학습·추론과 결과 전달"></p>
+<table><thead><tr><th>순서</th><th>작업</th><th>주 담당</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td>①</td><td>RunPod·모델 준비</td><td>ML · FE 협업</td><td>모델 로딩·GPU 계산 성공</td></tr>
+<tr><td>②</td><td>원본으로 증강</td><td>ML · BE · FE</td><td>실제 새 이미지와 데이터셋 생성</td></tr>
+<tr><td>③</td><td>학습 → 추론</td><td>ML · BE · FE</td><td>같은 결과를 이어받아 분류 성공</td></tr>
+<tr><td>④</td><td>화면·Job 연결</td><td>BE · FE</td><td>새로고침 후 상태·결과 유지</td></tr>
+<tr><td>⑤</td><td>레시피·개미·용량</td><td>정책 합의 → BE · FE</td><td>실행값·차감·파일 사용량 일치</td></tr>
+</tbody></table>
+<p><strong>RunPod</strong>는 GPU 컴퓨터를 빌리는 서비스입니다. <strong>모델 로딩</strong>은 학습된 모델 파일을 읽어 계산 준비를 하는 과정입니다.</p>
+<h2>4. 프론트에서 먼저 바꿀 것</h2>
+<ul>
+<li>☐ 팀원 시안의 <strong>최신 입력값</strong> 반영.</li>
+<li>☐ 진행률 바·% 제거 → <strong>대기 / 실행 / 성공 / 실패</strong> 유지.</li>
+<li>☐ 모의 작업·고정 점수 → <strong>실제 Job과 결과</strong> 연결.</li>
+<li>☐ 별도 Query 업로드 필수 항목 제거 → <strong>완료 데이터셋 선택</strong>.</li>
+<li>☐ 포크 레시피 → <strong>내 프로젝트·원본 선택 후 증강</strong>.</li>
+</ul>
+<p><strong>Query</strong>는 기존 데이터셋에서 뽑는 분류 연습 이미지입니다. <strong>포크</strong>는 레시피를 내 사본으로 가져오는 것입니다.</p>
+<h2>5. 팀에서 결정할 것</h2>
+<table><thead><tr><th>결정</th><th>질문</th></tr></thead><tbody>
+<tr><td>실행 재료</td><td>어떤 외부 코드·모델 파일·GPU를 쓸까?</td></tr>
+<tr><td>이미지 제한</td><td>최소·최대 장수, 용량, 픽셀 크기는?</td></tr>
+<tr><td>API 형식</td><td>파일·설정·작업 번호를 어떻게 전달할까?</td></tr>
+<tr><td>개미</td><td>차감·환급·보상은 언제, 어떤 조건으로?</td></tr>
+<tr><td>저장 용량</td><td>사용자별인가 팀별인가? 참조 중인 파일은 어떻게 삭제할까?</td></tr>
+</tbody></table>
+<p><strong>회의 결정 유지:</strong> 프로젝트 수 무제한 · 저장량 한도 있음 · 진행률 바 우선 제거 · 현금화 제외.</p>
+<h2>6. 첫 시험이 끝났다고 말하려면</h2>
+<ul>
+<li>☐ 실제 원본 → 증강 → 학습 → 추론 성공.</li>
+<li>☐ 새로고침 후 같은 결과 조회.</li>
+<li>☐ 실패가 가짜 성공으로 바뀌지 않음.</li>
+<li>☐ 중복 클릭이 중복 실행·차감으로 이어지지 않음.</li>
+</ul>
+<p>작은 설정으로 먼저 <strong>연결</strong>을 확인하고, 품질·속도·비용은 그다음 측정합니다.</p>
+<h2>필요한 내용만 더 보기</h2>
+<p><a href="BIFUSION_AI_상세설명.html">파라미터·업로드 제한·API·RunPod·용어 상세 설명</a></p>
+<p>상세 설명은 해당 작업을 구현하거나 논의할 때 찾아 읽으면 됩니다.</p></body></html>

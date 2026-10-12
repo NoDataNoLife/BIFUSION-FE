@@ -1,6 +1,8 @@
+> **2026-10-12 최신 조사 안내:** 이 문서는 10월 9일 기준 기록입니다. ML Medfusion 브랜치의 파라미터 변경과 RunPod 배포 점검, 회의 결정은 [최신 ML·pip 전수 점검](../2026-10-12_ai-audit/README.md)을 우선 확인하세요. 특히 증강의 steps/strength/finetune_steps와 학습의 q_query/episodes_per_epoch 반영, 진행률 바 제거 결정이 추가됐습니다.
+
 # BIFUSION 회의 준비 자료
 
-**기준일 · 2026년 10월 9일**  
+**기준일 · 2026년 10월 9일**
 최근 작업, API 명세, ML 문의를 합쳐 정리했습니다.
 
 ## 회의 직전 반영한 수정 · 10월 9일
@@ -11,14 +13,23 @@
 | 알림 페이지 | 서버 응답의 `page`를 현재 페이지로 저장 | 다음 페이지 화면 연결·오류 처리 |
 | 내 활동 빈 목록 | 빈 응답도 반영하고 ‘활동 없음’ 문구 표시 | 오류 시 예시 처리·다음 목록·노출값 구분 |
 
-수정은 `fix/fe-api-quick-fixes` 브랜치에 있습니다. main 병합·운영 배포 여부와 구분하세요.  
-[수정·검증 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Quickfix_Followup.md)
+수정은 `fix/fe-api-quick-fixes` 브랜치에 있습니다. main 병합·운영 배포 여부와 구분하세요.
+[수정·검증 상세](2026-10-09_Quickfix_Followup.md)
 
-> **현재 결론**  
-> 일반 기능의 서버 요청은 상당 부분 연결되어 있습니다.  
+> **현재 결론**
+> 일반 기능의 서버 요청은 상당 부분 연결되어 있습니다.
 > 핵심 AI 기능은 **FE 화면 → BE 연결 → ML 계산 → 결과 파일 전달**을 함께 완성해야 합니다.
 
 ---
+
+## AI 화면과 Medfusion 상세 대조 · 10월 9일
+
+화면 코드 9개와 프로젝트 작업 목록, BE 작업 API, Medfusion 브랜치의 실제 요청·응답을 함께 확인했습니다. **AI 작업 실패가 시뮬레이션으로 바뀌며, 결과 화면의 장수·성능·품질·검수 표시에는 고정 예시가 남아 있습니다.** 앞서 수정한 전문가 신청·알림·내 활동 3건은 이 AI 연동을 완성한 수정이 아닙니다.
+
+- [화면별 현재 동작·문제·수정 순서](../2026-10-12_ai-audit/README.md)
+- [현재 ML API와 BE 연결 제안, Notion 수정 항목](../2026-10-12_ai-audit/BACKEND_REQUEST.md)
+
+ML API가 구현된 상태와 서비스에서 실제 실행·재조회·다운로드까지 확인된 상태를 구분하세요. 이번 대조는 운영 AI 계산을 실행하지 않은 코드 분석입니다.
 
 ## 먼저 읽을 순서
 
@@ -29,11 +40,11 @@
 | 현재 기능별 상태 확인 | **4. 기능별 현황** |
 | 문제가 생기는 이유 이해 | **5. 중요한 문제 5개** |
 | 담당·기한 정하기 | **7. 회의 결정 기록** |
-| 본인 커밋 하나씩 확인 | [본인 커밋 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Commit_Followup.md) |
-| 과거 ML 문의에 답변 준비 | [문의 17개 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_ML_Inquiry_Followup.md) |
-| Notion 명세를 고칠 때 | [API 84개 대조표](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.md) |
+| 본인 커밋 하나씩 확인 | [본인 커밋 상세](2026-10-09_Commit_Followup.md) |
+| 과거 ML 문의에 답변 준비 | [문의 17개 상세](2026-10-09_ML_Inquiry_Followup.md) |
+| Notion 명세를 고칠 때 | [API 84개 대조표](2026-10-09_API_Spec_Reconciliation.md) |
 
-**상태를 읽는 기준:**  
+**상태를 읽는 기준:**
 ‘연결됨’은 화면에 요청 코드가 있다는 의미입니다. 실제 서버에서 저장·재조회까지 확인한 ‘완료’와는 구분했습니다.
 
 ---
@@ -97,7 +108,7 @@
 
 커밋은 변경 기록이고, PR은 변경을 검토해 합치는 요청입니다. 다른 사람의 작업을 본인이 병합한 기록과 직접 구현한 기록은 구분했습니다.
 
-[본인 커밋을 하나씩 보기 →](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Commit_Followup.md)
+[본인 커밋을 하나씩 보기 →](2026-10-09_Commit_Followup.md)
 
 ### 최신 버전은 서로 다릅니다
 
@@ -140,7 +151,7 @@
 
 **Fork**는 다른 레시피를 내 자산으로 복사하는 기능입니다. 현재 버튼은 화면 내부 상태만 바꾸므로 실제 복사본 생성과 연결해야 합니다.
 
-[기능별 정확한 API 판정 보기 →](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.md)
+[기능별 정확한 API 판정 보기 →](2026-10-09_API_Spec_Reconciliation.md)
 
 ---
 
@@ -234,7 +245,7 @@ Query는 별도 평가용 이미지입니다. FE는 이를 선택하게 하지�
 - API 모의 테스트: 실제 작업 대신 가짜 접수 번호로 시험합니다.
 - 3단계 함수 테스트: 같은 프로그램 안에서 계산 함수를 실행합니다. 별도 컨테이너 파일 공유나 FE→BE→ML 연결을 증명하지 않습니다.
 - 문서의 96.5% 같은 숫자: 예시이며 프로젝트 실험 성적을 증명하지 않습니다.
-- FE 타입 검사 결과와 이번 수정 전후 비교는 [수정·검증 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Quickfix_Followup.md)에 기록했습니다. 기존 오류 전체 해결과 구분해야 합니다.
+- FE 타입 검사 결과와 이번 수정 전후 비교는 [수정·검증 상세](2026-10-09_Quickfix_Followup.md)에 기록했습니다. 기존 오류 전체 해결과 구분해야 합니다.
 
 타입 검사는 코드의 데이터·속성 이름이 맞는지 확인하는 검사입니다. 검수 의견과 버튼 속성 이름 오류 등이 있어 정리가 필요합니다. 기존 오류 전체를 랜딩 PR #58이 새로 만든 것으로 해석하면 안 됩니다.
 
@@ -290,7 +301,7 @@ Query는 별도 평가용 이미지입니다. FE는 이를 선택하게 하지�
 
 ‘7일 보존’, 오류 코드, 취소의 404/409 응답은 제안이며 적용 완료가 아닙니다.
 
-[취소 6개 + 추가 문의 11개를 하나씩 보기 →](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_ML_Inquiry_Followup.md)
+[취소 6개 + 추가 문의 11개를 하나씩 보기 →](2026-10-09_ML_Inquiry_Followup.md)
 
 ---
 
@@ -308,7 +319,7 @@ Query는 별도 평가용 이미지입니다. FE는 이를 선택하게 하지�
 | 보존·취소·오류 처리 | ML·BE·FE | __________________ |
 | 레시피·알림·활동·명세 정리 | FE·BE | __________________ |
 
-**각 과제에 한 가지 증거를 적으세요.**  
+**각 과제에 한 가지 증거를 적으세요.**
 예: ‘실제 dataset_id로 학습 성공’, ‘새로고침 후 검수 의견 유지’, ‘취소 직후 다음 GPU 작업 성공’.
 
 ### 코드를 몰라도 확인할 완료 기준
@@ -346,8 +357,8 @@ Query는 별도 평가용 이미지입니다. FE는 이를 선택하게 하지�
 
 **화면 연결 / 규격 불일치 / 예시 / 실서버 검증**을 구분하고, 실제 검증 날짜·결과를 별도 열에 적는 것이 좋습니다.
 
-[API 84개 대조표 →](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.md)  
-[Notion 비교용 CSV →](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.csv)
+[API 84개 대조표 →](2026-10-09_API_Spec_Reconciliation.md)
+[Notion 비교용 CSV →](2026-10-09_API_Spec_Reconciliation.csv)
 
 ---
 
@@ -355,10 +366,10 @@ Query는 별도 평가용 이미지입니다. FE는 이를 선택하게 하지�
 
 ### 자료
 
-- [본인 커밋 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Commit_Followup.md)
-- [과거 ML 문의 17개](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_ML_Inquiry_Followup.md)
-- [편집 전 통합 원문 — 모든 기존 설명·근거](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief_Archive.md)
-- [TypeScript 검사 결과](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_TypeScript_Check.json)
+- [본인 커밋 상세](2026-10-09_Commit_Followup.md)
+- [과거 ML 문의 17개](2026-10-09_ML_Inquiry_Followup.md)
+- [편집 전 통합 원문 — 모든 기존 설명·근거](2026-10-09_Integrated_Meeting_Brief.md)
+- [TypeScript 검사 결과](2026-10-09_TypeScript_Check.json)
 
 ### 확인한 것
 

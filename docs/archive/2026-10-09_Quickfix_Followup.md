@@ -1,6 +1,6 @@
 # 회의 직전 FE 수정 · 2026년 10월 9일
 
-[회의 준비 자료로 돌아가기](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)
+[회의 준비 자료로 돌아가기](2026-10-09_Integrated_Meeting_Brief.md)
 
 **작업 브랜치:** `fix/fe-api-quick-fixes`  
 **기준 코드:** 원격 main `faaaf424`  
@@ -32,7 +32,7 @@ API 주소는 공통 `/api/v1` 앞부분을 생략했습니다. 기존 요청 �
 
 처음 로컬 main 검사에서는 37건이었지만, 최신 랜딩 코드가 있는 원격 main 기준의 동일한 전후 비교에서는 36건입니다. 이번 수정으로 기존 오류가 1건 해결됐다는 뜻은 아닙니다.
 
-[검사 결과 JSON](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Quickfix_Verification.json)
+[검사 결과 JSON](2026-10-09_Quickfix_Verification.json)
 
 ## 여전히 남은 것
 
@@ -50,4 +50,4 @@ API 주소는 공통 `/api/v1` 앞부분을 생략했습니다. 기존 요청 �
 
 회의 자료, API 대조 자료, CSV의 관련 항목에 반영했습니다. 최초 조사와 원문 아카이브는 당시 기록으로 보존했습니다.
 
-[브랜치 정리 기록](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Branch_Cleanup.md)
+[브랜치 정리 기록](2026-10-09_Branch_Cleanup.md)

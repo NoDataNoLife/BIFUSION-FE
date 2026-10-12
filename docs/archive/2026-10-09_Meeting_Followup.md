@@ -1,259 +1,8 @@
-# BIFUSION 총정리 — 최근 작업·API·ML 과거 문의 통합본
-기준: 2026-10-09. 새로 첨부한 두 문서와 앞서 작성한 FE·BE·ML 회의 자료를 합쳤다.
+> **10월 9일 후속 수정:** 전문가 인증 주소·알림 page·내 활동 빈 응답 처리를 수정했습니다. 아래는 최초 조사·과거 커밋 설명이며 최신 상태는 [회의 준비 자료](2026-10-09_Integrated_Meeting_Brief.md)와 [수정·검증 상세](2026-10-09_Quickfix_Followup.md)를 확인하세요.
 
-**먼저 볼 부분:** 아래 A~G는 이번 첨부 자료로 추가·보완한 내용이다. 뒤의 ‘기존 작업·본인 커밋·일반 API 전체 정리’에는 이전 종합 자료를 그대로 포함했다. API 84개 행 대조표는 별도 링크로 연결했다.
+> 추가 첨부 ML 질의응답과 초기 명세까지 합친 [최신 통합본](2026-10-09_Integrated_Meeting_Brief.md)을 우선 참고하세요.
 
-## A. 현재 상태를 한 번에 이해하기
-
-BIFUSION은 ‘소량의 정상/비정상 이미지로 증강 데이터를 만들고, 그 데이터로 분류 모델을 학습한 뒤, 새 이미지를 분류하는 서비스’를 목표로 한다. FE는 화면, BE는 계정·권한·기록 관리 서버, ML은 AI 계산 서버다.
-
-**전체 상황은 다음과 같다.**
-- 일반 기능: 로그인·프로젝트·커뮤니티·일반 데이터셋 등의 요청 연결은 상당 부분 있음.
-- AI 화면: 설정→진행→결과 화면은 있지만, 서버 오류 때 예시 성공으로 넘어가며 이미지 내용도 아직 실전송되지 않음.
-- BE: 확인한 main/develop에는 AI Job 생성·상태 조회·결과 저장·ML 연결부가 없음.
-- ML: 최초 main과 최신 Medfusion 브랜치를 구분해야 함. 최신 생성 방식은 Medfusion+업로드별 추가 학습이며 별도 코드·모델 파일 필요.
-- **ML 파일 연결:** 증강·학습·분류 각각의 함수가 있어도 워커 간 산출물을 공유/다운로드하는 연결이 빠져 있음.
-- 운영: 첨부 답변 당시 ML 배포·환경 설정·S3 설정은 미완료. 지금 로컬 ML에도 .env가 없음. 그 이후 외부에서 운영 환경을 준비했는지는 확인되지 않음.
-- 과거 요구: 취소·작업 등록부·결과 보존·파일 key·단계 문구 등 다수가 ‘가능한 방향’으로 답변됐을 뿐 구현 완료가 아님.
-- 검수/알림/활동/레시피: 요청 규격·실제 데이터·오류/빈 목록 처리가 남음.
-- 최신 FE 앱 타입 검사는 앞선 확인에서 36건 실패. 이번에는 이를 다시 실행하지 않았음.
-
-**핵심은 FE만의 미연동 문제가 아니라, FE·BE·ML·파일 저장·배포를 함께 완성해야 하는 상태라는 점이다.**
-
-### 연결이 끊긴 곳을 예로 들면
-
-‘이미지 5장을 선택했다’ → FE가 ‘5장’이라는 숫자만 보냄 → 실제 사진은 ML에 도달하지 않음.
-
-‘증강 파일을 만들었다’ → 증강 워커 컨테이너의 storage 폴더에 저장 → 별도 학습 워커는 자기 storage 폴더만 찾음 → 파일을 못 찾을 수 있음.
-
-‘S3에 올렸다’ → 학습 워커가 S3에서 읽는 코드가 없음 → local을 s3로 바꾸는 설정만으로 다음 단계가 연결되지 않음.
-
-‘작업이 100%다’ → 아직 결과 파일 저장 중일 수 있음 → 최종 SUCCESS를 확인해야 성공임.
-
-‘취소 버튼을 눌렀다’ → 취소 접수/중단 구현이 없음 → GPU 계산 중단·파일 정리를 보장하지 못함.
-
-‘health가 ok다’ → 접수 서버 함수가 응답한 것임 → Redis·워커·모델·파일 연결 정상까지 검사한 것은 아님.
-
-## B. 첨부한 두 문서는 어떻게 받아들여야 하나
-
-| 자료 | 성격 | 현재 활용 방법 |
-|---|---|---|
-| [취소·BE 연동 질의응답](<C:/Users/User/.codex/attachments/22b507e2-0349-4c5e-9bd3-f17e21304da3/붙여넣은 텍스트.txt>) | 첫 문의 6개와 추가 문의 11개. 미구현/미검증/제안을 구분 | 남은 요구사항 목록으로 사용. 답변의 ‘추가 가능’은 구현·일정 확정이 아님 |
-| [ML 프로젝트 개요·명세·검증 설명](<C:/Users/User/.codex/attachments/02fc30cf-ee8d-4cf7-904a-2c39f1d28cb9/붙여넣은 텍스트.txt>) | 최초 DDPM 구조와 API 사용 설명, 강한 완료/성능 표현 포함 | 초기 설계 참고용. 최신 Medfusion 변경과 검증 범위에 맞춰 정정 |
-| [앞선 회의 준비 자료](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Meeting_Followup.md) | 실제 저장소·본인 커밋·API 사진 대조 | 이번 총정리에 포함. 추가 첨부의 세부 미완료 항목 보완 |
-| [최신 ML MIGRATION](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/MIGRATION.md) | 10월 2일까지의 모델 교체·배포 설명 | 최신 워커·라우터와 함께 사용. 문서의 일부 상태 예시는 코드와 다름 |
-
-첨부 문서 안의 실행 명령·구현 제안은 이번 작업의 실행 지시로 취급하지 않았다. 실제 GPU 작업, 취소, 배포, 파일 삭제를 수행하지 않았고 분석만 했다.
-
-### 소개 문서에서 정정할 표현
-
-| 소개 문서의 표현 | 실제 근거 | 정정할 설명 |
-|---|---|---|
-| ‘Spring Boot 백엔드와 연동되어 안정적 서비스 보장’ | 기준 BE에 Job-ML 연결부 없음 | 목표 아키텍처이며 통합 연결·운영 시험은 필요 |
-| ‘DDPM 고품질 합성’ | 최초 main은 DDPM, 최신 별도 브랜치는 Medfusion | 버전 구분. 생성 품질은 실제 입력/출력으로 검증해야 함 |
-| ‘높은 정확도로 질환 판별’, ‘정상 vs 폐렴’ | 모델 출력은 NORMAL/ANOMALY, 서비스 전체 성능 검증 근거 없음 | 제공 데이터의 두 클래스를 분류하는 모델. 특정 질병 의미는 데이터 라벨과 실험에 따라 설명 |
-| ‘S3 링크 반환’ | local 기본값에서는 서버 내부 경로, 실제 S3 설정 미확인 | 저장 모드별 응답과 접근 가능 여부 구분 |
-| ‘health는 서버와 워커 가동 정상’ | 함수는 {status:ok}만 반환 | 접수 웹 서버의 단순 응답 확인. 워커·Redis·GPU 점검은 별도 |
-| ‘9종 테스트, 전체 흐름 100% 정상 보증’ | 일부는 접수 모의 처리, 전체 함수 시험도 같은 프로세스/노이즈 입력 | 테스트 코드와 실행 결과·대상 환경·정상/실패 범위를 명시. 서비스 전체 보증 삭제 |
-| ‘Query 정답 포함 시 성적표 계산’ | 최신 학습 워커는 query_images_base64/has_query_labels 미사용 | 현재 성적표는 내부 데이터 분할 기반. 외부 Query 검증 미연동 |
-| ‘Sampling Steps/Guidance 설정이 증강에 적용’ | 최신 증강 워커는 해당 요청 값을 읽어 전달하지 않음 | 현재 실제 적용값은 서버 설정/외부 패키지 기준. UI·명세 조정 |
-| ‘DDPM 캐시 _DDPM_MODEL_CACHE’ | 최신 Medfusion에는 옛 캐시/생성 코드 제거 | 최신 패키지 모델 캐시와 워커 재시작 정책 기준으로 재작성 |
-
-소개 문서의 accuracy=0.965, AUROC=0.984, confidence=0.942 같은 JSON 숫자는 **실제 서비스 실험 성적을 증명하지 않는다.** 예시를 프로젝트 결과 수치로 발표/보고서에 그대로 옮기면 안 된다.
-
-## C. 처음 취소 문의 6개 + 추가 문의 11개, 지금 어디까지 됐나
-
-판정은 최신 Medfusion f473b60 코드와 기준 BE/FE를 대조한 결과다. ‘미구현’은 확인한 코드에 없다는 뜻이며 별도 미공유 작업이 없다는 단정은 아니다.
-
-### 취소 관련 6개
-
-| 번호 | 당시 요구 | 현재 확인 | 필요한 후속·담당 |
-|---|---|---|---|
-| 취소1 | 증강/학습/분류 /{job_id}/cancel | 세 취소 API 미구현. FE의 /jobs/{id}/cancel도 BE 미구현 | ML 취소 계약, BE 권한/전달, FE 실제 응답 반영 |
-| 취소2 | 대기·실행·종료·미존재 상태별 동작 | 작업 등록부·취소 확인/중단 루프 없음 | ML: 발급 ID/종류 등록, 취소 처리. 종료 건409·미존재404는 제안이며 현재 동작 아님 |
-| 취소3 | GET과 같은 응답, 취소 시 progress 유지 | 취소 전용 응답 없음 | ML: 마지막 진행률 저장. FE: 취소 접수와 중단 완료 구분 |
-| 취소4 | 취소 후에도 GET으로 상태/기록 조회 | REVOKED→CANCELLED 변환은 있음. 실제 취소 기능/보존은 없음, 해당 상태 progress는0 | ML·BE: 중단 완료 상태, 마지막 progress, 보존 기간/재조회 |
-| 취소5 | GPU 메모리 반환·다음 작업 정상 실행 | 실GPU 검증 없음. 과거 DDPM 캐시 설명은 최신 기준으로 변경 필요 | ML·배포: 중단 후 다음 작업 성공, 반복 취소 메모리 누적 점검 |
-| 취소6 | 중간 S3 파일 정리 | 취소 연계 파일 정리 없음 | ML·BE: 중단 확인 후 해당 작업의 prefix만 정리. 입력으로 쓴 이전 작업 파일은 유지 |
-
-**취소 상태 매핑이 있다는 것과 실제 취소 기능이 있다는 것은 다르다.** 컨베이어에 ‘중지됨’ 표시판이 있어도 멈추는 스위치와 장치가 연결되지 않은 상황에 가깝다.
-
-첨부 답변의 실행 중 취소 우선안은 계산 반복에서 취소 요청을 확인하는 방식이다. 계산이 취소 요청을 받고 스스로 멈추도록 하는 것을 뜻한다. 프로세스를 바로 강제 종료하는 방식과 다르다. 어느 방식이든 실제 중단 확인, 완료와 취소가 동시에 발생하는 상황, 파일/GPU 정리가 함께 필요하다. 이 단계의 404/409/마지막progress 응답은 아직 제안이다.
-
-### 추가 연동 문의 11개
-
-| 번호 | 당시 요구 | 현재 확인 | 필요한 후속·담당 |
-|---|---|---|---|
-| 추가1 | 정확한 실행/실패 status | 외부 PENDING/STARTED/RUNNING/SUCCESS/FAILED/CANCELLED 유지 | BE: STARTED→RUNNING, SUCCESS→서비스 완료 상태 등 변환 합의. 내부 FAILURE와 외부 FAILED 구분 |
-| 추가2 | error 형식·오류 종류 | error 문자열. error_code 없음. 최신은 주요 가짜 모델/데이터 대체 제거 | ML: 오류 코드 필요 여부 합의. FE: 실패 이유 표시. 제안된 GPU_OUT_OF_MEMORY 등의 코드는 아직 없음 |
-| 추가3 | 없는 job_id는404 | AsyncResult만 조회해 모르는 ID도200/PENDING 가능 | ML: 작업 등록부, ID/종류 검증. 미존재와 결과 만료 구분 |
-| 추가4 | 결과를 며칠 보존 | result_expires 명시 없음, Compose Redis 영속 저장 설정 없음 | ML·배포: 보존 기간·재시작 정책. BE: 최종 기록 DB 저장. ‘7일’은 제안, 적용 완료 아님 |
-| 추가5 | 결과 URL과 S3 key/bucket | 저장 기능은1시간 임시 URL 반환, key/bucket 응답은 없음 | ML: dataset_key/preview_key/model_key/image_keys+bucket. BE: 필요할 때 URL 재발급 |
-| 추가6 | 입력 이미지 제한·S3 key 입력 | base64 입력만 지원. 장수/본문 제한 명시 없음. Query 항목은 학습 미사용 | FE·BE·ML: 실제 파일 전달 방식, 장수/크기, Query 사용 여부 합의 |
-| 추가7 | 동시 실행·사용자 제한 | 큐별 concurrency=1. 세 종류가 동시에 실행 가능 | ML·배포: 전체 GPU 제한. BE: 사용자별 요청 제한. 1은 서버 전체1이 아님 |
-| 추가8 | 배포 주소·위치·인증 | 첨부 당시 미배포. 코드 포트8000, API key 인증 없음 | ML·배포·BE: 실제 주소/접근 경로/인증/버전 확정. localhost:8000은 배포 주소 아님 |
-| 추가9 | 저장 버킷·파일 경로·다음 단계 읽기 | local 기본. S3 저장은 있으나 이전 산출물 읽기는 local 탐색. storage 공유 볼륨 없음 | ML·배포: 공유 storage 또는 S3 다운로드 연결. 결과 저장과 모델 가중치 위치 분리 |
-| 추가10 | currentStep 문구 | 워커 metadata.message는 존재, GET은 미반환 | ML: 실제 단계문구와 갱신시각 반환. 최신 증강은 Normal/Anomaly 클래스별 단계 있음 |
-| 추가11 | progress 단위·장시간 정체 | 계산 단계/학습 반복 완료 때 갱신. 파일 저장 전100 가능 | ML: 저장 단계 반영. FE: status만으로 완료 판정, 임의 진행률로 성공 만들지 않기 |
-
-현재 실패와 취소 상태 GET은 마지막 진행률을 별도로 저장하지 않으므로 progress 기본값0이 된다. created_at/updated_at 필드도 형식에는 있지만 라우터에서 채우지 않아 null이다. 따라서 ‘언제 시작·갱신됐고 어느 단계에서 실패했는지’까지 기록으로 관리하려면 보완이 필요하다.
-
-결과 보존의 ‘1일’은 첨부 답변이 설명한 Celery 기본값이지 운영 서버에서 측정한 보존 기간이 아니다. 코드에 기간을 명시하고 실제 환경 설정/재시작 시험으로 확인해야 한다.
-
-## D. 기존 자료보다 우선순위를 높여야 하는 문제
-
-### 1. 저장소 연결은 AI의 다음 단계 실행을 막는 문제
-
-컨테이너는 프로그램을 별도 실행 공간에 묶은 것이다. 같은 서버에 있어도 파일 폴더를 자동으로 공유하지 않는다.
-
-현재 Compose는 증강·학습·분류 워커를 각각 별도 공간으로 띄우고 ./models를 /app/models로 연결한다. 하지만 실제 결과는 기본 storage/datasets, storage/models에 저장되고 학습 임시 모델은 /tmp/models에 생긴다. 이 storage와 /tmp는 현재 구성에서 워커 간 공통 폴더로 연결되어 있지 않다.
-
-학습 워커는 local storage/datasets/{dataset_id}/support_aug.npz 등을 찾는다. 분류 워커도 local storage/models와 /tmp/models 등을 찾는다. S3에서 파일을 받아오는 연결은 이 경로에 없다.
-
-따라서 기본 Compose/local 구성에서는 다음과 같이 이어질 수 있다.
-
-```mermaid
-flowchart LR
-  A["증강 워커: 파일 생성"] --> F["증강 컨테이너의 storage"]
-  F -. "현재 공유/다운로드 연결 없음" .-> T["학습 워커: 파일 못 찾음"]
-  T --> E["FAILED"]
-```
-
-최초 main의 임의 데이터 대체는 이 문제를 가릴 수 있었지만 최신 Medfusion은 파일이 없으면 실패한다. **최신의 정직한 실패 처리를 받아들이려면 저장소 연결도 같이 해결해야 한다.**
-
-결정할 수 있는 방향은 공유 저장소 또는 S3다. 공유 저장소라면 실제 산출물 폴더를 모든 관련 워커에 일관되게 연결하고 영속 보관해야 한다. S3라면 생성 후 업로드뿐 아니라 다음 워커의 다운로드·실제 bucket/key 전달이 필요하다. 배포 방식과 함께 선택할 사안이며 이번에 변경하지 않았다.
-
-### 2. 화면 설정값을 바꿔도 계산에 적용되지 않을 수 있음
-
-요청 스키마는 서버가 받는 항목 목록이다. 항목이 목록에 있다고 실제 계산이 사용하는 것은 아니다.
-
-| 항목 | 최신 코드에서의 실제 사용 | 명세/FE에 필요한 정리 |
-|---|---|---|
-| 증강 num_samples_per_class | 읽어서 클래스별 생성 수로 전달 | 적용됨. 원본 장수+합성 장수 구분 |
-| 증강 seed | 생성 함수로 전달 | 실제 재현성은 외부 패키지·실행 환경 포함 검증 |
-| 증강 sampling_steps | 스키마에 있으나 증강 워커가 읽어 전달하지 않음 | 화면에서 변경한 값의 효과를 보장하지 않기. 실제 계산 경로에 연결 또는 서버 고정 설정 안내 |
-| 증강 guidance_scale | 스키마에 있으나 증강 워커가 읽어 전달하지 않음 | 요청값7.5와 서버 설정을 구분. 외부 패키지 적용 경로 확인 |
-| 증강 model_name | 옛 DDPM 항목이 스키마에 남음, 최신 증강 계산 미사용 | 최신 모델 선택 방식으로 명세 정리 |
-| 학습 dataset_id/k_shot/epochs | 읽어서 실제 학습 함수로 전달 | 진짜 산출물 ID·실제 파일 읽기 필요 |
-| 학습 query_images_base64/has_query_labels | 스키마에 있으나 학습 워커는 미사용 | 외부 검증 이미지를 쓸지 구현 또는 FE 필수 첨부 제거/설명 |
-| 추론 model_id/images_base64 | 실제 모델 찾기·유효 이미지 분류에 사용 | 정상 학습 모델과 실제 이미지 전달 필수 |
-| 단독 생성 sampling_steps | 추론의 generation 모드에서는 생성 함수에 전달 | 증강에서 미사용이라는 판정을 모든 생성 API로 일반화하지 않기 |
-
-Query는 모델을 평가하려고 따로 넣는 이미지다. 현재 FE 학습 화면은 Query 파일을 고르도록 요구하지만 실제 내용 대신 장수만 보내고, ML 학습도 해당 Query 항목을 쓰지 않는다. 그래서 이 첨부 흐름이 실제 평가 기능처럼 보이는 것을 정리해야 한다.
-
-최신 모델 성적표는 증강 데이터 내부를 학습/검증 부분으로 나누어 계산한다. 별도 업로드 Query의 정답 여부로 성적표가 켜지고 꺼지는 현재 구현이 아니다. 실제 연구 성능을 평가하려면 검증 데이터 구성과 원본·변주본 분리 기준도 확인해야 한다.
-
-### 3. health와 테스트 성공을 서비스 전체 성공으로 읽으면 안 됨
-
-health 함수는 고정 {status:ok}를 반환한다. Redis 연결, 작업 수신 가능한 워커, GPU 모델 로딩, 저장소 읽기, 다음 단계 실행을 검사하지 않는다. ‘안내 데스크가 답한다’ 정도다.
-
-API 테스트는 apply_async를 모의 함수로 바꿔 실제 작업 대신 mock 작업 번호를 받는다. 서버 접수 형식을 시험하는 유용한 테스트지만 워커/GPU/S3를 돌린 증거가 아니다.
-
-3단계 통합 테스트도 노이즈 이미지를 만들고 워커 함수를 같은 프로세스에서 직접 순서대로 실행한다. 그 시험이 성공해도 별도 컨테이너 사이의 파일 공유 문제나 FE→BE→ML 통신을 증명하지 않는다.
-
-최신 Medfusion의 test_protonet_service에는 1채널 무작위 데이터가 남아 있지만 최신 기본 CHANNELS는3이다. 별도로 CHANNELS=1을 설정하지 않은 기본 환경과 테스트 입력이 맞지 않는 점도 정리해야 한다. 이번에는 실행하지 않았으므로 새 테스트 실패 결과로 보고하지 않는다.
-
-개수 기준으로 최초 main에는 테스트 함수9개가 있고, 최신 Medfusion의 확인한 세 테스트 파일에는8개가 있다. 더 중요한 것은 개수보다 **실행 환경, 실제 사용 데이터, 검증한 성공·실패 범위**다. ‘100% 보증’ 표현을 삭제하고 그 정보를 적어야 한다.
-
-### 4. 최신에서 해결된 것도 정확히 인정해야 함
-
-- 데이터셋이 없는데 임의 데이터로 학습 성공시키기: 최신 학습 워커는 명시적으로 실패.
-- 분류 모델이 없는데 초기 모델로 분류하기: 최신 분류 워커는 명시적으로 실패.
-- 유효한 분류 이미지가 없는데 노이즈로 결과 만들기: 최신은 명시적으로 실패.
-- 정상/비정상 원본이 한쪽도 없는데 증강하기: 최신은 명시적으로 실패.
-- 모델 내부 학습: 최신 ProtoNet은 k_shot을 사용하고 에피소드 학습과 내부 검증 분할을 적용.
-
-즉 첨부 질의응답의 ‘가짜 모델/데이터 대체 제거 필요’는 최신 별도 브랜치에서 중요한 개선이 진행됐다. 그러나 FE의 서버 오류→모의 성공은 여전히 별개로 남았고, 최신 브랜치가 main/운영에 반영됐는지도 구분해야 한다.
-
-부분적으로 깨진 이미지의 경우 현재 파싱 루프가 실패한 이미지를 건너뛴다. 유효 이미지가 남으면 작업이 계속될 수 있어, 누락 장수 안내와 결과를 원본 이미지에 대응하는 방법은 추가 확인이 필요하다.
-
-## E. 실제 사용자 흐름의 ‘완료’ 증거
-
-다음 단계별 증거가 있으면 코드를 몰라도 따라갈 수 있다.
-
-| 단계 | 요청할 증거 |
-|---|---|
-| 배포 준비 | 실제 ML 주소·실행 커밋·외부 패키지 버전·모델 로딩 성공 기록 |
-| 파일 입력 | 고른 원본 이미지 내용이 ML까지 전달됐음을 확인 |
-| 증강 | 실제 입력과 생성 미리보기, dataset_id, 파일 bucket/key 또는 공유 경로 |
-| 학습 | 그 dataset_id의 파일을 다른 학습 워커가 읽었다는 기록, 실제 model_id·성적표 |
-| 분류 | 그 model_id를 분류 워커가 읽고 새 이미지 결과를 반환한 기록 |
-| 기록 복구 | 새로고침·BE 재시작·결과 기간 경과 후 기록/파일 조회 정책 |
-| 실패 | 잘못된 ID·빈 이미지·없는 모델에서 FAILED/이유 표시. 성공 화면 금지 |
-| 취소 | 실제 중단 확인, 마지막 진행률, 대상 파일 정리, 다음 GPU 작업 정상 |
-| 권한 | 다른 계정으로 남의 작업/파일/검수에 접근할 수 없음을 확인 |
-
-소개 문서의 JSON 예시는 이 증거를 대신하지 못한다. 같은 dataset_id와 model_id가 실제 파일·요청·결과에 이어지는 것이 중요하다.
-
-## F. 담당자별 우선순위와 회의 결정
-
-담당은 추천이며 실제 배정·일정은 팀이 확정해야 한다.
-
-| 순서 | 과제 | 주 담당 | 지금 결정할 것 |
-|---|---|---|---|
-| 1 | 버전·시연 범위 확정 | 전원 | Medfusion 사용 여부, 어느 기능까지 실동작으로 발표 |
-| 2 | 배포·가중치·외부 패키지 준비 | ML·배포 | 서버·코드·체크포인트 담당과 기한 |
-| 3 | 워커 간 파일 전달 | ML·배포, BE 협의 | 공유 storage 또는 S3 다운로드, bucket/key |
-| 4 | Job 접수·상태·최종 기록 | BE 중심, FE·ML | 실제 번호 대응·요청/응답·DB 보존 |
-| 5 | 실제 이미지·설정 전달, 모의 성공 분리 | FE·ML | 적용되는 설정값과 Query 기능 범위 |
-| 6 | 검수 규격·실제 ID·빌드 수정 | FE·BE | AUGMENTED_DATA 지원 범위, taskId 응답 |
-| 7 | 상태 기록·없음/만료·URL 재발급 | ML·BE·배포 | 보존 일수, 등록부, 오류/시각/단계 |
-| 8 | 취소 전체 동작·파일/GPU 정리 | ML·BE·FE | 대기/실행 중/종료 규칙, 중단 완료 증거 |
-| 9 | 나머지 일반 기능·예시 제거 | FE, BE 일부 | 레시피/Fork/후기, 알림, 활동 노출/페이지 |
-| 10 | 실제 사용 시험과 명세 정정 | 전원 | 성공/실패/새로고침 결과와 다음 회의 증거 |
-
-취소를 나중 단계로 둔 것은 현재 실행·파일 연결 자체를 먼저 성립시키기 위한 추천이다. 서비스 필수 조건이라면 담당·일정을 병행 배정하되 구현이 된 것처럼 표시하지 않는다.
-
-회의에서 반드시 확인할 질문:
-1. 첨부 답변 이후 ML 배포와 .env/S3 설정이 실제로 달라졌나? 달라졌다면 주소·버전·증거는?
-2. Medfusion 코드와 외부 bifusion 패키지/가중치는 누가 어느 버전으로 준비하나?
-3. 증강 파일을 학습 워커가, 학습 파일을 분류 워커가 실제로 어떻게 읽나?
-4. BE-ML 연결을 다른 브랜치에서 진행 중인가? 담당·기한·요청/응답은?
-5. Sampling Steps/Guidance/Query가 실제 계산에 적용되도록 할 것인가, 화면/명세 범위를 줄일 것인가?
-6. 취소·보존7일·파일key 등 제안을 이번에 구현 범위로 확정할 것인가? 각 완료 기준은?
-7. 발표 자료의 예시 성능 수치와 ‘100% 보증’ 표현을 실제 검증 근거에 맞춰 정정할 수 있나?
-
-### 그대로 읽을 회의용 발언
-
-> 자료를 합쳐 보니 일반 기능의 요청 연결은 상당히 진행됐지만, 핵심 AI는 화면·BE 연결·ML 파일 저장·배포를 함께 완성해야 하는 상태였습니다. ML이 각 단계를 계산하는 코드와 전체 서비스가 작동하는 것은 다릅니다. 특히 워커끼리 증강/모델 파일을 읽는 연결이 빠져 있고 FE는 오류 때 예시 성공으로 넘어갈 수 있습니다. 최신 Medfusion은 가짜 대체를 실패로 바꾸는 개선이 들어갔지만 main에는 아직 미병합입니다. 오늘 버전과 배포·저장 방식, BE 연결 담당/기한부터 정하고 싶습니다. 취소·7일 보존·파일key는 아직 제안인 항목을 확정해야 하고, 화면 설정과 테스트 보증 문구도 실제 구현 기준으로 정리하겠습니다.
-
-## G. 명세·용어·검증 범위
-
-[일반 API 84개 대조표](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.md)는 그대로 함께 사용한다. 이번 추가 자료를 통해 ML 명세에는 다음을 더 반영해야 한다.
-
-- 세 cancel 주소는 ‘구현 예정’이며 현재7개 기본 접수/조회/health API와 구분.
-- FAILED/CANCELLED 등 실제 외부 상태, 실패·취소 progress0, 시각null의 현재 한계.
-- storage/local 내부 경로와 S3의 임시 URL을 구분. URL+key/bucket은 추가 요구.
-- Query와 미사용 증강 설정 항목을 실제 동작과 구분.
-- health의 제한과 모의 테스트·직접 함수 시험 범위.
-- Medfusion 최신 동작·외부 패키지·기본3채널로 설명 정정.
-
-용어:
-- 가중치/체크포인트: 모델이 학습한 숫자를 저장한 파일.
-- 컨테이너: 프로그램을 별도 실행 공간으로 묶은 것. 파일 공유는 별도 연결.
-- 워커: 뒤에서 AI 계산을 실행하는 프로그램.
-- 큐: 작업을 기다리는 줄. Redis/Celery가 전달/실행을 관리.
-- 폴링: FE 또는 BE가 일정 간격으로 상태를 다시 묻는 방식.
-- S3 bucket/key: 파일 창고 이름과 창고 안의 경로.
-- presigned URL: 일정 시간만 파일을 열 수 있는 임시 주소. 현재 코드 생성값1시간.
-- 영속 보관: 프로그램/컨테이너가 재시작되어도 기록을 유지하는 것.
-- OOM: 계산 장치 메모리가 부족한 오류.
-- Accuracy: 평가 이미지 중 맞힌 비율. AUROC: 두 클래스를 구분하는 점수 순위 성능을 평가하는 지표.
-- 신뢰도(confidence): 모델 출력의 확신 정도. 실제 정확도와 같은 값이 아님.
-- 모의 테스트(mock): 실제 외부 계산/통신을 대체해 특정 코드만 검사하는 시험.
-
-추가 정적 확인 근거:
-[최신 학습 워커](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/app/workers/training_worker.py), [분류 워커](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/app/workers/inference_worker.py), [증강 워커](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/app/workers/augmentation_worker.py), [저장 서비스](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/app/services/storage_service.py), [Compose](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/docker-compose.yml), [상태 조회](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/app/routers/augmentation.py), [health](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/app/main.py), [API 모의 테스트](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/tests/test_api_endpoints.py), [함수 단위3단계 시험](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/tests/test_workers_integration.py), [ProtoNet 학습](https://github.com/NoDataNoLife/BIFUSION-ML/blob/f473b6024b31355c9be75a6bcb9779919c49131d/app/services/protonet_service.py).
-
-이 추가 분석은 첨부 원문과 10월9일 확인한 최신 ML f473b60 소스를 다시 읽어 대조했다. 이번 추가 턴에는 원격 전체 변경을 새로 가져오거나 GPU/배포/종합 시험을 실행하지 않았다. 이전 FE·BE 분석의 버전과 검증 한계도 유지한다. 구현 코드는 수정하지 않았고 운영 결과 예시는 새로 만들지 않았다.
-
----
-
-# 기존 작업·본인 커밋·일반 API 전체 정리
-
-아래에는 앞서 작성한 회의 준비 자료의 본문을 포함한다. ML 저장·설정·검증·취소 항목의 보완은 위 A~G를 함께 적용한다.
-
-## 기존 분석: BIFUSION 회의 준비·작업 인수인계 — 2026-10-09
+# BIFUSION 회의 준비·작업 인수인계 — 2026-10-09
 
 ## 1. 회의 전에 먼저 이해할 결론
 
@@ -323,7 +72,7 @@ AI 계산은 오래 걸린다. 비동기 작업은 요청을 받은 즉시 작�
 
 현재 FE는 1.5초마다 상태를 묻는 **폴링**을 사용한다. SSE는 서버가 연결을 유지하며 변경을 보내주는 방식이다. 명세서의 SSE 행과 현재 폴링 코드는 같은 것이 아니다. 9월 진행률 문서도 ‘제안서’이며 BE 구현 증거가 아니다. BE가 상태를 기록하는 방법은 폴링·콜백 등으로 합의할 수 있지만, 조회 복구와 최종 기록 보존은 필요하다.
 
-근거: [FE Job 상태](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/src/store/useJobStore.ts), [폴링 코드](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/src/hooks/useJobPolling.ts), [BE Job 접수 코드](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-BE/src/main/java/com/nodatanolife/bifusion_be/domain/job/controller/JobController.java), [본인 진행률 제안](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-09-04_Job_Progress_UI_Architecture_Proposal.md).
+근거: [FE Job 상태](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/src/store/useJobStore.ts), [폴링 코드](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/src/hooks/useJobPolling.ts), [BE Job 접수 코드](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-BE/src/main/java/com/nodatanolife/bifusion_be/domain/job/controller/JobController.java), [본인 진행률 제안](2026-09-04_Job_Progress_UI_Architecture_Proposal.md).
 
 ## 4. 최근 작업의 흐름
 
@@ -511,8 +260,8 @@ base64는 이미지 파일을 요청에 넣기 위해 문자로 표현한 것이
 
 사진에서 보이는 **84개 항목의 대조표와 CSV**를 별도 파일로 만들었다.
 
-- [API 대조표](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.md)
-- [Notion 비교용 CSV](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.csv)
+- [API 대조표](2026-10-09_API_Spec_Reconciliation.md)
+- [Notion 비교용 CSV](2026-10-09_API_Spec_Reconciliation.csv)
 
 ‘시작 전’에서 올려야 하는 대표 항목은 알림 목록/읽음/단건 삭제, Q&A 상세/삭제, 모집 상세/지원/승인, 레시피 등록/목록/삭제, 내 자산 목록, 내 활동 첫 목록, 프로젝트 생성이다. 다만 대부분은 ‘요청 연결 또는 부분 연결’이며 모두 실서버 완료로 올리면 안 된다.
 
@@ -593,8 +342,8 @@ base64는 이미지 파일을 요청에 넣기 위해 문자로 표현한 것이
 - 그중 실제 이름 불일치는 AssetDatasetDetail.tsx:255의 버튼 속성과 ReviewDetailPage.tsx:77 등 저장 의견 항목이다. 나머지 상당수는 미사용 변수/가져오기 검사 오류다.
 - 기존 기준은 37건, 최신 기준은 36건이었다. 최신 랜딩에는 FeatureCard/ProcessStep 미사용 오류 2건도 있다. 기존 오류 전체를 PR #58에서 새로 만들었다고 해석하면 안 된다.
 - package.json의 build는 tsc -b 후 vite build다. 이번 앱 타입 검사 실패는 현재 정상 build가 가능하다는 근거가 없음을 보여준다. 오늘 전체 배포를 실행하거나 Vercel 배포 로그를 확인한 것은 아니다. 과거 npx vite build 성공은 타입 검사를 포함하는 npm run build 성공과 다르다.
-- 결과: [TypeScript 검사 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_TypeScript_Check.json).
+- 결과: [TypeScript 검사 상세](2026-10-09_TypeScript_Check.json).
 - 앱 구현, 사용자 브랜치, 기존 미커밋 변경은 수정하지 않았다. 생성한 것은 이번 분석 자료다.
 - 운영 DB·GPU·S3·실제 인증/검수/AI 전체 연결 시험은 이번에 실행하지 않았다. 과거 이슈의 온라인 댓글/종료 상태 접근에도 제한이 있었다.
 
-추가 근거와 이전 상세 기록: [10월 5일 종합 분석](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-05_Project_Audit_And_Followup.md), [BE 구현·FE 미연동 목록](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-05_BE_Implemented_FE_Gaps.md). 오늘 문서는 최신 원격 확인과 명세 사진 대조를 추가했으며, 이전 문서의 완료 여부보다 현재 요청 접수·응답 코드의 판정을 우선한다.
+추가 근거와 이전 상세 기록: [10월 5일 종합 분석](2026-10-05_Project_Audit_And_Followup.md), [BE 구현·FE 미연동 목록](2026-10-05_BE_Implemented_FE_Gaps.md). 오늘 문서는 최신 원격 확인과 명세 사진 대조를 추가했으며, 이전 문서의 완료 여부보다 현재 요청 접수·응답 코드의 판정을 우선한다.

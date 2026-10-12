@@ -1,28 +1,29 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Upload, 
+import {
+  ArrowLeft,
+  Upload,
   ChevronRight,
-  FileImage,
-  Info
+  FileImage
 } from 'lucide-react';
 
-import { useJobStore } from '../../store/useJobStore';
+import '../../components/jobs/AISetup.css';
+
+import { getJobErrorMessage, useJobStore } from '../../store/useJobStore';
 
 export default function InferenceSetupPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
   const { createJob, isLoading } = useJobStore();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [selectedModel, setSelectedModel] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [includeLabels, setIncludeLabels] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
   const availableModels = [
-    { id: 'model-1', name: '5-shot 심장 질환 예측 모델 (2026-02-09 15:23)', accuracy: '94.2%' },
-    { id: 'model-2', name: '3-shot 폐암 감지 모델 (2026-02-08 10:15)', accuracy: '89.5%' },
+    { id: 'model-1', name: '5-shot 심장 질환 예측 모델 (2026-02-09 15:23)' },
+    { id: 'model-2', name: '3-shot 폐암 감지 모델 (2026-02-08 10:15)' },
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,59 +33,57 @@ export default function InferenceSetupPage() {
   };
 
   const handleStartInference = async () => {
+    if (isLoading || !projectId || !selectedModel || uploadedFiles.length === 0) return;
+    setSubmitError(null);
     try {
-      const job = await createJob(projectId || '1', 'INFERENCE', {
+      const job = await createJob(projectId, 'INFERENCE', {
         model_id: selectedModel,
-        modelId: selectedModel,
         imageCount: uploadedFiles.length,
-        hasLabels: includeLabels,
-        batch_size: 4,
       });
 
-      navigate(`/dashboard/projects/${projectId}/inference/${job.jobId}/progress`, { 
-        state: { totalImages: uploadedFiles.length } 
+      navigate(`/dashboard/projects/${projectId}/inference/${job.jobId}/progress`, {
+        state: { totalImages: uploadedFiles.length }
       });
     } catch (err) {
-      console.error('Failed to start inference job:', err);
-      navigate(`/dashboard/projects/${projectId}/inference/${jobId || 'JOB-003'}/progress`, { 
-        state: { totalImages: uploadedFiles.length } 
-      });
+      setSubmitError(getJobErrorMessage(err, '추론 요청에 실패했습니다. 다시 시도해 주세요.'));
     }
   };
 
   const canStart = selectedModel && uploadedFiles.length > 0;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="ai-setup min-h-screen bg-background pb-20">
+      {submitError && <p role="alert" className="p-4 text-red-500">{submitError}</p>}
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-8 py-6 flex items-center gap-4">
-          <button 
+          <button
+            aria-label="프로젝트로 돌아가기"
             onClick={() => navigate(`/dashboard/projects/${projectId}`)}
             className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
+            <nav className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1">
               <span>Project</span>
               <ChevronRight className="w-3 h-3" />
-              <span>Job {jobId}</span>
+              <span>{jobId === 'new' ? 'New Job' : `Job ${jobId}`}</span>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-primary font-black italic">Inference Setup</span>
+              <span className="text-primary font-semibold italic">Inference Setup</span>
             </nav>
-            <h1 className="text-2xl font-black text-foreground tracking-tight">모델 추론 설정</h1>
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">모델 추론 설정</h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-8 py-8">
-        <div className="bg-card rounded-4xl border border-border shadow-sm p-10 md:p-12 space-y-10">
-          <p className="text-muted-foreground font-medium">학습된 모델로 새로운 이미지를 분류합니다</p>
+        <div className="bg-card rounded-3xl border border-border shadow-sm p-6 md:p-8 space-y-7">
+          <p className="text-muted-foreground font-medium">학습된 모델로 새 이미지를 정상·비정상으로 분류합니다. 정답 라벨 없이 예측 결과를 확인하는 화면입니다.</p>
 
           {/* Model Selection */}
           <div className="space-y-4">
-            <label className="block text-sm font-black text-foreground uppercase tracking-widest">
+            <label className="block text-sm font-semibold text-foreground uppercase tracking-wide">
               학습된 모델 선택 <span className="text-red-500">*</span>
             </label>
             <select
@@ -95,7 +94,7 @@ export default function InferenceSetupPage() {
               <option value="">학습 완료된 모델을 선택하세요</option>
               {availableModels.map((model) => (
                 <option key={model.id} value={model.id}>
-                  {model.name} — Accuracy: {model.accuracy}
+                  예시: {model.name}
                 </option>
               ))}
             </select>
@@ -103,15 +102,15 @@ export default function InferenceSetupPage() {
 
           {/* Image Upload Area */}
           <div className="space-y-4">
-            <label className="block text-sm font-black text-foreground uppercase tracking-widest">
+            <label className="block text-sm font-semibold text-foreground uppercase tracking-wide">
               추론할 이미지 업로드 <span className="text-red-500">*</span>
             </label>
-            
+
             <div
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); if(e.dataTransfer.files) setUploadedFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]); }}
-              className={`border-2 border-dashed rounded-4xl p-16 text-center transition-all cursor-pointer group ${
+              className={`border-2 border-dashed rounded-3xl p-8 md:p-10 text-center transition-all cursor-pointer group ${
                 isDragging ? 'border-primary bg-primary/5' : 'border-border bg-muted/40 hover:border-primary/50'
               }`}
             >
@@ -119,9 +118,9 @@ export default function InferenceSetupPage() {
                 <div className="w-20 h-20 bg-card border border-border rounded-3xl flex items-center justify-center shadow-sm mb-6 group-hover:scale-110 transition-transform">
                   <FileImage className={`w-10 h-10 ${uploadedFiles.length > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
                 </div>
-                <p className="text-xl font-black text-foreground mb-2 tracking-tight">파일 선택 또는 드래그 & 드롭</p>
-                <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest mb-6">JPG, PNG (배치 업로드 가능)</p>
-                
+                <p className="text-xl font-semibold text-foreground mb-2 tracking-tight">파일 선택 또는 드래그 & 드롭</p>
+                <p className="text-sm text-muted-foreground font-bold uppercase tracking-wide mb-6">JPG, PNG (배치 업로드 가능)</p>
+
                 <input
                   type="file"
                   id="file-upload"
@@ -132,7 +131,7 @@ export default function InferenceSetupPage() {
                 />
                 <label
                   htmlFor="file-upload"
-                  className="px-8 py-3.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+                  className="px-8 py-3.5 bg-primary text-white rounded-2xl font-semibold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
                 >
                   파일 찾아보기
                 </label>
@@ -142,8 +141,8 @@ export default function InferenceSetupPage() {
             {/* Uploaded Files List */}
             {uploadedFiles.length > 0 && (
               <div className="mt-6 p-6 bg-muted/50 rounded-3xl border border-border space-y-3">
-                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">
-                  업로드된 파일: <span className="text-primary font-bold">{uploadedFiles.length}개</span>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  선택한 파일: <span className="text-primary font-bold">{uploadedFiles.length}개</span>
                 </p>
                 <div className="max-h-40 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                   {uploadedFiles.slice(0, 5).map((file, index) => (
@@ -158,51 +157,25 @@ export default function InferenceSetupPage() {
                     </div>
                   ))}
                   {uploadedFiles.length > 5 && (
-                    <p className="text-center text-[10px] font-black text-muted-foreground uppercase tracking-tighter pt-2">...외 {uploadedFiles.length - 5}개의 파일이 더 있습니다</p>
+                    <p className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-tighter pt-2">...외 {uploadedFiles.length - 5}개의 파일이 더 있습니다</p>
                   )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Optional: Include Labels */}
-          <div className="p-7 bg-muted/40 border border-border rounded-3xl">
-            <label className="flex items-start gap-4 cursor-pointer group">
-              <div className={`mt-1 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                includeLabels ? 'bg-primary border-primary text-white' : 'bg-card border-border'
-              }`}>
-                {includeLabels && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-              <input
-                type="checkbox"
-                checked={includeLabels}
-                onChange={(e) => setIncludeLabels(e.target.checked)}
-                className="hidden"
-              />
-              <div className="space-y-1">
-                <p className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
-                  <Info size={16} className="text-primary" /> 이미지 라벨 포함 (선택 사항)
-                </p>
-                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-                  라벨이 있으면 예측 정확도를 함께 분석하여 리포트에 표시합니다.<br />
-                  없어도 AI 추론은 정상적으로 수행됩니다.
-                </p>
-              </div>
-            </label>
-          </div>
-
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 pt-6 border-t border-border">
             <button
               onClick={() => navigate(`/dashboard/projects/${projectId}`)}
-              className="px-8 py-4 bg-muted text-muted-foreground rounded-2xl font-black text-sm hover:text-foreground transition-all cursor-pointer"
+              className="px-8 py-4 bg-muted text-muted-foreground rounded-2xl font-semibold text-sm hover:text-foreground transition-all cursor-pointer"
             >
               취소
             </button>
             <button
               onClick={handleStartInference}
               disabled={!canStart || isLoading}
-              className={`px-10 py-4 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
+              className={`px-10 py-4 rounded-2xl font-semibold text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
                 canStart && !isLoading
                   ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
                   : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none opacity-50'

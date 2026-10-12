@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useJobStore, type JobDetail } from '../store/useJobStore';
+import { useEffect, useRef, useState } from 'react';
+import { useJobStore, getJobErrorMessage, isSuccessfulJobStatus, isTerminalJobStatus, type JobDetail } from '../store/useJobStore';
 
 interface UseJobPollingOptions {
   jobId?: string;
@@ -16,7 +16,8 @@ export function useJobPolling({
   onComplete,
   onError,
 }: UseJobPollingOptions) {
-  const { currentJob, fetchJobStatus, cancelJob } = useJobStore();
+  const { currentJob, fetchJobStatus } = useJobStore();
+  const [queryError, setQueryError] = useState<{ jobId: string; message: string } | null>(null);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
 
@@ -25,53 +26,45 @@ export function useJobPolling({
     onErrorRef.current = onError;
   });
 
-  const isPolling = Boolean(
-    jobId &&
-    enabled &&
-    (!currentJob || currentJob.status === 'RUNNING' || currentJob.status === 'PENDING') &&
-    (currentJob?.progress ?? 0) < 100
-  );
-
   useEffect(() => {
-    if (!jobId || !enabled) {
-      return;
-    }
+    if (!jobId || !enabled) return;
 
-    // Initial fetch
-    fetchJobStatus(jobId);
-
-    const timer = setInterval(async () => {
+    let disposed = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const poll = async () => {
       try {
         const job = await fetchJobStatus(jobId);
-        if (job.status === 'SUCCESS' || job.status === 'COMPLETED' || job.progress >= 100) {
-          clearInterval(timer);
+        if (disposed) return;
+        setQueryError(null);
+        if (isSuccessfulJobStatus(job.status)) {
           onCompleteRef.current?.(job);
-        } else if (job.status === 'FAILED' || job.status === 'CANCELLED') {
-          clearInterval(timer);
-          onErrorRef.current?.(job.error || '작업이 중단되었습니다.');
+          return;
         }
-      } catch (err) {
-        console.warn('Job polling warning:', err);
+        if (job.status === 'FAILED' || job.status === 'CANCELLED') {
+          onErrorRef.current?.(job.error || '작업이 중단되었습니다.');
+          return;
+        }
+      } catch (error) {
+        if (disposed) return;
+        setQueryError({ jobId, message: getJobErrorMessage(error, '작업 상태를 확인하지 못했습니다.') });
       }
-    }, intervalMs);
+      if (!disposed) timer = setTimeout(() => { void poll(); }, intervalMs);
+    };
 
+    void poll();
     return () => {
-      clearInterval(timer);
+      disposed = true;
+      if (timer !== undefined) clearTimeout(timer);
     };
   }, [jobId, intervalMs, enabled, fetchJobStatus]);
 
-  const handleCancel = useCallback(async () => {
-    if (jobId) {
-      await cancelJob(jobId);
-    }
-  }, [jobId, cancelJob]);
-
+  const job = currentJob?.jobId === jobId ? currentJob : null;
+  const error = queryError && queryError.jobId === jobId ? queryError.message : null;
   return {
-    job: currentJob,
-    progress: currentJob?.progress ?? 0,
-    status: currentJob?.status ?? 'RUNNING',
-    currentStep: currentJob?.currentStep ?? '작업 준비 중...',
-    isPolling,
-    cancel: handleCancel,
+    job,
+    status: job?.status,
+    currentStep: job?.currentStep,
+    error,
+    isPolling: Boolean(jobId && enabled && !error && !isTerminalJobStatus(job?.status)),
   };
 }

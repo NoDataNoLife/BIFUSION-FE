@@ -1,0 +1,900 @@
+[
+  {
+    "repo": "ml",
+    "file": "app/__init__.py",
+    "lines": 0,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "app/core/__init__.py",
+    "lines": 0,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "app/core/celery_app.py",
+    "lines": 25,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "app/core/config.py",
+    "lines": 61,
+    "definitions": [
+      {
+        "name": "Settings",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/core/model_loader.py",
+    "lines": 73,
+    "definitions": [
+      {
+        "name": "get_device",
+        "line": 9
+      },
+      {
+        "name": "ModelLoader",
+        "line": 30
+      },
+      {
+        "name": "LocalModelLoader",
+        "line": 36
+      },
+      {
+        "name": "S3ModelLoader",
+        "line": 47
+      },
+      {
+        "name": "get_model_loader",
+        "line": 70
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/main.py",
+    "lines": 17,
+    "definitions": [
+      {
+        "name": "health_check",
+        "line": 16
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/routers/__init__.py",
+    "lines": 0,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "app/routers/augmentation.py",
+    "lines": 55,
+    "definitions": [
+      {
+        "name": "_map_celery_state",
+        "line": 10
+      },
+      {
+        "name": "start_augmentation",
+        "line": 22
+      },
+      {
+        "name": "get_augmentation_status",
+        "line": 31
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/routers/inference.py",
+    "lines": 45,
+    "definitions": [
+      {
+        "name": "start_inference",
+        "line": 12
+      },
+      {
+        "name": "get_inference_status",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/routers/training.py",
+    "lines": 45,
+    "definitions": [
+      {
+        "name": "start_training",
+        "line": 12
+      },
+      {
+        "name": "get_training_status",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/schemas/__init__.py",
+    "lines": 0,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "app/schemas/augmentation.py",
+    "lines": 13,
+    "definitions": [
+      {
+        "name": "AugmentationRequest",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/schemas/inference.py",
+    "lines": 13,
+    "definitions": [
+      {
+        "name": "InferenceRequest",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/schemas/job.py",
+    "lines": 23,
+    "definitions": [
+      {
+        "name": "JobStatus",
+        "line": 7
+      },
+      {
+        "name": "JobResponse",
+        "line": 16
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/schemas/training.py",
+    "lines": 10,
+    "definitions": [
+      {
+        "name": "TrainingRequest",
+        "line": 4
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/services/__init__.py",
+    "lines": 0,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "app/services/image_utils.py",
+    "lines": 32,
+    "definitions": [
+      {
+        "name": "base64_to_pil",
+        "line": 8
+      },
+      {
+        "name": "pil_to_base64",
+        "line": 21
+      },
+      {
+        "name": "create_synthetic_noise_image",
+        "line": 29
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/services/medfusion_service.py",
+    "lines": 123,
+    "definitions": [
+      {
+        "name": "_ensure_bifusion_on_path",
+        "line": 22
+      },
+      {
+        "name": "_build_config",
+        "line": 28
+      },
+      {
+        "name": "MedfusionService",
+        "line": 48
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/services/protonet_service.py",
+    "lines": 270,
+    "definitions": [
+      {
+        "name": "conv_block",
+        "line": 18
+      },
+      {
+        "name": "ProtoEncoderConv4",
+        "line": 27
+      },
+      {
+        "name": "compute_prototypes",
+        "line": 49
+      },
+      {
+        "name": "compute_logits",
+        "line": 63
+      },
+      {
+        "name": "ProtoNetService",
+        "line": 73
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/services/storage_service.py",
+    "lines": 122,
+    "definitions": [
+      {
+        "name": "StorageService",
+        "line": 12
+      },
+      {
+        "name": "LocalStorageService",
+        "line": 34
+      },
+      {
+        "name": "S3StorageService",
+        "line": 65
+      },
+      {
+        "name": "get_storage_service",
+        "line": 119
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/workers/__init__.py",
+    "lines": 0,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "app/workers/augmentation_worker.py",
+    "lines": 170,
+    "definitions": [
+      {
+        "name": "run_augmentation",
+        "line": 16
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/workers/inference_worker.py",
+    "lines": 141,
+    "definitions": [
+      {
+        "name": "run_inference",
+        "line": 15
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "app/workers/training_worker.py",
+    "lines": 105,
+    "definitions": [
+      {
+        "name": "run_training",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "tests/__init__.py",
+    "lines": 0,
+    "definitions": []
+  },
+  {
+    "repo": "ml",
+    "file": "tests/test_api_endpoints.py",
+    "lines": 63,
+    "definitions": [
+      {
+        "name": "test_health_check",
+        "line": 9
+      },
+      {
+        "name": "test_api_augmentation_run",
+        "line": 15
+      },
+      {
+        "name": "test_api_training_run",
+        "line": 33
+      },
+      {
+        "name": "test_api_inference_run",
+        "line": 50
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "tests/test_pipeline.py",
+    "lines": 53,
+    "definitions": [
+      {
+        "name": "test_storage_service",
+        "line": 10
+      },
+      {
+        "name": "test_image_utils",
+        "line": 18
+      },
+      {
+        "name": "test_protonet_service",
+        "line": 26
+      }
+    ]
+  },
+  {
+    "repo": "ml",
+    "file": "tests/test_workers_integration.py",
+    "lines": 58,
+    "definitions": [
+      {
+        "name": "test_end_to_end_3step_pipeline",
+        "line": 8
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/__init__.py",
+    "lines": 62,
+    "definitions": [
+      {
+        "name": "augment",
+        "line": 9
+      },
+      {
+        "name": "train",
+        "line": 17
+      },
+      {
+        "name": "evaluate",
+        "line": 22
+      },
+      {
+        "name": "infer",
+        "line": 27
+      },
+      {
+        "name": "generate_medfusion",
+        "line": 32
+      },
+      {
+        "name": "__getattr__",
+        "line": 38
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/_version.py",
+    "lines": 1,
+    "definitions": []
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/api.py",
+    "lines": 698,
+    "definitions": [
+      {
+        "name": "_get_device",
+        "line": 19
+      },
+      {
+        "name": "_resolve_encoder",
+        "line": 38
+      },
+      {
+        "name": "augment",
+        "line": 53
+      },
+      {
+        "name": "_augment_feature",
+        "line": 170
+      },
+      {
+        "name": "_augment_medfusion",
+        "line": 234
+      },
+      {
+        "name": "_augment_ddpm",
+        "line": 304
+      },
+      {
+        "name": "train",
+        "line": 465
+      },
+      {
+        "name": "evaluate",
+        "line": 602
+      },
+      {
+        "name": "infer",
+        "line": 661
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/augment/__init__.py",
+    "lines": 18,
+    "definitions": [
+      {
+        "name": "_CallableAugmentModule",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/augment/encoders.py",
+    "lines": 173,
+    "definitions": [
+      {
+        "name": "BaseEncoder",
+        "line": 10
+      },
+      {
+        "name": "BioMedCLIPEncoder",
+        "line": 37
+      },
+      {
+        "name": "CustomEncoder",
+        "line": 101
+      },
+      {
+        "name": "load_encoder",
+        "line": 135
+      },
+      {
+        "name": "resolve_checkpoint_encoder",
+        "line": 154
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/augment/feature_augmentor.py",
+    "lines": 132,
+    "definitions": [
+      {
+        "name": "augment_features",
+        "line": 10
+      },
+      {
+        "name": "save_synthetic_features",
+        "line": 85
+      },
+      {
+        "name": "load_synthetic_features",
+        "line": 109
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/cli.py",
+    "lines": 280,
+    "definitions": [
+      {
+        "name": "main",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/config.py",
+    "lines": 123,
+    "definitions": [
+      {
+        "name": "get_device_config",
+        "line": 90
+      },
+      {
+        "name": "BifusionConfig",
+        "line": 101
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/data/__init__.py",
+    "lines": 1,
+    "definitions": []
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/data/augmentor.py",
+    "lines": 197,
+    "definitions": [
+      {
+        "name": "MedicalAugmentor",
+        "line": 27
+      },
+      {
+        "name": "AugmentedDataset",
+        "line": 109
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/data/image_folder.py",
+    "lines": 99,
+    "definitions": [
+      {
+        "name": "ImageFolderDataset",
+        "line": 11
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/data/npz_saver.py",
+    "lines": 123,
+    "definitions": [
+      {
+        "name": "save_selected_as_npz",
+        "line": 11
+      },
+      {
+        "name": "NpzDataset",
+        "line": 80
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/data/sampler.py",
+    "lines": 231,
+    "definitions": [
+      {
+        "name": "EpisodeSampler",
+        "line": 12
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/data/selector.py",
+    "lines": 219,
+    "definitions": [
+      {
+        "name": "_compute_prototype",
+        "line": 13
+      },
+      {
+        "name": "_load_generated",
+        "line": 18
+      },
+      {
+        "name": "_select_top_k",
+        "line": 37
+      },
+      {
+        "name": "_arrays_to_tensors",
+        "line": 45
+      },
+      {
+        "name": "_encode_batches",
+        "line": 67
+      },
+      {
+        "name": "_select_top_k_by_encoder",
+        "line": 79
+      },
+      {
+        "name": "select_best_by_similarity",
+        "line": 103
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/eval/__init__.py",
+    "lines": 1,
+    "definitions": []
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/eval/evaluate.py",
+    "lines": 141,
+    "definitions": [
+      {
+        "name": "evaluate_protonet",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/eval/metrics.py",
+    "lines": 53,
+    "definitions": [
+      {
+        "name": "compute_ci95",
+        "line": 8
+      },
+      {
+        "name": "compute_metrics",
+        "line": 18
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/generate/__init__.py",
+    "lines": 25,
+    "definitions": []
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/generate/ddpm.py",
+    "lines": 278,
+    "definitions": [
+      {
+        "name": "train_conditional_ddpm",
+        "line": 22
+      },
+      {
+        "name": "generate_conditional_samples",
+        "line": 164
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/generate/medfusion.py",
+    "lines": 543,
+    "definitions": [
+      {
+        "name": "MedfusionConfig",
+        "line": 38
+      },
+      {
+        "name": "_install_compat_shims",
+        "line": 55
+      },
+      {
+        "name": "_trusted_torch_load",
+        "line": 92
+      },
+      {
+        "name": "_resolve_device",
+        "line": 107
+      },
+      {
+        "name": "_load_pipeline",
+        "line": 119
+      },
+      {
+        "name": "MedfusionGenerator",
+        "line": 150
+      },
+      {
+        "name": "generate_medfusion_samples",
+        "line": 441
+      },
+      {
+        "name": "augment_medfusion_from_images",
+        "line": 458
+      },
+      {
+        "name": "augment_medfusion_finetune",
+        "line": 478
+      },
+      {
+        "name": "save_medfusion_samples",
+        "line": 502
+      },
+      {
+        "name": "create_preview_grid",
+        "line": 523
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/generate/unet.py",
+    "lines": 78,
+    "definitions": [
+      {
+        "name": "ConditionalUNet",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/inference/__init__.py",
+    "lines": 1,
+    "definitions": []
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/inference/infer.py",
+    "lines": 160,
+    "definitions": [
+      {
+        "name": "infer_image",
+        "line": 11
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/models/__init__.py",
+    "lines": 1,
+    "definitions": []
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/models/encoder.py",
+    "lines": 100,
+    "definitions": [
+      {
+        "name": "ConvBlock",
+        "line": 11
+      },
+      {
+        "name": "ProtoEncoderConv4",
+        "line": 29
+      },
+      {
+        "name": "PretrainedProtoEncoder",
+        "line": 73
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/models/protonet.py",
+    "lines": 182,
+    "definitions": [
+      {
+        "name": "compute_prototypes",
+        "line": 14
+      },
+      {
+        "name": "euclidean_logits",
+        "line": 45
+      },
+      {
+        "name": "prototypical_logits",
+        "line": 74
+      },
+      {
+        "name": "tta_embed",
+        "line": 103
+      },
+      {
+        "name": "ProtoNet",
+        "line": 120
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/train/__init__.py",
+    "lines": 23,
+    "definitions": [
+      {
+        "name": "_CallableTrainModule",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "bifusion/train/protonet.py",
+    "lines": 478,
+    "definitions": [
+      {
+        "name": "_split_class_indices",
+        "line": 24
+      },
+      {
+        "name": "_param_groups",
+        "line": 49
+      },
+      {
+        "name": "_make_ema",
+        "line": 65
+      },
+      {
+        "name": "_ema_ctx",
+        "line": 78
+      },
+      {
+        "name": "_trainable_params",
+        "line": 83
+      },
+      {
+        "name": "_validate",
+        "line": 87
+      },
+      {
+        "name": "_select_value",
+        "line": 118
+      },
+      {
+        "name": "train_protonet_with_augmentation",
+        "line": 124
+      },
+      {
+        "name": "train_protonet_with_feature_augmentation",
+        "line": 300
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "install_test.py",
+    "lines": 132,
+    "definitions": [
+      {
+        "name": "create_test_data",
+        "line": 20
+      },
+      {
+        "name": "main",
+        "line": 40
+      }
+    ]
+  },
+  {
+    "repo": "pip",
+    "file": "setup.py",
+    "lines": 5,
+    "definitions": []
+  },
+  {
+    "repo": "pip",
+    "file": "tools/prepare_bloodmnist_binary.py",
+    "lines": 76,
+    "definitions": [
+      {
+        "name": "parse_args",
+        "line": 11
+      },
+      {
+        "name": "main",
+        "line": 25
+      }
+    ]
+  }
+]

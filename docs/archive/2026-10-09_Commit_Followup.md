@@ -1,9 +1,9 @@
-> **10월 9일 후속 수정:** 전문가 인증 주소·알림 page·내 활동 빈 응답 처리를 수정했습니다. 아래는 최초 조사·과거 커밋 설명이며 최신 상태는 [회의 준비 자료](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)와 [수정·검증 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Quickfix_Followup.md)를 확인하세요.
+> **10월 9일 후속 수정:** 전문가 인증 주소·알림 page·내 활동 빈 응답 처리를 수정했습니다. 아래는 최초 조사·과거 커밋 설명이며 최신 상태는 [회의 준비 자료](2026-10-09_Integrated_Meeting_Brief.md)와 [수정·검증 상세](2026-10-09_Quickfix_Followup.md)를 확인하세요.
 
 # 본인 커밋 상세
 
 **기준일 · 2026년 10월 9일**  
-[회의 준비 자료로 돌아가기](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)
+[회의 준비 자료로 돌아가기](2026-10-09_Integrated_Meeting_Brief.md)
 
 커밋은 코드의 변경 기록입니다. **변경 내용**과 **남은 과제**를 따로 읽으면 ‘연동 완료’라는 제목에 의존하지 않고 실제 진행을 이해할 수 있습니다.
 
@@ -234,4 +234,4 @@ Medfusion은 생성 엔진, VAE는 이미지 압축·복원 모델, 추가 학�
 
 본인 진행률 제안 문서 `c3fd5e6`은 로컬에는 있지만 최신 원격 main에 포함되지 않았습니다. 9/30 `69ec301`은 병합 기록이며 새 기능 추가로 해석하면 안 됩니다.
 
-[기존 근거·코드 링크 전체](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief_Archive.md)
+[기존 근거·코드 링크 전체](2026-10-09_Integrated_Meeting_Brief.md)

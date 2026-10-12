@@ -1,11 +1,13 @@
+> **2026-10-12 최신 조사 안내:** 이 문서는 10월 9일 기준 기록입니다. ML Medfusion 브랜치의 파라미터 변경과 RunPod 배포 점검, 회의 결정은 [최신 ML·pip 전수 점검](../2026-10-12_ai-audit/README.md)을 우선 확인하세요. 특히 증강의 steps/strength/finetune_steps와 학습의 q_query/episodes_per_epoch 반영, 진행률 바 제거 결정이 추가됐습니다.
+
 # API 명세 대조 자료 · 기능별 상세
 
 **기준일 · 2026년 10월 9일**  
-[회의 준비 자료로 돌아가기](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)
+[회의 준비 자료로 돌아가기](2026-10-09_Integrated_Meeting_Brief.md)
 
 사진의 그룹 합계는 **91개**입니다. 읽을 수 있는 **84개**를 대조했습니다. 데이터증강 1개·마이페이지 6개는 내용이 보이지 않아 판정하지 않았습니다.
 
-**10월 9일 후속 수정:** 전문가 인증 주소, 알림 page 항목, 내 활동 빈 응답 처리를 반영했습니다. 실서버 검증은 별도입니다. [수정 상세](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Quickfix_Followup.md)
+**10월 9일 후속 수정:** 전문가 인증 주소, 알림 page 항목, 내 활동 빈 응답 처리를 반영했습니다. 실서버 검증은 별도입니다. [수정 상세](2026-10-09_Quickfix_Followup.md)
 
 **읽는 순서:** 각 기능에서 **현재 FE 판정 → 수정·남은 일 → 요청 규격**을 확인하세요.  
 주소가 맞더라도 화면에서 사용하지 않거나 실제 결과 대신 예시를 보여주는 경우가 있습니다.
@@ -43,7 +45,7 @@ GET은 조회, POST는 생성·실행, PUT·PATCH는 수정, DELETE는 삭제 �
 | [마이페이지](#마이페이지) | 72–78 | 7 |
 | [로그인](#로그인) | 79–84 | 6 |
 
-[CSV 비교표](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_API_Spec_Reconciliation.csv)는 기존 84행을 그대로 유지했습니다.
+[CSV 비교표](2026-10-09_API_Spec_Reconciliation.csv)는 기존 84행을 그대로 유지했습니다.
 
 ---
 
@@ -1333,14 +1335,22 @@ ML 응답은 job_id이며 FE jobId와 직접 호환되지 않는다. **README/MI
 4. 보이지 않는 7개는 원본 행을 확인한 후 판정한다.
 5. CSV는 비교용 별도 표로 가져오거나 복사한다. 원본 행을 무조건 덮어쓰지 않는다.
 
-[회의 준비 자료](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)에서 작업 흐름과 담당자별 과제를 확인할 수 있습니다.
+[회의 준비 자료](2026-10-09_Integrated_Meeting_Brief.md)에서 작업 흐름과 담당자별 과제를 확인할 수 있습니다.
 
 
 ## 추가 ML 문의와 MIGRATION.md
 
 최신 Medfusion의 증강 설정 일부와 학습 Query 입력은 요청 형식에 있지만 계산에는 전달되지 않습니다. 컨테이너 사이의 파일 공유·S3 이전 결과 다운로드도 추가 연결이 필요합니다.
 
-- [변경 내용·MIGRATION.md 대조](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)
-- [취소·추가 연동 문의 17개](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_ML_Inquiry_Followup.md)
+- [변경 내용·MIGRATION.md 대조](2026-10-09_Integrated_Meeting_Brief.md)
+- [취소·추가 연동 문의 17개](2026-10-09_ML_Inquiry_Followup.md)
 
 health 응답과 모의 접수 테스트 성공만으로 GPU·워커·파일·BE 전체 연결 완료를 판정할 수 없습니다.
+
+## AI 화면·ML 계약 상세 대조 추가
+
+작업(Job) 영역은 화면 표시와 실연동을 구분해야 합니다. 현재 FE의 공통 작업 요청, BE 미구현 경로, Medfusion의 7개 실제 경로와 사용하지 않는 설정 항목을 별도 대조했습니다.
+
+[화면별 분석](../2026-10-12_ai-audit/README.md) · [API 계약 대조와 Notion 수정 항목](../2026-10-12_ai-audit/BACKEND_REQUEST.md)
+
+위 상세 문서의 BE 경로 제안은 아직 구현·확정된 명세가 아닙니다.

@@ -1,7 +1,7 @@
 # ML 과거 문의 17개 · 후속 확인 자료
 
 **기준일 · 2026년 10월 9일**  
-[회의 준비 자료로 돌아가기](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief.md)
+[회의 준비 자료로 돌아가기](2026-10-09_Integrated_Meeting_Brief.md)
 
 첨부 답변의 **‘추가 가능’은 구현·일정 확정이 아닙니다.** 아래는 취소 6개, 추가 연동 11개를 최신 Medfusion `f473b60`과 FE·BE 코드에 대조한 판정입니다.
 
@@ -216,4 +216,4 @@ ML: 저장 단계 반영. FE: status만으로 완료 판정, 임의 진행률로
 - 실제 증강 파일로 학습하고 그 모델을 분류 워커가 읽는지
 - 임시 URL이 만료돼도 bucket/key로 새 주소를 받을 수 있는지
 
-[기존 원문·첨부 링크·코드 근거 전체](//wsl.localhost/Ubuntu-24.04/home/ysb/projects/BIFUSION/BIFUSION-FE/docs/2026-10-09_Integrated_Meeting_Brief_Archive.md)
+[기존 원문·첨부 링크·코드 근거 전체](2026-10-09_Integrated_Meeting_Brief.md)

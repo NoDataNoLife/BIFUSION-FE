@@ -1,0 +1,355 @@
+{
+  "date": "2026-10-12",
+  "ml_ref": "ffd687b",
+  "pip_ref": "3675ae6",
+  "pydantic_version": "2.13.5",
+  "coverage": {
+    "python_files": 59,
+    "ml_python_files": 28,
+    "pip_python_files": 31
+  },
+  "schema_cases": [
+    {
+      "name": "empty augmentation accepted before worker",
+      "accepted_by_schema": true,
+      "input_fields": [],
+      "output": {
+        "num_samples_per_class": 10,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "11 images accepted despite documented max10",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "normal_images_base64"
+      ],
+      "output": {
+        "num_samples_per_class": 10,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": [
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image",
+          "not-an-image"
+        ],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "101 outputs accepted despite documented max100",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "num_samples_per_class"
+      ],
+      "output": {
+        "num_samples_per_class": 101,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "zero output count accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "num_samples_per_class"
+      ],
+      "output": {
+        "num_samples_per_class": 0,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "negative output count accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "num_samples_per_class"
+      ],
+      "output": {
+        "num_samples_per_class": -1,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "negative finetune steps accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "finetune_steps"
+      ],
+      "output": {
+        "num_samples_per_class": 10,
+        "strength": 0.3,
+        "finetune_steps": -1,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "negative generation steps accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "steps"
+      ],
+      "output": {
+        "num_samples_per_class": 10,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": -1,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "null image list accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "normal_images_base64"
+      ],
+      "output": {
+        "num_samples_per_class": 10,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": null,
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "strength above 1 rejected",
+      "accepted_by_schema": false,
+      "input_fields": [
+        "strength"
+      ],
+      "output": null
+    },
+    {
+      "name": "old sampling and guidance silently removed",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "sampling_steps",
+        "guidance_scale"
+      ],
+      "output": {
+        "num_samples_per_class": 10,
+        "strength": 0.3,
+        "finetune_steps": null,
+        "steps": null,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "new augmentation fields retained",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "strength",
+        "finetune_steps",
+        "steps"
+      ],
+      "output": {
+        "num_samples_per_class": 10,
+        "strength": 0.4,
+        "finetune_steps": 20,
+        "steps": 10,
+        "seed": null,
+        "normal_images_base64": [],
+        "anomaly_images_base64": []
+      }
+    },
+    {
+      "name": "kshot2 accepted despite documented options",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "dataset_id",
+        "k_shot"
+      ],
+      "output": {
+        "dataset_id": "example",
+        "k_shot": 2,
+        "epochs": 30,
+        "q_query": 5,
+        "episodes_per_epoch": 10,
+        "seed": 42
+      }
+    },
+    {
+      "name": "epochs zero accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "dataset_id",
+        "epochs"
+      ],
+      "output": {
+        "dataset_id": "example",
+        "k_shot": 5,
+        "epochs": 0,
+        "q_query": 5,
+        "episodes_per_epoch": 10,
+        "seed": 42
+      }
+    },
+    {
+      "name": "episodes zero accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "dataset_id",
+        "episodes_per_epoch"
+      ],
+      "output": {
+        "dataset_id": "example",
+        "k_shot": 5,
+        "epochs": 30,
+        "q_query": 5,
+        "episodes_per_epoch": 0,
+        "seed": 42
+      }
+    },
+    {
+      "name": "query zero accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "dataset_id",
+        "q_query"
+      ],
+      "output": {
+        "dataset_id": "example",
+        "k_shot": 5,
+        "epochs": 30,
+        "q_query": 0,
+        "episodes_per_epoch": 10,
+        "seed": 42
+      }
+    },
+    {
+      "name": "external query fields silently removed",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "dataset_id",
+        "query_images_base64",
+        "has_query_labels"
+      ],
+      "output": {
+        "dataset_id": "example",
+        "k_shot": 5,
+        "epochs": 30,
+        "q_query": 5,
+        "episodes_per_epoch": 10,
+        "seed": 42
+      }
+    },
+    {
+      "name": "new training fields retained",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "dataset_id",
+        "q_query",
+        "episodes_per_epoch",
+        "seed"
+      ],
+      "output": {
+        "dataset_id": "example",
+        "k_shot": 5,
+        "epochs": 30,
+        "q_query": 3,
+        "episodes_per_epoch": 2,
+        "seed": 7
+      }
+    },
+    {
+      "name": "empty inference accepted before worker",
+      "accepted_by_schema": true,
+      "input_fields": [],
+      "output": {
+        "model_id": "best.pt",
+        "images_base64": [],
+        "num_samples": null,
+        "batch_size": 4,
+        "sampling_steps": null,
+        "seed": null
+      }
+    },
+    {
+      "name": "zero generation batch accepted",
+      "accepted_by_schema": true,
+      "input_fields": [
+        "num_samples",
+        "batch_size"
+      ],
+      "output": {
+        "model_id": "best.pt",
+        "images_base64": [],
+        "num_samples": 10,
+        "batch_size": 0,
+        "sampling_steps": null,
+        "seed": null
+      }
+    }
+  ],
+  "adapter": {
+    "actual_method_executed_with_stub_generator": true,
+    "keyword_signature_compatible": true,
+    "requested_outputs": 10,
+    "generated_before_slice": 12,
+    "returned": 10
+  },
+  "image_roundtrip": {
+    "valid": true,
+    "mode": "RGB",
+    "size": [
+      16,
+      16
+    ]
+  },
+  "sample_dataset_metadata": {
+    "source": "BloodMNIST",
+    "split": "train",
+    "n_per_class": 32,
+    "image_size": 128,
+    "class_map": {
+      "0": {
+        "source_id": 4,
+        "source_name": "lymphocyte"
+      },
+      "1": {
+        "source_id": 6,
+        "source_name": "neutrophil"
+      }
+    }
+  },
+  "gpu_test_executed": false,
+  "external_model_weights_present_in_repos": false
+}

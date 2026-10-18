@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Download, 
@@ -23,8 +23,6 @@ interface Comment {
 export default function InferenceResultPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const totalImages = location.state?.totalImages || 50;
   
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.0);
   const [newComment, setNewComment] = useState('');

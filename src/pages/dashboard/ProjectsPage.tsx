@@ -11,7 +11,6 @@ import {
   FolderKanban,
   X,
 } from "lucide-react";
-import { useAuthStore } from "../../store/useAuthStore";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useEffect } from "react";
 
@@ -28,7 +27,6 @@ interface Project {
 
 export default function ProjectListPage() {
   const navigate = useNavigate();
-  const { user: userInfo } = useAuthStore();
   const { managingProjects, participatingProjects, fetchMyProjects, createProject, isLoading } = useProjectStore();
   
   const [projects, setProjects] = useState<Project[]>([]);

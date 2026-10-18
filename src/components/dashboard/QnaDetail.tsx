@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, ThumbsUp, MessageCircle, Award, Send, Edit2, Trash2, X, Check } from 'lucide-react';
+import { ArrowLeft, CheckCircle, ThumbsUp, MessageCircle, Award, Send, Edit2, Trash2 } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { useCommunityStore } from '../../store/useCommunityStore';
 import { useAuthStore } from '../../store/useAuthStore';

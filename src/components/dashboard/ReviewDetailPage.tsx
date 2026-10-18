@@ -74,11 +74,8 @@ export default function ReviewDetailPage({
 
   useEffect(() => {
     if (inspectionDetail) {
-      if (inspectionDetail.draftComment && !reviewComment) {
-        setReviewComment(inspectionDetail.draftComment);
-      }
-      if (inspectionDetail.finalComment) {
-        setReviewComment(inspectionDetail.finalComment);
+      if (inspectionDetail.expertComment && !reviewComment) {
+        setReviewComment(inspectionDetail.expertComment);
       }
       if (inspectionDetail.images && inspectionDetail.images.length > 0) {
         const initialComments: Record<number, string> = { ...imageComments };

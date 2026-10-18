@@ -1,5 +1,3 @@
-import { cn } from '../lib/utils';
-
 export default function TestPage() {
   return (
     <div className="min-h-screen bg-muted flex flex-col items-center justify-center gap-8 p-4">

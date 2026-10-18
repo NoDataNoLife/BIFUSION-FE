@@ -4,20 +4,13 @@ import {
   ArrowLeft,
   Database,
   Download,
-  HardDrive,
   FileText,
   Calendar,
   Code,
   Info,
   Trash2,
   Edit,
-  X,
-  Tag,
-  Clock,
   Play,
-  Award,
-  CheckCircle,
-  AlertCircle,
   ShieldCheck,
 } from "lucide-react";
 import ExpertVerificationCard, { type VerificationStatus } from "../community/ExpertVerificationCard";
@@ -54,13 +47,12 @@ interface AssetDatasetDetailProps {
   }) => void;
 }
 
- export default function AssetDatasetDetail({
+export default function AssetDatasetDetail({
   dataset,
   onBack,
   onDelete,
-  onUpdate,
 }: AssetDatasetDetailProps) {
-  const { fetchDatasetDetail, datasetDetail, isLoadingDetail, getDatasetDownloadUrl } = useCommunityStore();
+  const { fetchDatasetDetail, datasetDetail, getDatasetDownloadUrl } = useCommunityStore();
 
   useEffect(() => {
     if (!isNaN(Number(dataset.id))) {
@@ -74,11 +66,6 @@ interface AssetDatasetDetailProps {
  
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState(dataset.name);
-  const [newDescription, setNewDescription] = useState(
-    dataset.description || "",
-  );
-  const [newTags, setNewTags] = useState(dataset.tags || []);
   const [verificationStatus] = useState<VerificationStatus>(dataset.verificationStatus || "NONE");
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
@@ -252,8 +239,8 @@ interface AssetDatasetDetailProps {
             {/* Expert Section */}
             <ExpertVerificationCard 
               status={displayData.verificationStatus || verificationStatus}
-              onRequestClick={() => setShowVerificationModal(true)}
-              onResultClick={() => setShowResultModal(true)}
+              onRequestVerification={() => setShowVerificationModal(true)}
+              onViewResults={() => setShowResultModal(true)}
             />
           </div>
         </div>
@@ -311,6 +298,7 @@ interface AssetDatasetDetailProps {
               }
               setShowVerificationModal(false);
             } catch (error) {
+              console.error(error);
               alert('검증 요청 실패');
             }
           }}

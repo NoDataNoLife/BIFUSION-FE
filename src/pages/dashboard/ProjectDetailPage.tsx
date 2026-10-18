@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -17,97 +17,34 @@ import {
   Activity,
   Play,
   Check,
+  RotateCcw,
 } from "lucide-react";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useAuthStore } from "../../store/useAuthStore";
-import { useEffect } from "react";
+import api from "../../lib/axios";
 
 // --- Types ---
-interface Job {
-  id: string;
-  type: "Augment" | "Train" | "Inference";
-  status: "Queue" | "Processing" | "Completed" | "Failed";
-  progress?: number;
-  seed: string;
-  user: string;
-  date: string;
+interface ProjectJobItem {
+  jobId: number | string;
+  jobCode?: string;
+  type: string;
+  status: string;
+  seedNumber?: number | string;
+  createdBy?: {
+    userId?: number | null;
+    nickname?: string | null;
+    email?: string | null;
+  } | null;
+  createdAt: string;
+  finishedAt?: string | null;
+  currentStep?: string | null;
+  error?: string | null;
+  retryable?: boolean;
+  retryOfJobId?: number | string | null;
 }
-
 
 type StatusTab = "all" | "queue" | "processing" | "completed" | "failed";
 type JobTypeFilter = "all" | "Augment" | "Train" | "Inference";
-
-// --- Mock Data (Based on BIFUSION-PROTO) ---
-const mockJobs: Job[] = [
-  {
-    id: "JOB-001",
-    type: "Augment",
-    status: "Queue",
-    seed: "4231",
-    user: "염승빈",
-    date: "2026-02-09",
-  },
-  {
-    id: "JOB-002",
-    type: "Train",
-    status: "Queue",
-    seed: "7892",
-    user: "권나현",
-    date: "2026-02-09",
-  },
-  {
-    id: "JOB-003",
-    type: "Inference",
-    status: "Queue",
-    seed: "5614",
-    user: "김성한",
-    date: "2026-02-09",
-  },
-  {
-    id: "JOB-004",
-    type: "Augment",
-    status: "Processing",
-    progress: 45,
-    seed: "9023",
-    user: "조현희",
-    date: "2026-02-08",
-  },
-  {
-    id: "JOB-005",
-    type: "Train",
-    status: "Processing",
-    progress: 65,
-    seed: "3407",
-    user: "모채현",
-    date: "2026-02-08",
-  },
-  {
-    id: "JOB-007",
-    type: "Augment",
-    status: "Completed",
-    seed: "8743",
-    user: "권나현",
-    date: "2026-02-05",
-  },
-  {
-    id: "JOB-008",
-    type: "Train",
-    status: "Completed",
-    seed: "6159",
-    user: "김성한",
-    date: "2026-02-06",
-  },
-  {
-    id: "JOB-013",
-    type: "Inference",
-    status: "Failed",
-    seed: "9999",
-    user: "염승빈",
-    date: "2026-02-10",
-  },
-];
-
-
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
@@ -116,11 +53,54 @@ export default function ProjectDetailPage() {
   const { user } = useAuthStore();
   const { currentProject, fetchProjectDetail, updateProjectInfo, inviteMember, removeMember, updateMemberRole } = useProjectStore();
 
+  const [jobs, setJobs] = useState<ProjectJobItem[]>([]);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [jobsError, setJobsError] = useState<string | null>(null);
+
+  const fetchJobs = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      setJobsError(null);
+      const res = await api.get(`/projects/${projectId}/jobs`);
+      const payload = res.data?.data ?? res.data;
+      const items = Array.isArray(payload?.items)
+        ? payload.items
+        : Array.isArray(payload)
+          ? payload
+          : [];
+      setJobs(items);
+      if (payload?.statusCounts) {
+        setStatusCounts(payload.statusCounts);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '작업 목록을 불러오지 못했습니다.';
+      setJobsError(msg);
+    } finally {
+      setLoadingJobs(false);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     if (projectId) {
       fetchProjectDetail(projectId);
+      fetchJobs();
     }
-  }, [projectId, fetchProjectDetail]);
+  }, [projectId, fetchProjectDetail, fetchJobs]);
+
+  // Periodic polling when any job is running/pending
+  useEffect(() => {
+    const hasActiveJob = jobs.some((j) =>
+      ['PENDING', 'STARTED', 'RUNNING'].includes(j.status?.toUpperCase())
+    );
+    if (!hasActiveJob) return;
+
+    const timer = setInterval(() => {
+      fetchJobs();
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [jobs, fetchJobs]);
 
   const [selectedTab, setSelectedTab] = useState<StatusTab>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] =
@@ -144,23 +124,36 @@ export default function ProjectDetailPage() {
 
   // Statistics
   const stats = {
-    queue: mockJobs.filter((j) => j.status === "Queue").length,
-    processing: mockJobs.filter((j) => j.status === "Processing").length,
-    completed: mockJobs.filter((j) => j.status === "Completed").length,
-    failed: mockJobs.filter((j) => j.status === "Failed").length,
+    queue: statusCounts?.PENDING ?? jobs.filter((j) => j.status?.toUpperCase() === "PENDING").length,
+    processing:
+      (statusCounts?.STARTED ?? 0) + (statusCounts?.RUNNING ?? 0) ||
+      jobs.filter((j) => ["STARTED", "RUNNING"].includes(j.status?.toUpperCase())).length,
+    completed:
+      (statusCounts?.SUCCESS ?? 0) + (statusCounts?.COMPLETED ?? 0) ||
+      jobs.filter((j) => ["SUCCESS", "COMPLETED"].includes(j.status?.toUpperCase())).length,
+    failed:
+      (statusCounts?.FAILED ?? 0) + (statusCounts?.CANCELLED ?? 0) ||
+      jobs.filter((j) => ["FAILED", "CANCELLED"].includes(j.status?.toUpperCase())).length,
   };
 
-  const filteredJobs = mockJobs.filter((j) => {
-    if (selectedTab !== "all" && j.status.toLowerCase() !== selectedTab)
-      return false;
-    if (selectedTypeFilter !== "all" && j.type !== selectedTypeFilter)
-      return false;
-    if (
-      searchQuery &&
-      !j.id.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !j.user.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-      return false;
+  const filteredJobs = jobs.filter((j) => {
+    const s = j.status?.toUpperCase();
+    if (selectedTab === "queue" && s !== "PENDING") return false;
+    if (selectedTab === "processing" && !["STARTED", "RUNNING"].includes(s)) return false;
+    if (selectedTab === "completed" && !["SUCCESS", "COMPLETED"].includes(s)) return false;
+    if (selectedTab === "failed" && !["FAILED", "CANCELLED"].includes(s)) return false;
+
+    const t = j.type?.toUpperCase();
+    if (selectedTypeFilter === "Augment" && !t.includes("AUGMENT")) return false;
+    if (selectedTypeFilter === "Train" && !t.includes("TRAIN")) return false;
+    if (selectedTypeFilter === "Inference" && !t.includes("INFERENCE")) return false;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const codeMatch = String(j.jobCode || j.jobId).toLowerCase().includes(q);
+      const userMatch = (j.createdBy?.nickname || j.createdBy?.email || "").toLowerCase().includes(q);
+      if (!codeMatch && !userMatch) return false;
+    }
     return true;
   });
 
@@ -254,75 +247,80 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const getStatusBadge = (status: Job["status"], progress?: number) => {
-    switch (status) {
-      case "Queue":
+  const getStatusBadge = (status: string, currentStep?: string | null) => {
+    const s = (status || "").toUpperCase();
+    switch (s) {
+      case "PENDING":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-bold border border-yellow-500/20">
             <Clock className="w-3 h-3" />
             대기중
           </span>
         );
-      case "Processing":
+      case "STARTED":
+      case "RUNNING":
         return (
-          <div className="flex flex-col gap-1.5 min-w-30">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-500/20 self-start">
-              <Loader className="w-3 h-3 animate-spin" /> {progress}% 진행중
-            </span>
-            <div className="w-full bg-muted rounded-full h-1.5">
-              <div
-                className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-500/20">
+            <Loader className="w-3 h-3 animate-spin" />
+            {currentStep || "진행중"}
+          </span>
         );
-      case "Completed":
+      case "SUCCESS":
+      case "COMPLETED":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold border border-green-500/20">
             <CheckCircle className="w-3 h-3" />
             완료됨
           </span>
         );
-      case "Failed":
+      case "FAILED":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold border border-red-500/20">
             <XCircle className="w-3 h-3" />
             실패
           </span>
         );
+      case "CANCELLED":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-500/10 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-500/20">
+            <XCircle className="w-3 h-3" />
+            취소됨
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-bold border border-border">
+            {status}
+          </span>
+        );
     }
   };
 
-  const handleJobClick = (job: Job) => {
-    if (job.status === "Queue") {
-      if (job.type === "Augment") {
-        navigate(`/dashboard/projects/${projectId}/jobs/${job.id}/setup`);
-      } else if (job.type === "Train") {
-        navigate(`/dashboard/projects/${projectId}/train/${job.id}/setup`);
-      } else if (job.type === "Inference") {
-        navigate(`/dashboard/projects/${projectId}/inference/${job.id}/setup`);
+  const handleJobClick = (job: ProjectJobItem) => {
+    const t = (job.type || "").toUpperCase();
+    const s = (job.status || "").toUpperCase();
+    const isCompleted = s === "SUCCESS" || s === "COMPLETED";
+
+    if (t.includes("AUGMENT")) {
+      if (isCompleted) {
+        navigate(`/dashboard/projects/${projectId}/jobs/${job.jobId}/result`);
+      } else {
+        navigate(`/dashboard/projects/${projectId}/jobs/${job.jobId}/progress`);
       }
-    } else if (job.status === "Processing") {
-      if (job.type === "Augment") {
-        navigate(`/dashboard/projects/${projectId}/jobs/${job.id}/progress`);
-      } else if (job.type === "Train") {
-        navigate(`/dashboard/projects/${projectId}/train/${job.id}/progress`);
-      } else if (job.type === "Inference") {
-        navigate(
-          `/dashboard/projects/${projectId}/inference/${job.id}/progress`,
-        );
+    } else if (t.includes("TRAIN")) {
+      if (isCompleted) {
+        navigate(`/dashboard/projects/${projectId}/train/${job.jobId}/result`);
+      } else {
+        navigate(`/dashboard/projects/${projectId}/train/${job.jobId}/progress`);
       }
-    } else if (job.status === "Completed") {
-      if (job.type === "Augment") {
-        navigate(`/dashboard/projects/${projectId}/jobs/${job.id}/result`);
-      } else if (job.type === "Train") {
-        navigate(`/dashboard/projects/${projectId}/train/${job.id}/result`);
-      } else if (job.type === "Inference") {
-        navigate(`/dashboard/projects/${projectId}/inference/${job.id}/result`);
+    } else if (t.includes("INFERENCE")) {
+      if (isCompleted) {
+        navigate(`/dashboard/projects/${projectId}/inference/${job.jobId}/result`);
+      } else {
+        navigate(`/dashboard/projects/${projectId}/inference/${job.jobId}/progress`);
       }
     } else {
-      alert(`${job.type} 작업의 ${job.status} 상태 페이지는 준비 중입니다.`);
+      alert(`${job.type} 작업의 상세 페이지를 찾을 수 없습니다.`);
     }
   };
 
@@ -374,7 +372,10 @@ export default function ProjectDetailPage() {
                 <Settings className="w-4 h-4" />
                 설정
               </button>
-              <button className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+              <button
+                onClick={() => navigate(`/dashboard/projects/${projectId}/jobs/new/setup`)}
+                className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
+              >
                 <Play className="w-4 h-4 fill-current" />새 작업 시작
               </button>
             </div>
@@ -469,17 +470,39 @@ export default function ProjectDetailPage() {
               ))}
             </div>
 
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <input
-                type="text"
-                placeholder="작업 ID 또는 담당자 검색..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full md:w-72 pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-foreground"
-              />
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="relative group flex-1 md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <input
+                  type="text"
+                  placeholder="작업 ID 또는 담당자 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-foreground"
+                />
+              </div>
+              <button
+                onClick={() => fetchJobs()}
+                disabled={loadingJobs}
+                title="새로고침"
+                className="p-2.5 bg-card border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <RotateCcw className={`w-4 h-4 ${loadingJobs ? "animate-spin text-primary" : ""}`} />
+              </button>
             </div>
           </div>
+
+          {jobsError && (
+            <div className="p-4 bg-red-500/10 border-b border-red-500/20 text-red-600 dark:text-red-400 text-sm flex items-center justify-between">
+              <span>{jobsError}</span>
+              <button
+                onClick={() => fetchJobs()}
+                className="text-xs font-bold underline hover:no-underline cursor-pointer"
+              >
+                다시 시도
+              </button>
+            </div>
+          )}
 
           {/* Job Table */}
           <div className="overflow-x-auto">
@@ -505,61 +528,81 @@ export default function ProjectDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredJobs.length > 0 ? (
-                  filteredJobs.map((job) => (
-                    <tr
-                      key={job.id}
-                      onClick={() => handleJobClick(job)}
-                      className="group hover:bg-muted/50 transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-5">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-foreground tracking-tight group-hover:text-primary transition-colors cursor-pointer">
-                            {job.id}
+                {loadingJobs && filteredJobs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-20 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <Loader className="w-8 h-8 animate-spin mb-3 text-primary" />
+                        <p className="font-bold text-sm">작업 목록을 불러오는 중입니다...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredJobs.length > 0 ? (
+                  filteredJobs.map((job) => {
+                    const jobLabel = job.jobCode || `JOB-${job.jobId}`;
+                    const userName = job.createdBy?.nickname || job.createdBy?.email || "시스템";
+                    const formattedDate = job.createdAt
+                      ? new Date(job.createdAt).toLocaleDateString("ko-KR")
+                      : "-";
+
+                    const isAugment = (job.type || "").toUpperCase().includes("AUGMENT");
+                    const isTrain = (job.type || "").toUpperCase().includes("TRAIN");
+
+                    return (
+                      <tr
+                        key={job.jobId}
+                        onClick={() => handleJobClick(job)}
+                        className="group hover:bg-muted/50 transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-5">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-foreground tracking-tight group-hover:text-primary transition-colors cursor-pointer">
+                              {jobLabel}
+                            </span>
+                            <span className="text-xs font-medium text-muted-foreground mt-0.5 select-all">
+                              Seed: {job.seedNumber !== undefined && job.seedNumber !== null ? String(job.seedNumber) : "-"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span
+                            className={`px-2 py-1 rounded-lg text-[10px] font-black border ${
+                              isAugment
+                                ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+                                : isTrain
+                                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                                  : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20"
+                            }`}
+                          >
+                            {isAugment ? "AUGMENT" : isTrain ? "TRAIN" : "INFERENCE"}
                           </span>
-                          <span className="text-xs font-medium text-muted-foreground mt-0.5 select-all">
-                            Seed: {job.seed}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span
-                          className={`px-2 py-1 rounded-lg text-[10px] font-black border ${
-                            job.type === "Augment"
-                              ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
-                              : job.type === "Train"
-                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-                                : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20"
-                          }`}
-                        >
-                          {job.type.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5">
-                        {getStatusBadge(job.status, job.progress)}
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${job.user}`}
-                            alt={job.user}
-                            className="w-6 h-6 rounded-full bg-muted ring-1 ring-gray-200 shadow-sm"
-                          />
-                          <span className="text-sm font-bold text-foreground">
-                            {job.user}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-sm font-medium text-muted-foreground tabular-nums">
-                        {job.date}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <button className="p-2 text-muted-foreground hover:text-gray-900 hover:bg-muted rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="px-6 py-5">
+                          {getStatusBadge(job.status, job.currentStep)}
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userName)}`}
+                              alt={userName}
+                              className="w-6 h-6 rounded-full bg-muted ring-1 ring-border shadow-sm"
+                            />
+                            <span className="text-sm font-bold text-foreground">
+                              {userName}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 text-sm font-medium text-muted-foreground tabular-nums">
+                          {formattedDate}
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-20 text-center">

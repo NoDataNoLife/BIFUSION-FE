@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -10,12 +10,13 @@ import {
   HardDrive,
   ImageIcon,
   CheckCircle2,
-  MoreVertical,
-  Heart,
+  AlertTriangle,
+  Loader2,
   Send,
-  Sparkles,
-  Layers
+  ExternalLink,
 } from 'lucide-react';
+
+import { useJobStore, getJobErrorMessage, type JobDetail } from '../../store/useJobStore';
 
 interface Comment {
   id: string;
@@ -28,40 +29,126 @@ interface Comment {
 export default function AugmentResultPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
-  
-  const [activeTab, setActiveTab] = useState<'Normal' | 'Anomaly'>('Normal');
+  const { currentJob, fetchJobStatus } = useJobStore();
+
+  const [job, setJob] = useState<JobDetail | null>(
+    currentJob?.jobId === jobId ? currentJob : null
+  );
+  const [loading, setLoading] = useState(!job);
+  const [error, setError] = useState<string | null>(null);
+
   const [newComment, setNewComment] = useState('');
   const [comments, setComments] = useState<Comment[]>([
     {
       id: '1',
       user: '김성한',
-      time: '2시간 전',
-      content: '증강 품질이 훌륭합니다! 특히 Normal 데이터의 변동성이 자연스럽네요. 다음 단계 진행해도 좋을 것 같습니다.',
+      time: '이전 기록',
+      content: '증강 생성 품질을 확인하고 학습 단계로 넘어가 주세요.',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim'
     }
   ]);
 
-  const stats = {
-    total: 40,
-    normal: 20,
-    anomaly: 20,
-    duration: '3분 42초',
-    fileSize: '12.4 MB'
+  useEffect(() => {
+    if (!jobId) return;
+    let isMounted = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchJobStatus(jobId);
+        if (isMounted) setJob(data);
+      } catch (err) {
+        if (isMounted) setError(getJobErrorMessage(err, '작업 결과를 불러오지 못했습니다.'));
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
+  }, [jobId, fetchJobStatus]);
+
+  const result = (job?.result ?? {}) as {
+    datasetId?: number | string;
+    dataset_id?: number | string;
+    generatedCount?: number;
+    generated_count?: number;
+    totalSampleCount?: number;
+    total_sample_count?: number;
+    previewUrl?: string | null;
+    preview_url?: string | null;
+    downloadUrl?: string | null;
+    download_url?: string | null;
+    artifacts?: {
+      dataset_url?: string;
+      preview_url?: string;
+      size_bytes?: number;
+    };
+  };
+
+  const datasetId = result.datasetId ?? result.dataset_id;
+  const generatedCount = result.generatedCount ?? result.generated_count ?? 0;
+  const totalSampleCount = result.totalSampleCount ?? result.total_sample_count ?? generatedCount;
+  const normalCount = Math.floor(generatedCount / 2);
+  const anomalyCount = generatedCount - normalCount;
+  const previewUrl = result.previewUrl ?? result.preview_url ?? result.artifacts?.preview_url ?? null;
+  const downloadUrl = result.downloadUrl ?? result.download_url ?? result.artifacts?.dataset_url ?? null;
+
+  const handleDownload = () => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank');
+    } else {
+      alert('다운로드 파일이 준비되지 않았거나 S3 발행(AUGMENTATION_PUBLISH_S3)이 비활성화되어 있습니다.');
+    }
+  };
+
+  const handleStartTrain = () => {
+    navigate(`/dashboard/projects/${projectId}/train/new/setup`, {
+      state: { datasetId }
+    });
   };
 
   const handlePostComment = () => {
     if (newComment.trim()) {
       const comment: Comment = {
         id: Date.now().toString(),
-        user: '염승빈',
+        user: '사용자',
         time: '방금 전',
         content: newComment.trim(),
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yeom'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'
       };
       setComments([...comments, comment]);
       setNewComment('');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="font-semibold text-sm">증강 작업 결과를 불러오는 중입니다…</p>
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-xl mx-auto mt-20 p-8 bg-card border border-border rounded-3xl text-center space-y-4">
+          <AlertTriangle className="w-10 h-10 text-red-500 mx-auto" />
+          <h2 className="text-xl font-bold">결과를 불러올 수 없습니다</h2>
+          <p className="text-sm text-muted-foreground">{error ?? '해당 작업을 찾을 수 없습니다.'}</p>
+          <button
+            onClick={() => navigate(`/dashboard/projects/${projectId}`)}
+            className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90"
+          >
+            프로젝트 홈으로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isSuccess = job.status === 'SUCCESS' || job.status === 'COMPLETED';
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
@@ -81,121 +168,140 @@ export default function AugmentResultPage() {
                 <ChevronRight className="w-3 h-3" />
                 <span>Job {jobId}</span>
                 <ChevronRight className="w-3 h-3" />
-                <span className="text-emerald-500 font-black">Completed</span>
+                <span className={isSuccess ? "text-emerald-500 font-black" : "text-orange-500 font-black"}>
+                  {job.status}
+                </span>
               </nav>
               <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-                데이터 증강 결과 리포트 <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                데이터 증강 결과 리포트 {isSuccess && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
               </h1>
             </div>
 
             <div className="ml-auto flex items-center gap-3">
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-2xl font-black text-sm text-foreground hover:bg-muted transition-all shadow-sm active:scale-95 cursor-pointer">
-                <Download className="w-4 h-4" />
-                NPZ 다운로드
-              </button>
               <button 
-                onClick={() => navigate(`/dashboard/projects/${projectId}/train/new-job/setup`)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+                onClick={handleDownload}
+                className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-2xl font-bold text-sm text-foreground hover:bg-muted transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"
               >
-                모델 학습 시작 <Play className="w-4 h-4 fill-current ml-1" />
+                <Download className="w-4 h-4" />
+                {downloadUrl ? '결과 파일 다운로드' : '다운로드 (준비중)'}
               </button>
+              {isSuccess && (
+                <button 
+                  onClick={handleStartTrain}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+                >
+                  모델 학습 시작 <Play className="w-4 h-4 fill-current ml-1" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-8 space-y-8">
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { label: '생성 이미지 수', value: `${stats.total}장`, sub: `Normal ${stats.normal} / Anomaly ${stats.anomaly}`, icon: ImageIcon, bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20' },
-            { label: '총 소요 시간', value: stats.duration, sub: 'GPU 가속 모드 사용', icon: Clock, bg: 'bg-purple-500/10', text: 'text-purple-500', border: 'border-purple-500/20' },
-            { label: '데이터셋 크기', value: stats.fileSize, sub: '압축된 NPZ 포맷', icon: HardDrive, bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' },
-          ].map((stat, i) => (
-            <div key={i} className="bg-card rounded-3xl p-7 border border-border shadow-sm relative overflow-hidden group">
-              <div className="relative z-10">
-                <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.text} ${stat.border} border flex items-center justify-center mb-6`}>
-                  <stat.icon size={24} />
-                </div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{stat.label}</p>
-                <p className="text-3xl font-black text-foreground mb-1">{stat.value}</p>
-                <p className="text-xs font-bold text-muted-foreground">{stat.sub}</p>
-              </div>
+        {!isSuccess && (
+          <div className="p-6 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="font-bold text-foreground">작업이 아직 완료되지 않았습니다 (현재 상태: {job.status})</h3>
+              <p className="text-xs text-muted-foreground">진행 중이거나 오류가 발생한 작업의 상세 상태를 확인하세요.</p>
             </div>
-          ))}
-        </div>
-
-        {/* Results Explorer */}
-        <div className="bg-card rounded-[2.5rem] border border-border shadow-sm overflow-hidden">
-          {/* Explorer Header & Tabs */}
-          <div className="px-10 pt-10 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex gap-10">
-              {(['Normal', 'Anomaly'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-8 text-lg font-black transition-all relative ${
-                    activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-500'
-                  }`}
-                >
-                  {tab} Data
-                  <span className="ml-2 px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-lg group-hover:bg-primary/10 transition-colors">
-                    {tab === 'Normal' ? stats.normal : stats.anomaly}
-                  </span>
-                  {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-1.5 bg-primary rounded-full" />}
-                </button>
-              ))}
-            </div>
-
-            <div className="pb-8 flex items-center gap-3">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Display:</span>
-              <div className="flex p-1 bg-muted rounded-xl">
-                <button className="px-3 py-1.5 bg-card shadow-sm rounded-lg text-xs font-black text-foreground">Grid</button>
-                <button className="px-3 py-1.5 text-xs font-black text-muted-foreground hover:text-gray-600 transition-colors">List</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Image Grid */}
-          <div className="p-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div 
-                key={i} 
-                className="group relative aspect-square bg-muted rounded-3xl overflow-hidden border border-border hover:border-primary/50 transition-all cursor-zoom-in"
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all">
-                  <Heart className="w-4 h-4 text-muted-foreground hover:text-red-500 hover:fill-current" />
-                </div>
-                {/* Placeholder Image Visual */}
-                <div className="w-full h-full flex items-center justify-center text-gray-200 group-hover:scale-110 transition-transform duration-700">
-                  <Sparkles className="w-12 h-12 opacity-20" />
-                </div>
-                <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[10px] font-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  ID: {activeTab.slice(0, 1)}-{i + 101}
-                </div>
-              </div>
-            ))}
-            {/* View More Card */}
-            <button className="aspect-square rounded-3xl border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground hover:border-primary/30 hover:text-primary hover:bg-primary/5 transition-all group">
-              <Layers className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-black uppercase tracking-widest">+ 5 More</span>
+            <button
+              onClick={() => navigate(`/dashboard/projects/${projectId}/jobs/${jobId}/progress`)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors"
+            >
+              진행 상태 확인
             </button>
           </div>
+        )}
+
+        {/* Key Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-card rounded-3xl p-7 border border-border shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center mb-6">
+              <ImageIcon size={24} />
+            </div>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">생성된 이미지 수</p>
+            <p className="text-3xl font-black text-foreground mb-1">{generatedCount}장</p>
+            <p className="text-xs font-bold text-muted-foreground">Normal {normalCount}장 / Anomaly {anomalyCount}장</p>
+          </div>
+
+          <div className="bg-card rounded-3xl p-7 border border-border shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-500 border border-purple-500/20 flex items-center justify-center mb-6">
+              <Clock size={24} />
+            </div>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">작업 일시</p>
+            <p className="text-lg font-bold text-foreground mb-1">
+              {job.updatedAt ? new Date(job.updatedAt).toLocaleString() : '확인 중'}
+            </p>
+            <p className="text-xs font-bold text-muted-foreground">Seed: {String(job.seed ?? '미지정')}</p>
+          </div>
+
+          <div className="bg-card rounded-3xl p-7 border border-border shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mb-6">
+              <HardDrive size={24} />
+            </div>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">생성 데이터셋 ID</p>
+            <p className="text-2xl font-black text-foreground mb-1">
+              {datasetId ? `ID: ${datasetId}` : '데이터셋 등록 확인 중'}
+            </p>
+            <p className="text-xs font-bold text-muted-foreground">
+              총 샘플 수: {totalSampleCount}장
+            </p>
+          </div>
+        </div>
+
+        {/* Results Preview Section */}
+        <div className="bg-card rounded-[2.5rem] border border-border shadow-sm p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">증강 결과 미리보기</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                모델이 생성한 합성 이미지 결과물입니다.
+              </p>
+            </div>
+            {previewUrl && (
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
+              >
+                원본 이미지 보기 <ExternalLink size={14} />
+              </a>
+            )}
+          </div>
+
+          {previewUrl ? (
+            <div className="rounded-3xl overflow-hidden border border-border bg-black/5 flex items-center justify-center p-4">
+              <img
+                src={previewUrl}
+                alt="증강 생성 미리보기"
+                className="max-h-[500px] w-auto object-contain rounded-2xl shadow-sm"
+              />
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-dashed border-border p-12 text-center space-y-2 bg-muted/20">
+              <ImageIcon className="w-10 h-10 text-muted-foreground mx-auto opacity-50" />
+              <p className="text-sm font-semibold text-foreground">미리보기 이미지가 준비되지 않았습니다</p>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                서버의 S3 업로드 설정(AUGMENTATION_PUBLISH_S3)이 활성화되어 있지 않거나, 아직 결과 파일이 동기화 중일 수 있습니다. 생성된 데이터셋 ID는 다음 학습 단계에서 그대로 사용할 수 있습니다.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Interaction Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Comments Area */}
           <div className="lg:col-span-2 bg-card rounded-[2.5rem] p-10 border border-border shadow-sm space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-muted text-muted-foreground rounded-2xl">
                   <MessageSquare className="w-6 h-6" />
                 </div>
-                <h3 className="text-2xl font-black text-foreground tracking-tight">팀 코멘트 <span className="text-primary ml-1">{comments.length}</span></h3>
+                <h3 className="text-2xl font-black text-foreground tracking-tight">
+                  팀 코멘트 <span className="text-primary ml-1">{comments.length}</span>
+                </h3>
               </div>
-              <button className="text-xs font-bold text-muted-foreground hover:text-gray-900 transition-colors uppercase tracking-widest">최신순 ↓</button>
             </div>
 
             {/* Comment Input */}
@@ -204,13 +310,13 @@ export default function AugmentResultPage() {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="결과에 대한 의견을 남겨주세요..."
-                className="w-full p-6 bg-muted border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none text-foreground min-h-[120px]"
+                className="w-full p-6 bg-muted border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary transition-all font-medium resize-none text-foreground min-h-30"
               />
               <button 
                 onClick={handlePostComment}
                 disabled={!newComment.trim()}
-                className={`absolute bottom-4 right-4 p-4 rounded-2xl transition-all shadow-lg active:scale-95 ${
-                  newComment.trim() ? 'bg-primary text-white shadow-primary/20' : 'bg-gray-200 text-muted-foreground cursor-not-allowed'
+                className={`absolute bottom-4 right-4 p-4 rounded-2xl transition-all shadow-lg active:scale-95 cursor-pointer ${
+                  newComment.trim() ? 'bg-primary text-white shadow-primary/20' : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}
               >
                 <Send className="w-5 h-5" />
@@ -218,72 +324,36 @@ export default function AugmentResultPage() {
             </div>
 
             {/* Comments List */}
-            <div className="space-y-6 pt-4">
+            <div className="space-y-4">
               {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-4 group">
-                  <img src={comment.avatar} alt={comment.user} className="w-12 h-12 rounded-2xl bg-muted ring-4 ring-gray-50 shrink-0" />
-                  <div className="flex-1 space-y-2">
+                <div key={comment.id} className="p-5 bg-muted/40 rounded-3xl border border-border flex items-start gap-4">
+                  <img src={comment.avatar} alt={comment.user} className="w-10 h-10 rounded-xl" />
+                  <div className="flex-1 space-y-1">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-foreground text-sm">{comment.user}</span>
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{comment.time}</span>
-                      </div>
-                      <button className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-gray-900 transition-all">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                      <span className="font-bold text-foreground text-sm">{comment.user}</span>
+                      <span className="text-xs text-muted-foreground">{comment.time}</span>
                     </div>
-                    <div className="p-5 bg-muted rounded-2xl rounded-tl-none border border-border text-muted-foreground font-medium leading-relaxed">
-                      {comment.content}
-                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed font-medium">{comment.content}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Quality Summary Sidebar */}
-          <div className="space-y-6">
-            <div className="bg-primary text-white rounded-[2.5rem] p-8 shadow-xl shadow-primary/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-xl" />
-              <div className="relative z-10 space-y-6">
-                <h4 className="text-xl font-black italic tracking-tight">AI Quality Summary</h4>
-                <div className="space-y-4">
-                  {[
-                    { label: '이미지 선명도', score: 98 },
-                    { label: '클래스 다양성', score: 92 },
-                    { label: '해부학적 일관성', score: 95 },
-                  ].map((item, i) => (
-                    <div key={i} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-black uppercase tracking-tighter opacity-80">
-                        <span>{item.label}</span>
-                        <span>{item.score}%</span>
-                      </div>
-                      <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-card rounded-full" style={{ width: `${item.score}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="pt-2">
-                  <p className="text-xs font-bold leading-relaxed opacity-70 italic">
-                    * BIFUSION의 자동 품질 검사 엔진에 의해 분석된 수치입니다. 전문가 검토가 권장됩니다.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-card rounded-[2.5rem] p-8 border border-border shadow-sm text-center space-y-4">
-              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-3xl flex items-center justify-center mx-auto shadow-sm">
-                <CheckCircle2 size={32} />
-              </div>
-              <div>
-                <h4 className="font-black text-foreground tracking-tight">최종 검수 완료</h4>
-                <p className="text-xs text-muted-foreground font-bold mt-1 uppercase tracking-widest italic">Ready for Training</p>
-              </div>
-              <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                생성된 데이터셋의 품질이 기준치를 통과했습니다. 즉시 모델 학습 단계로 진입할 수 있습니다.
-              </p>
-            </div>
+          {/* Quick Guide */}
+          <div className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-8 space-y-4">
+            <h3 className="font-bold text-foreground text-lg">다음 권장 단계</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              증강된 데이터셋은 이 프로젝트의 고유 데이터셋 ID({datasetId ? `ID: ${datasetId}` : '생성 완료'})로 등록되었습니다. 상단의 <strong>[모델 학습 시작]</strong> 버튼을 누르면 해당 데이터셋이 자동으로 선택된 상태로 학습을 진행할 수 있습니다.
+            </p>
+            {isSuccess && (
+              <button
+                onClick={handleStartTrain}
+                className="w-full py-3 bg-primary text-white rounded-2xl font-bold text-sm shadow-md hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                모델 학습으로 이동 <Play size={14} className="fill-current" />
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -15,6 +15,8 @@ export interface JobDetail {
   seed?: string | number;
   result?: Record<string, unknown> | null;
   error?: string | null;
+  retryable?: boolean;
+  retryOfJobId?: string | number | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -77,6 +79,8 @@ function parseJob(
     seed: data.seedNumber as string | number | undefined ?? data.seed as string | number | undefined ?? fallback.seed,
     result: data.result && typeof data.result === 'object' ? data.result as Record<string, unknown> : null,
     error: typeof data.error === 'string' ? data.error : null,
+    retryable: typeof data.retryable === 'boolean' ? data.retryable : undefined,
+    retryOfJobId: data.retryOfJobId as string | number | null | undefined,
     createdAt: data.createdAt as string | undefined,
     updatedAt: data.updatedAt as string | undefined,
   };

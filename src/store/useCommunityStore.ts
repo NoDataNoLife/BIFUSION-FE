@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../lib/axios';
+import type { InspectionResult } from '../lib/liveData';
 
 export interface AuthorInfo {
   userId: number;
@@ -47,6 +48,13 @@ export interface DatasetDetailResponse extends DatasetListResponse {
   thumbnail?: string;
   fileId?: number;
   fileName?: string;
+  inspectionStatus?: string;
+  inspectionResult?: InspectionResult | null;
+  format?: string;
+  category?: string;
+  imageType?: string;
+  resolution?: string;
+  classes?: string;
 }
 
 export interface RecipeListResponse {
@@ -87,15 +95,15 @@ export interface RecipeDetailResponse {
     batchSize: number;
   };
   inspectionStatus?: string;
-  inspectionResult?: any;
+  inspectionResult?: InspectionResult | null;
 }
 
 export interface ApplicationResponse {
   applicationId: number;
-  applicant: AuthorInfo;
+  userId: number;
+  nickname: string;
+  profileImageUrl: string | null;
   status: string;
-  message: string;
-  createdAt: string;
 }
 
 export interface RecruitmentDetailResponse extends RecruitmentResponse {
@@ -189,7 +197,6 @@ interface CommunityStore {
   forkRecipe: (recipeId: number) => Promise<void>;
   deleteRecipe: (recipeId: number) => Promise<void>;
   
-  requestExpertVerification: (targetType: 'RECIPE' | 'DATASET', targetId: number | string, reason: string, reward: number) => Promise<void>;
   deleteRecipeReview: (recipeId: number, reviewId: number) => Promise<void>;
   getDatasetDownloadUrl: (fileId: number) => Promise<string>;
 }
@@ -262,7 +269,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   },
 
   fetchQnaDetail: async (qnaId: number) => {
-    set({ isLoadingDetail: true, error: null });
+    set({ qnaDetail: null, isLoadingDetail: true, error: null });
     try {
       const response = await api.get<{ data: ExpertQnADetailResponse }>(`/community/qna/${qnaId}`);
       set({ qnaDetail: response.data.data, isLoadingDetail: false });
@@ -294,7 +301,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   },
 
   fetchRecruitmentDetail: async (recruitmentId: number) => {
-    set({ isLoadingDetail: true, error: null });
+    set({ recruitmentDetail: null, isLoadingDetail: true, error: null });
     try {
       const response = await api.get<{ data: RecruitmentDetailResponse }>(`/community/recruitments/${recruitmentId}`);
       set({ recruitmentDetail: response.data.data, isLoadingDetail: false });
@@ -326,7 +333,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   },
 
   fetchDatasetDetail: async (datasetId: number) => {
-    set({ isLoadingDetail: true, error: null });
+    set({ datasetDetail: null, isLoadingDetail: true, error: null });
     try {
       const response = await api.get<{ data: DatasetDetailResponse }>(`/datasets/${datasetId}`);
       set({ datasetDetail: response.data.data, isLoadingDetail: false });
@@ -374,7 +381,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
   },
 
   fetchRecipeDetail: async (recipeId: number) => {
-    set({ isLoadingDetail: true, error: null });
+    set({ recipeDetail: null, isLoadingDetail: true, error: null });
     try {
       const response = await api.get<{ data: RecipeDetailResponse }>(`/community/recipes/${recipeId}`);
       set({ recipeDetail: response.data.data, isLoadingDetail: false });
@@ -401,15 +408,6 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
       await store.fetchRecipeDetail(recipeId);
     } catch (error: any) {
       set({ error: error.message || 'Failed to fork recipe' });
-      throw error;
-    }
-  },
-
-  requestExpertVerification: async (targetType: 'RECIPE' | 'DATASET', targetId: number | string, reason: string, reward: number) => {
-    try {
-      await api.post('/inspections', { targetType, targetId, reason, reward });
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to request expert verification' });
       throw error;
     }
   },

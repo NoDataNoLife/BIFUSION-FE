@@ -3,33 +3,25 @@ import api from '../lib/axios';
 
 export interface MyDatasetListResponse {
   datasetId: number;
-  title: string;
-  description: string;
-  thumbnailUrl?: string;
-  fileSize?: string;
-  fileCount?: number;
-  format?: string;
-  category?: string;
-  license?: string;
-  isPublic?: boolean;
-  isExpertVerified?: boolean;
-  createdAt: string;
+  name: string;
+  expertVerified: boolean;
+  bannerImageUrl: string | null;
+  totalSize: number | null;
+  fileCount: number | null;
+  uploadedAt: string | null;
+  fileFormats: string[];
 }
 
 export interface MyRecipeListResponse {
   recipeId: number;
   title: string;
   description: string;
-  bannerUrl?: string;
-  author?: {
-    userId: number;
-    nickname: string;
-    profileImageUrl?: string;
-  };
-  forkCount?: number;
-  likeCount?: number;
-  isExpertVerified?: boolean;
-  createdAt: string;
+  expertVerified: boolean;
+  rating: number | null;
+  forkCount: number | null;
+  viewCount: number | null;
+  bannerImageUrl: string | null;
+  isDeleted: boolean;
 }
 
 interface PageResponse<T> {
@@ -42,47 +34,23 @@ interface PageResponse<T> {
 }
 
 interface AssetStore {
-  forkedRecipeIds: string[];
   myDatasets: MyDatasetListResponse[];
   myRecipes: MyRecipeListResponse[];
   isLoading: boolean;
   error: string | null;
 
-  toggleFork: (recipeId: string) => void;
-  isForked: (recipeId: string) => boolean;
-
   fetchMyDatasets: (type: 'UPLOADED' | 'AUGMENTED', page?: number, size?: number) => Promise<void>;
   fetchMyRecipes: (type: 'MY' | 'FORKED', page?: number, size?: number) => Promise<void>;
 }
 
-export const useAssetStore = create<AssetStore>((set, get) => ({
-  forkedRecipeIds: [],
+export const useAssetStore = create<AssetStore>((set) => ({
   myDatasets: [],
   myRecipes: [],
   isLoading: false,
   error: null,
 
-  toggleFork: (recipeId: string) => {
-    const { forkedRecipeIds } = get();
-    const isAlreadyForked = forkedRecipeIds.includes(recipeId);
-    
-    if (isAlreadyForked) {
-      set({
-        forkedRecipeIds: forkedRecipeIds.filter(id => id !== recipeId)
-      });
-    } else {
-      set({
-        forkedRecipeIds: [...forkedRecipeIds, recipeId]
-      });
-    }
-  },
-
-  isForked: (recipeId: string) => {
-    return get().forkedRecipeIds.includes(recipeId);
-  },
-
   fetchMyDatasets: async (type: 'UPLOADED' | 'AUGMENTED', page = 0, size = 20) => {
-    set({ isLoading: true, error: null });
+    set({ myDatasets: [], myRecipes: [], isLoading: true, error: null });
     try {
       const response = await api.get<{ data: PageResponse<MyDatasetListResponse> }>('/assets/datasets', {
         params: { type, page, size }
@@ -94,7 +62,7 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
   },
 
   fetchMyRecipes: async (type: 'MY' | 'FORKED', page = 0, size = 20) => {
-    set({ isLoading: true, error: null });
+    set({ myDatasets: [], myRecipes: [], isLoading: true, error: null });
     try {
       const serverType = type === 'MY' ? 'MINE' : 'FORKED';
       const response = await api.get<{ data: PageResponse<MyRecipeListResponse> }>('/assets/recipes', {

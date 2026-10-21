@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -16,7 +16,7 @@ import {
 import '../../components/jobs/AISetup.css';
 
 import { getJobErrorMessage, useJobStore } from '../../store/useJobStore';
-import { uploadTempFiles, validateImageFiles } from '../../lib/fileUpload';
+import { uploadTempFiles, validateImageFiles, type TempUploadedFile } from '../../lib/fileUpload';
 
 export default function AugmentSetupPage() {
   const { projectId, jobId } = useParams();
@@ -34,6 +34,8 @@ export default function AugmentSetupPage() {
   const [normalFiles, setNormalFiles] = useState<File[]>([]);
   const [anomalyFiles, setAnomalyFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const uploadCache = useRef(new Map<File, TempUploadedFile>());
+  const submitting = useRef(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const handleNormalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +75,7 @@ export default function AugmentSetupPage() {
     && (!fixedSeed || (seed !== '' && Number.isSafeInteger(Number(seed)) && Number(seed) >= 0 && Number(seed) <= 4294967295));
 
   const handleStartAugmentation = async () => {
-    if (!isValid || isUploading || isLoading || !projectId) return;
+    if (!isValid || submitting.current || isUploading || isLoading || !projectId) return;
     setSubmitError(null);
 
     const normalValidation = validateImageFiles(normalFiles, { minCount: 5, maxCount: 10 });
@@ -93,16 +95,20 @@ export default function AugmentSetupPage() {
       return;
     }
 
+    submitting.current = true;
     try {
       setIsUploading(true);
-      setUploadProgress(10);
+      setUploadProgress(0);
 
-      const [normalUploaded, anomalyUploaded] = await Promise.all([
-        uploadTempFiles(normalFiles, (p) => setUploadProgress(Math.round(p * 0.45))),
-        uploadTempFiles(anomalyFiles, (p) => setUploadProgress(Math.round(45 + p * 0.45))),
-      ]);
+      const uploaded = await uploadTempFiles(
+        [...normalFiles, ...anomalyFiles],
+        (progress) => setUploadProgress(progress),
+        uploadCache.current,
+      );
+      const normalUploaded = uploaded.slice(0, normalFiles.length);
+      const anomalyUploaded = uploaded.slice(normalFiles.length);
 
-      setUploadProgress(95);
+      setUploadProgress(100);
 
       const normalFileIds = normalUploaded.map((f) => f.fileId);
       const anomalyFileIds = anomalyUploaded.map((f) => f.fileId);
@@ -122,6 +128,7 @@ export default function AugmentSetupPage() {
     } catch (err) {
       setSubmitError(getJobErrorMessage(err, '증강 요청에 실패했습니다. 설정을 확인하고 다시 시도해 주세요.'));
     } finally {
+      submitting.current = false;
       setIsUploading(false);
       setUploadProgress(null);
     }

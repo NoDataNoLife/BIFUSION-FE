@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -14,8 +14,9 @@ import {
 import '../../components/jobs/AISetup.css';
 
 import api from '../../lib/axios';
+import { saveInferenceInputs } from '../../lib/inferenceInputs';
 import { getJobErrorMessage, useJobStore } from '../../store/useJobStore';
-import { uploadTempFiles, validateImageFiles } from '../../lib/fileUpload';
+import { uploadTempFiles, validateImageFiles, type TempUploadedFile } from '../../lib/fileUpload';
 
 interface TrainedModel {
   trainedModelId: number | string;
@@ -23,8 +24,8 @@ interface TrainedModel {
   modelName?: string;
   name?: string;
   jobCode?: string;
-  accuracy?: number;
-  createdAt?: string;
+  metrics?: { accuracy?: number | null } | null;
+  finishedAt?: string | null;
 }
 
 export default function InferenceSetupPage() {
@@ -43,6 +44,8 @@ export default function InferenceSetupPage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const uploadCache = useRef(new Map<File, TempUploadedFile>());
+  const submitting = useRef(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
@@ -93,12 +96,13 @@ export default function InferenceSetupPage() {
   const totalBytes = uploadedFiles.reduce((acc, f) => acc + f.size, 0);
 
   const isValid = !!projectId
-    && !!selectedModel
+    && !loadingModels && !modelError
+    && models.some((model) => String(model.trainedModelId ?? model.id) === selectedModel)
     && uploadedFiles.length >= 1 && uploadedFiles.length <= 20
     && totalBytes <= 20 * 1024 * 1024;
 
   const handleStartInference = async () => {
-    if (isLoading || isUploading || !isValid || !projectId) return;
+    if (submitting.current || isLoading || isUploading || !isValid || !projectId) return;
     setSubmitError(null);
 
     const validation = validateImageFiles(uploadedFiles, { minCount: 1, maxCount: 20 });
@@ -107,11 +111,12 @@ export default function InferenceSetupPage() {
       return;
     }
 
+    submitting.current = true;
     try {
       setIsUploading(true);
-      setUploadProgress(10);
+      setUploadProgress(0);
 
-      const uploaded = await uploadTempFiles(uploadedFiles, (p) => setUploadProgress(p));
+      const uploaded = await uploadTempFiles(uploadedFiles, (p) => setUploadProgress(p), uploadCache.current);
       const fileIds = uploaded.map((f) => f.fileId);
 
       const parsedModelId = isNaN(Number(selectedModel))
@@ -123,12 +128,14 @@ export default function InferenceSetupPage() {
         fileIds,
       });
 
+      saveInferenceInputs(projectId, job.jobId, uploaded);
       navigate(`/dashboard/projects/${projectId}/inference/${job.jobId}/progress`, {
         state: { totalImages: uploadedFiles.length }
       });
     } catch (err) {
       setSubmitError(getJobErrorMessage(err, '추론 요청에 실패했습니다. 다시 시도해 주세요.'));
     } finally {
+      submitting.current = false;
       setIsUploading(false);
       setUploadProgress(null);
     }
@@ -216,8 +223,8 @@ export default function InferenceSetupPage() {
                 {models.map((model) => {
                   const id = String(model.trainedModelId ?? model.id);
                   const name = model.modelName || model.name || model.jobCode || `모델 #${id}`;
-                  const accText = model.accuracy ? ` (정확도 ${(model.accuracy * 100).toFixed(1)}%)` : '';
-                  const dateStr = model.createdAt ? ` - ${new Date(model.createdAt).toLocaleDateString()}` : '';
+                  const accText = typeof model.metrics?.accuracy === 'number' ? ` (정확도 ${(model.metrics.accuracy * 100).toFixed(1)}%)` : '';
+                  const dateStr = model.finishedAt ? ` - ${new Date(model.finishedAt).toLocaleDateString()}` : '';
                   return (
                     <option key={id} value={id}>
                       {name}{accText}{dateStr}

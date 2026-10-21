@@ -81,11 +81,12 @@ export default function TrainSetupPage() {
   const numEpisodes = Number(episodesPerEpoch);
   const numSeed = Number(seed);
 
-  const isValid = !!projectId && !!selectedAugmentData
+  const isValid = !!projectId && !loadingDatasets && !datasetError
+    && datasets.some((dataset) => String(dataset.datasetId ?? dataset.id) === selectedAugmentData)
     && Number.isInteger(numEpochs) && numEpochs >= 1 && numEpochs <= 200
     && Number.isInteger(numQuery) && numQuery >= 1 && numQuery <= 20
     && Number.isInteger(numEpisodes) && numEpisodes >= 1 && numEpisodes <= 100
-    && Number.isInteger(numSeed) && numSeed >= 0 && numSeed <= 4294967295;
+    && seed.trim() !== '' && Number.isInteger(numSeed) && numSeed >= 0 && numSeed <= 4294967295;
 
   const handleStartTrain = async () => {
     if (isLoading || !isValid || !projectId) return;

@@ -63,37 +63,36 @@ export function validateImageFiles(
   return { valid: true };
 }
 
+// Cache is owned by the setup screen, and survives a partially failed upload.
 export async function uploadTempFiles(
   files: File[],
-  onProgress?: (progressPercent: number) => void
+  onProgress?: (progressPercent: number) => void,
+  cache: Map<File, TempUploadedFile> = new Map(),
 ): Promise<TempUploadedFile[]> {
-  if (files.length === 0) return [];
-
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append('files', file);
-  });
-
-  const response = await api.post('/files/temp', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-    onUploadProgress: (progressEvent) => {
-      if (progressEvent.total && onProgress) {
-        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        onProgress(percent);
+  const uploaded: TempUploadedFile[] = [];
+  for (const [index, file] of files.entries()) {
+    let item = cache.get(file);
+    if (!item) {
+      // One file per request gives an unambiguous file -> fileId mapping.
+      const formData = new FormData();
+      formData.append('files', file);
+      const response = await api.post('/files/temp', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (event) => {
+          if (event.total) onProgress?.(Math.round((index + event.loaded / event.total) / files.length * 100));
+        },
+      });
+      const data: unknown = response.data?.data ?? response.data;
+      if (!Array.isArray(data) || data.length !== 1) throw new Error('파일 업로드 응답 형식이 올바르지 않습니다.');
+      const value = data[0] as Record<string, unknown>;
+      if (!Number.isSafeInteger(value.fileId) || Number(value.fileId) <= 0 || typeof value.fileUrl !== 'string') {
+        throw new Error('업로드한 파일의 번호와 주소를 확인할 수 없습니다.');
       }
-    },
-  });
-
-  const rawData = response.data?.data ?? response.data;
-  if (!Array.isArray(rawData)) {
-    throw new Error('파일 업로드 응답 형식이 올바르지 않습니다.');
+      item = { fileId: Number(value.fileId), fileUrl: value.fileUrl, originalFileName: file.name };
+      cache.set(file, item);
+    }
+    uploaded.push(item);
+    onProgress?.(Math.round((index + 1) / files.length * 100));
   }
-
-  return rawData.map((item: any) => ({
-    fileId: Number(item.fileId ?? item.id),
-    fileUrl: String(item.fileUrl ?? item.url ?? ''),
-    originalFileName: item.originalFileName ?? item.fileName,
-  }));
+  return uploaded;
 }

@@ -5,6 +5,7 @@ export interface InspectionImageItem {
   imageId: number;
   imageUrl: string;
   comment?: string;
+  imageName?: string;
   label?: string;
 }
 
@@ -22,6 +23,7 @@ export interface InspectionDetailResponse {
   rewardPoints: number;
   requestedAt: string;
   expertComment?: string;
+  augmentationParams?: { imagesPerClass?: number; sampling?: number; guidance?: number };
   sampleImages?: {
     images: InspectionImageItem[];
   };
@@ -95,7 +97,7 @@ export const useExpertStore = create<ExpertStore>((set) => ({
   },
 
   fetchInspectionDetail: async (inspectionId: number) => {
-    set({ isLoadingDetail: true, error: null });
+    set({ inspectionDetail: null, isLoadingDetail: true, error: null });
     try {
       const response = await api.get<{ data: InspectionDetailResponse }>(`/inspections/${inspectionId}`);
       const data = response.data.data;
@@ -137,7 +139,7 @@ export const useExpertStore = create<ExpertStore>((set) => ({
 
   approveInspection: async (inspectionId: number, finalComment: string) => {
     try {
-      await api.post(`/inspections/${inspectionId}/approve`, { finalComment });
+      await api.patch(`/inspections/${inspectionId}/approve`, { expertComment: finalComment });
     } catch (error: any) {
       set({ error: error.message || '검수 승인 처리에 실패했습니다.' });
       throw error;
@@ -146,7 +148,7 @@ export const useExpertStore = create<ExpertStore>((set) => ({
 
   rejectInspection: async (inspectionId: number, rejectionReason: string) => {
     try {
-      await api.post(`/inspections/${inspectionId}/reject`, { rejectionReason });
+      await api.patch(`/inspections/${inspectionId}/reject`, { expertComment: rejectionReason });
     } catch (error: any) {
       set({ error: error.message || '검수 반려 처리에 실패했습니다.' });
       throw error;

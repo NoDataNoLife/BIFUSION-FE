@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  XCircle, 
-  Users, 
-  Bell, 
-  MessageCircle, 
-  X, 
+import {
+  XCircle,
+  Users,
+  Bell,
+  MessageCircle,
+  X,
   Check,
   Sparkles,
   ShieldCheck,
   Info
 } from 'lucide-react';
+import { notificationTarget } from '../../lib/notificationTarget';
+import { requestMessage } from '../../lib/liveData';
 import { useNotificationStore, type NotificationItem } from '../../store/useNotificationStore';
 
 interface NotificationCenterProps {
@@ -20,13 +22,13 @@ interface NotificationCenterProps {
 
 export default function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
   const navigate = useNavigate();
-  const { 
-    notifications, 
-    unreadCount, 
-    fetchNotifications, 
-    markAsRead, 
-    markAllAsRead, 
-    softDeleteNotification 
+  const {
+    notifications, error, isLoading,
+    unreadCount,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    softDeleteNotification
   } = useNotificationStore();
 
   useEffect(() => {
@@ -81,40 +83,10 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
     }
   };
 
-  const resolveTargetLink = (item: NotificationItem) => {
-    switch (item.type) {
-      case 'AUGMENTATION_SUCCESS':
-      case 'AUGMENTATION_FAILED':
-        return item.targetId ? `/dashboard/projects/${item.targetId}` : '/dashboard/projects';
-      case 'PROJECT_INVITATION':
-      case 'INVITATION_ACCEPTED':
-      case 'INVITATION_REJECTED':
-        return '/dashboard/projects';
-      case 'EXPERT_APPROVED':
-      case 'EXPERT_REJECTED':
-        return '/dashboard/profile';
-      case 'AUGMENTATION_INSPECTION_APPROVED':
-      case 'AUGMENTATION_INSPECTION_REJECTED':
-      case 'RECIPE_REVIEW_REQUESTED':
-      case 'RECIPE_APPROVED':
-      case 'RECIPE_REJECTED':
-        return '/dashboard/expert';
-      case 'RECIPE_REVIEW':
-      case 'QNA_ANSWERED':
-      case 'RECRUITMENT_APPLY':
-      case 'RECRUITMENT_ACCEPTED':
-      case 'RECRUITMENT_REJECTED':
-        return '/dashboard/community';
-      default:
-        return '/dashboard/notifications';
-    }
-  };
-
-  const handleItemClick = (item: NotificationItem) => {
-    markAsRead(item.notificationId);
-    onClose();
-    const link = resolveTargetLink(item);
-    navigate(link);
+  const handleItemClick = async (item: NotificationItem) => {
+    if (!item.isRead && !await markAsRead(item.notificationId)) return;
+    try { const link = await notificationTarget(item); navigate(link); onClose(); }
+    catch (err) { useNotificationStore.setState({ error: requestMessage(err) }); }
   };
 
   const handleDelete = (e: React.MouseEvent, notificationId: number) => {
@@ -126,7 +98,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      
+
       {/* Notification Panel */}
       <div className="absolute top-16 right-8 w-105 bg-card rounded-[2.5rem] shadow-2xl border border-border z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
         {/* Header */}
@@ -137,14 +109,14 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => markAllAsRead()}
               className="p-2 hover:bg-muted rounded-xl text-muted-foreground hover:text-primary transition-all cursor-pointer"
               title="모두 읽음 처리"
             >
               <Check className="w-5 h-5" />
             </button>
-            <button 
+            <button
               onClick={onClose}
               className="p-2 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition-all cursor-pointer"
             >
@@ -155,9 +127,11 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
 
         {/* List */}
         <div className="max-h-125 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-          {notifications.length > 0 ? (
+      {error && <p role="alert" className="p-4 text-red-500">{error}</p>}
+      {isLoading && <p className="p-4">알림을 불러오는 중…</p>}
+          {isLoading || error ? null : notifications.length > 0 ? (
             notifications.map((notification) => (
-              <div 
+              <div
                 key={notification.notificationId}
                 onClick={() => handleItemClick(notification)}
                 className={`group relative p-4 rounded-3xl transition-all cursor-pointer flex gap-4 items-start ${
@@ -171,7 +145,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{getRelativeTime(notification.createdAt)}</span>
                   </div>
                   <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{notification.content}</p>
-                  
+
                   {!notification.isRead && (
                     <div className="mt-3 flex justify-end">
                       <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
@@ -200,7 +174,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
         </div>
 
         {/* Footer */}
-        <button 
+        <button
           onClick={() => {
             onClose();
             navigate('/dashboard/notifications');

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, ThumbsUp, MessageCircle, Award, Send, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, MessageCircle, Award, Send, Edit2, Trash2 } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { useCommunityStore } from '../../store/useCommunityStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -13,7 +13,7 @@ interface QnaDetailProps {
 export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { qnaDetail, fetchQnaDetail, createQnaAnswer, isLoadingDetail } = useCommunityStore();
+  const { qnaDetail, fetchQnaDetail, createQnaAnswer, isLoadingDetail, error } = useCommunityStore();
   const { user } = useAuthStore();
   const isAuthor = user?.userId === qnaDetail?.author.userId;
 
@@ -23,14 +23,17 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'CLOSED':
       case 'Solved': return 'bg-green-100 text-green-600';
       case 'Expert Answered': return 'bg-blue-100 text-blue-600';
+      case 'OPEN':
       case 'Open': return 'bg-orange-100 text-orange-600';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
 
   const handleSubmitComment = async () => {
+    if (isSubmitting || user?.expertStatus !== 'APPROVED') return;
     if (newComment.trim()) {
       setIsSubmitting(true);
       try {
@@ -46,6 +49,7 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
     }
   };
 
+  if (error && !qnaDetail) return <div className="p-8"><p role="alert">{error}</p><button onClick={() => fetchQnaDetail(qnaId)}>다시 시도</button><button onClick={onBack}>목록으로</button></div>;
   if (isLoadingDetail || !qnaDetail) {
     return <div className="min-h-screen bg-background flex items-center justify-center font-bold text-muted-foreground">데이터를 불러오는 중입니다...</div>;
   }
@@ -62,11 +66,6 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
 
           {isAuthor && (
             <div className="flex items-center gap-4">
-              <button 
-                className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-primary hover:bg-white rounded-xl font-bold transition-all text-sm border border-transparent hover:border-border"
-              >
-                <Edit2 size={18} /> 수정
-              </button>
               <button 
                 onClick={onDelete}
                 className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl font-bold transition-all text-sm border border-transparent hover:border-red-100"
@@ -114,11 +113,6 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
                 <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{new Date(qnaDetail.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
-
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-card border-2 border-border text-muted-foreground hover:text-primary hover:border-primary/20 rounded-xl transition-all font-bold text-sm">
-              <ThumbsUp size={18} /> {qnaDetail.answerCount * 5}
-
-            </button>
           </div>
         </div>
 
@@ -146,10 +140,6 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
                       <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-0.5">{new Date(comment.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  
-                  <button className="flex items-center gap-2 px-4 py-2 bg-muted text-muted-foreground hover:text-primary rounded-xl transition-all font-bold text-xs">
-                    <ThumbsUp size={14} /> {comment.answerId % 10 + 2}
-                  </button>
                 </div>
                 
                 <p className="text-muted-foreground font-medium leading-relaxed whitespace-pre-wrap">{comment.content}</p>
@@ -164,15 +154,15 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
                 <Edit2 className="text-primary" size={20} /> 답변 남기기
               </h3>
               <textarea
-                value={newComment}
+                disabled={user?.expertStatus !== 'APPROVED'} value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="동료 연구자에게 도움이 되는 따뜻한 답변을 남겨주세요..."
+                placeholder={user?.expertStatus === 'APPROVED' ? '답변을 입력해 주세요.' : '인증된 전문가만 답변을 작성할 수 있습니다.'}
                 className="w-full h-40 px-6 py-5 bg-white/5 border border-white/10 rounded-3xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white/10 transition-all font-medium resize-none"
               />
               <div className="flex justify-end pt-2">
                 <button
                   onClick={handleSubmitComment}
-                  disabled={!newComment.trim() || isSubmitting}
+                  disabled={user?.expertStatus !== 'APPROVED' || !newComment.trim() || isSubmitting}
                   className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={18} /> {isSubmitting ? '등록 중...' : '답변 등록하기'}

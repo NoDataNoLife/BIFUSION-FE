@@ -1,44 +1,47 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Bell, 
-  Check, 
-  CheckCheck, 
-  Trash2, 
-  Search, 
-  Sparkles, 
-  Users, 
-  ShieldCheck, 
-  MessageSquare, 
+import {
+  Bell,
+  Check,
+  CheckCheck,
+  Trash2,
+  Search,
+  Sparkles,
+  Users,
+  ShieldCheck,
+  MessageSquare,
   ArrowRight,
   Info,
   XCircle,
   Clock
 } from 'lucide-react';
+import { notificationTarget } from '../../lib/notificationTarget';
+import { requestMessage } from '../../lib/liveData';
 import { useNotificationStore, type NotificationItem, type NotificationCategory } from '../../store/useNotificationStore';
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const { 
-    notifications, 
-    unreadCount, 
-    fetchNotifications, 
-    markAsRead, 
-    markAllAsRead, 
-    hardDeleteNotification 
+  const {
+    notifications, error, isLoading, totalPages, currentPage,
+    unreadCount,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    hardDeleteNotification
   } = useNotificationStore();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterUnreadOnly, setFilterUnreadOnly] = useState<boolean>(false);
 
+  const [page, setPage] = useState(0);
   const loadNotifications = useCallback(() => {
-    fetchNotifications({
+    fetchNotifications({ page,
       category: selectedCategory !== 'ALL' ? (selectedCategory as NotificationCategory) : undefined,
       isRead: filterUnreadOnly ? false : undefined,
       keyword: searchQuery.trim() || undefined,
     });
-  }, [fetchNotifications, selectedCategory, filterUnreadOnly, searchQuery]);
+  }, [fetchNotifications, selectedCategory, filterUnreadOnly, searchQuery, page]);
 
   useEffect(() => {
     loadNotifications();
@@ -75,41 +78,10 @@ export default function NotificationsPage() {
     }
   };
 
-  const resolveTargetLink = (item: NotificationItem) => {
-    switch (item.type) {
-      case 'AUGMENTATION_SUCCESS':
-      case 'AUGMENTATION_FAILED':
-        return item.targetId ? `/dashboard/projects/${item.targetId}` : '/dashboard/projects';
-      case 'PROJECT_INVITATION':
-      case 'INVITATION_ACCEPTED':
-      case 'INVITATION_REJECTED':
-        return '/dashboard/projects';
-      case 'EXPERT_APPROVED':
-      case 'EXPERT_REJECTED':
-        return '/dashboard/profile';
-      case 'AUGMENTATION_INSPECTION_APPROVED':
-      case 'AUGMENTATION_INSPECTION_REJECTED':
-      case 'RECIPE_REVIEW_REQUESTED':
-      case 'RECIPE_APPROVED':
-      case 'RECIPE_REJECTED':
-        return '/dashboard/expert';
-      case 'RECIPE_REVIEW':
-      case 'QNA_ANSWERED':
-      case 'RECRUITMENT_APPLY':
-      case 'RECRUITMENT_ACCEPTED':
-      case 'RECRUITMENT_REJECTED':
-        return '/dashboard/community';
-      default:
-        return undefined;
-    }
-  };
-
-  const handleNotificationClick = (item: NotificationItem) => {
-    markAsRead(item.notificationId);
-    const link = resolveTargetLink(item);
-    if (link) {
-      navigate(link);
-    }
+  const handleNotificationClick = async (item: NotificationItem) => {
+    if (!item.isRead && !await markAsRead(item.notificationId)) return;
+    try { navigate(await notificationTarget(item)); }
+    catch (err) { useNotificationStore.setState({ error: requestMessage(err) }); }
   };
 
   const getRelativeTime = (dateStr: string) => {
@@ -139,6 +111,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="p-8 space-y-8 max-w-5xl mx-auto">
+      {error && <p role="alert" className="p-4 text-red-500">{error}</p>}
+      {isLoading && <p className="p-4">알림을 불러오는 중…</p>}
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -171,7 +145,7 @@ export default function NotificationsPage() {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setPage(0); setSearchQuery(e.target.value); }}
             placeholder="알림 제목 또는 내용을 검색하세요..."
             className="w-full pl-14 pr-6 py-4 bg-card border border-border rounded-3xl shadow-xs text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium"
           />
@@ -189,7 +163,7 @@ export default function NotificationsPage() {
             ].map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => { setPage(0); setSelectedCategory(cat.id); }}
                 className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
                   selectedCategory === cat.id
                     ? 'bg-primary text-white shadow-md shadow-primary/20 scale-102'
@@ -205,7 +179,7 @@ export default function NotificationsPage() {
             <input
               type="checkbox"
               checked={filterUnreadOnly}
-              onChange={(e) => setFilterUnreadOnly(e.target.checked)}
+              onChange={(e) => { setPage(0); setFilterUnreadOnly(e.target.checked); }}
               className="w-4 h-4 text-primary rounded-md border-border focus:ring-primary"
             />
             <span>읽지 않은 알림만 보기 ({unreadCount})</span>
@@ -215,7 +189,7 @@ export default function NotificationsPage() {
 
       {/* Notification List */}
       <div className="space-y-4">
-        {filteredNotifications.length === 0 ? (
+        {isLoading || error ? null : filteredNotifications.length === 0 ? (
           <div className="py-24 text-center bg-card rounded-[2.5rem] border border-border space-y-4 shadow-xs">
             <div className="w-16 h-16 bg-muted rounded-3xl flex items-center justify-center mx-auto text-muted-foreground">
               <Bell size={28} />
@@ -262,7 +236,7 @@ export default function NotificationsPage() {
                   {item.content}
                 </p>
 
-                {resolveTargetLink(item) && (
+                {item.targetId != null && (
                   <span className="inline-flex items-center gap-1 text-xs font-black text-primary group-hover:underline">
                     바로가기 <ArrowRight size={13} />
                   </span>
@@ -298,6 +272,7 @@ export default function NotificationsPage() {
           ))
         )}
       </div>
+      {!error && totalPages > 1 && <div className="flex justify-center gap-5"><button disabled={isLoading || currentPage === 0} onClick={() => setPage((value) => value - 1)}>이전</button><span>{currentPage + 1} / {totalPages}</span><button disabled={isLoading || currentPage + 1 >= totalPages} onClick={() => setPage((value) => value + 1)}>다음</button></div>}
     </div>
   );
 }

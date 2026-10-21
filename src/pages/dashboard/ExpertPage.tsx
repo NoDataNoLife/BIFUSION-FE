@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { 
-  CheckCircle, 
-  XCircle, 
-  TrendingUp, 
-  Award, 
-  Star, 
-  Eye, 
-  MessageSquare 
+import {
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  Award,
+  Star,
+  Eye,
+  MessageSquare
 } from 'lucide-react';
 import ReviewDetailPage from '../../components/dashboard/ReviewDetailPage';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import { useExpertStore } from '../../store/useExpertStore';
 
 interface ReviewRequest {
@@ -22,9 +23,9 @@ interface ReviewRequest {
   project: string;
   thumbnail: string;
   parameters: {
-    imagesPerClass: number;
-    samplingSteps: number;
-    guidanceScale: number;
+    imagesPerClass?: number;
+    samplingSteps?: number;
+    guidanceScale?: number;
   };
   requestDate: string;
   status: 'pending' | 'reviewing' | 'completed';
@@ -34,22 +35,23 @@ interface ReviewRequest {
 }
 
 export default function ExpertDashboard() {
+  const performance = useApiQuery<{ isExpertCertified: boolean; totalReward: number; topPercent: number | null; completedCount: number; feedbackSatisfaction: number | null }>('/experts/me/performance');
   const [selectedTab, setSelectedTab] = useState<'pending' | 'reviewing' | 'completed'>('pending');
   const [selectedRequest, setSelectedRequest] = useState<ReviewRequest | null>(null);
   const [showDetailPage, setShowDetailPage] = useState(false);
 
-  const { 
-    groupedTasks, 
-    fetchMyTasks, 
-    startInspectionTask, 
-    isLoading 
+  const {
+    groupedTasks,
+    fetchMyTasks,
+    startInspectionTask,
+    isLoading, error
   } = useExpertStore();
 
   useEffect(() => {
     fetchMyTasks();
   }, [fetchMyTasks]);
 
-  const currentTasks = 
+  const currentTasks =
     selectedTab === 'pending'
       ? groupedTasks.PENDING || []
       : selectedTab === 'reviewing'
@@ -62,17 +64,13 @@ export default function ExpertDashboard() {
     requester: {
       name: item.requester?.nickname || '연구자',
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.requester?.nickname || 'expert'}`,
-      email: item.requester?.email || 'researcher@biffusion.com',
+      email: item.requester?.email || '',
     },
     dataType: '증강 데이터셋',
-    project: item.projectName || '의료 영상 증강 프로젝트',
-    thumbnail: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80',
-    parameters: {
-      imagesPerClass: 50,
-      samplingSteps: 100,
-      guidanceScale: 7.5,
-    },
-    requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '2026-08-25',
+    project: item.projectName || '프로젝트 정보 없음',
+    thumbnail: '',
+    parameters: {},
+    requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '날짜 정보 없음',
     status: item.status === 'PENDING' ? 'pending' : item.status === 'IN_PROGRESS' ? 'reviewing' : 'completed',
     reviewResult: item.reviewResult === 'APPROVED' ? 'approved' : item.reviewResult === 'REJECTED' ? 'rejected' : undefined,
   }));
@@ -85,6 +83,7 @@ export default function ExpertDashboard() {
         await fetchMyTasks();
       } catch (e) {
         console.error('Failed to start inspection on server:', e);
+        return;
       }
     }
     setSelectedTab('reviewing');
@@ -96,12 +95,14 @@ export default function ExpertDashboard() {
   };
 
   const handleBackToDashboard = () => {
+    performance.reload();
     setShowDetailPage(false);
     setSelectedRequest(null);
     fetchMyTasks();
   };
 
   const handleApprove = () => {
+    performance.reload();
     setShowDetailPage(false);
     setSelectedRequest(null);
     setSelectedTab('completed');
@@ -109,6 +110,7 @@ export default function ExpertDashboard() {
   };
 
   const handleReject = () => {
+    performance.reload();
     setShowDetailPage(false);
     setSelectedRequest(null);
     setSelectedTab('completed');
@@ -128,6 +130,7 @@ export default function ExpertDashboard() {
 
   return (
     <div className="p-8 space-y-10 max-w-7xl mx-auto">
+      {error && <p role="alert" className="p-4 text-red-500">{error}</p>}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -136,18 +139,19 @@ export default function ExpertDashboard() {
         </div>
         <div className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-2xl border border-primary/20">
           <Award className="w-5 h-5" />
-          <span className="font-black text-sm">전문가 인증 완료</span>
+          <span className="font-black text-sm">{performance.loading ? '인증 상태 조회 중' : performance.data?.isExpertCertified ? '전문가 인증 완료' : '전문가 인증 필요'}</span>
         </div>
       </div>
 
+      {performance.error && <p role="alert" className="text-red-500">{performance.error} <button onClick={performance.reload}>성과 다시 조회</button></p>}
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-primary rounded-3xl p-8 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
           <Award className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 group-hover:scale-110 transition-transform" />
           <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-2">총 획득 리워드</p>
-          <p className="text-4xl font-black">12,500 <span className="text-lg font-bold opacity-70">P</span></p>
+          <p className="text-4xl font-black">{performance.data?.totalReward?.toLocaleString() ?? '—'} <span className="text-lg font-bold opacity-70">P</span></p>
           <div className="mt-6 flex items-center gap-2 text-xs font-bold bg-white/20 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm">
-            <TrendingUp size={14} /> 상위 5% 전문가
+            <TrendingUp size={14} /> {performance.data?.topPercent != null ? `상위 ${performance.data.topPercent}%` : '순위 정보 없음'}
           </div>
         </div>
 
@@ -157,7 +161,7 @@ export default function ExpertDashboard() {
           </div>
           <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">검수 완료 건수</p>
           <p className="text-3xl font-black text-foreground">
-            {(groupedTasks.COMPLETED || []).length} <span className="text-sm font-bold text-muted-foreground ml-1">건</span>
+            {performance.data?.completedCount ?? '—'} <span className="text-sm font-bold text-muted-foreground ml-1">건</span>
           </p>
         </div>
 
@@ -166,7 +170,7 @@ export default function ExpertDashboard() {
             <Star size={24} />
           </div>
           <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">피드백 만족도</p>
-          <p className="text-3xl font-black text-foreground">4.9 <span className="text-sm font-bold text-muted-foreground ml-1">/ 5.0</span></p>
+          <p className="text-3xl font-black text-foreground">{performance.data?.feedbackSatisfaction ?? '평가 없음'} <span className="text-sm font-bold text-muted-foreground ml-1">/ 5.0</span></p>
         </div>
       </div>
 
@@ -183,11 +187,11 @@ export default function ExpertDashboard() {
                   selectedTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-gray-600'
                 }`}
               >
-                {tab === 'pending' 
-                  ? `검수 대기 (${(groupedTasks.PENDING || []).length})` 
-                  : tab === 'reviewing' 
-                  ? `검수 중 (${(groupedTasks.IN_PROGRESS || []).length})` 
-                  : `검수 완료 (${(groupedTasks.COMPLETED || []).length})`}
+                {tab === 'pending'
+                  ? `검수 대기 (${(groupedTasks.PENDING || []).length})`
+                  : tab === 'reviewing'
+                  ? `검수 중 (${(groupedTasks.IN_PROGRESS || []).length})`
+                  : `검수 완료 (${performance.data?.completedCount ?? '—'})`}
                 {selectedTab === tab && (
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full" />
                 )}
@@ -221,7 +225,7 @@ export default function ExpertDashboard() {
                   </div>
 
                   <div className="relative aspect-video rounded-2xl overflow-hidden mb-6 bg-muted">
-                    <img src={request.thumbnail} alt={request.project} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={request.thumbnail || "/defaultUserProfile.png"} alt={request.project} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
 
                   <h3 className="text-lg font-black text-foreground mb-2 line-clamp-1">{request.project}</h3>

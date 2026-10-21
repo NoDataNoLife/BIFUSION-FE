@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Briefcase, Clock, CheckCircle, Send, Calendar, Edit2, Trash2, Tag } from 'lucide-react';
+import { ArrowLeft, Users, Briefcase, Clock, CheckCircle, Send, Calendar, Trash2, Tag } from 'lucide-react';
 import api from '../../lib/axios';
 import axios from 'axios';
+import { requestMessage } from '../../lib/liveData';
 import { useCommunityStore } from '../../store/useCommunityStore';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -14,6 +15,8 @@ interface RecruitmentDetailProps {
 export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: RecruitmentDetailProps) {
   const { recruitmentDetail, isLoadingDetail, fetchRecruitmentDetail, updateApplicationStatus, error } = useCommunityStore();
   const { user } = useAuthStore();
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<number | null>(null);
   const [applicationName, setApplicationName] = useState('');
   const [applicationEmail, setApplicationEmail] = useState('');
   const [applicationMessage, setApplicationMessage] = useState('');
@@ -27,7 +30,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
 
   const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!applicationName || !applicationEmail || !applicationMessage) return;
+    if (isSubmitting || !applicationName || !applicationEmail || !applicationMessage) return;
 
     setIsSubmitting(true);
     try {
@@ -50,8 +53,16 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
     }
   };
 
+  const changeApplication = async (applicationId: number, status: string) => {
+    if (updating !== null) return;
+    setUpdating(applicationId); setActionError(null);
+    try { await updateApplicationStatus(recruitmentId, applicationId, status); }
+    catch (err) { setActionError(requestMessage(err)); }
+    finally { setUpdating(null); }
+  };
+
   const myApplication = recruitmentDetail?.applications?.find(
-    (app) => app.applicant.userId === user?.userId
+    (app) => app.userId === user?.userId
   );
 
   if (error && !recruitmentDetail) {
@@ -101,6 +112,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
 
   return (
     <div className="min-h-screen bg-background">
+      {actionError && <p role="alert" className="p-4 text-red-500">{actionError}</p>}
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-8 py-6 flex items-center justify-between">
@@ -111,11 +123,6 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
 
           {user?.userId === recruitmentDetail.author?.userId && (
             <div className="flex items-center gap-4">
-              <button 
-                className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-primary hover:bg-white rounded-xl font-bold transition-all text-sm border border-transparent hover:border-border"
-              >
-                <Edit2 size={18} /> 수정
-              </button>
               <button 
                 onClick={onDelete}
                 className="flex items-center gap-2 px-4 py-2.5 bg-muted text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl font-bold transition-all text-sm border border-transparent hover:border-red-100"
@@ -229,10 +236,10 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                 {recruitmentDetail.applications?.map(app => (
                   <div key={app.applicationId} className="bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col md:flex-row gap-6">
                     <div className="flex items-start gap-4 flex-1">
-                      <img src={app.applicant.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={app.applicant.nickname} className="w-12 h-12 rounded-xl shrink-0" />
+                      <img src={app.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={app.nickname} className="w-12 h-12 rounded-xl shrink-0" />
                       <div className="space-y-2">
-                        <h4 className="font-bold text-foreground text-lg">{app.applicant.nickname}</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{app.message}</p>
+                        <h4 className="font-bold text-foreground text-lg">{app.nickname}</h4>
+
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 shrink-0 justify-center">
@@ -244,8 +251,8 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                       </span>
                       {app.status === 'PENDING' && (
                         <div className="flex gap-2">
-                          <button onClick={() => updateApplicationStatus(recruitmentId, app.applicationId, 'ACCEPTED')} className="px-4 py-2 bg-green-500 text-white rounded-xl text-xs font-bold hover:bg-green-600 transition-colors">수락</button>
-                          <button onClick={() => updateApplicationStatus(recruitmentId, app.applicationId, 'REJECTED')} className="px-4 py-2 bg-red-500 text-white rounded-xl text-xs font-bold hover:bg-red-600 transition-colors">거절</button>
+                          <button disabled={updating !== null} onClick={() => changeApplication(app.applicationId, 'ACCEPTED')} className="px-4 py-2 bg-green-500 text-white rounded-xl text-xs font-bold hover:bg-green-600 transition-colors">수락</button>
+                          <button disabled={updating !== null} onClick={() => changeApplication(app.applicationId, 'REJECTED')} className="px-4 py-2 bg-red-500 text-white rounded-xl text-xs font-bold hover:bg-red-600 transition-colors">거절</button>
                         </div>
                       )}
                     </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
   Award,
   MapPin,
@@ -29,6 +29,7 @@ import {
 import ImageWithFallback from "../../components/common/ImageWithFallback";
 import { useAuthStore } from "../../store/useAuthStore";
 import api from "../../lib/axios";
+import { requestMessage, type ActivityItem, type ActivityPage } from "../../lib/liveData";
 
 // --- Types ---
 interface CommunityActivity {
@@ -50,108 +51,13 @@ interface ProfileProject {
   isPublic: boolean;
 }
 
+function mapActivity(item: ActivityItem): CommunityActivity {
+  return { id: `${item.type}:${item.activityId}`, type: item.type === 'RECIPE' ? 'showcase' : item.type === 'DATASET' ? 'dataset' : item.type === 'QNA' ? 'qna' : 'recruiting', title: item.title, description: item.description, timestamp: new Date(item.createdAt).toLocaleDateString(), isPublic: item.isPublic, stats: { likes: item.likeCount, downloads: item.downloadCount, comments: item.commentCount } };
+}
+
 type SettingsTab = "plan" | "verification" | "account";
 
 
-
-const initialActivities: CommunityActivity[] = [
-  {
-    id: "1",
-    type: "showcase",
-    title: "ECG Data Augmentation Pipeline",
-    description: "심전도 신호 분류를 위한 전문가 검증 레시피",
-    timestamp: "1일 전",
-    isPublic: true,
-    stats: { likes: 512, comments: 24 },
-    isExpertVerified: true,
-  },
-  {
-    id: "2",
-    type: "dataset",
-    title: "ECG Heartbeat Categorization",
-    description: "심전도 신호 분류를 위한 대규모 데이터셋 (109,446 files)",
-    timestamp: "5일 전",
-    isPublic: true,
-    stats: { downloads: 2145, likes: 789 },
-    isExpertVerified: true,
-  },
-  {
-    id: "3",
-    type: "qna",
-    title: "ECG 데이터 전처리 방법 문의",
-    description:
-      "Q&A 답변: ECG 신호의 경우 베이스라인 원더 제거가 중요합니다...",
-    timestamp: "1주 전",
-    isPublic: true,
-    stats: { comments: 24 },
-  },
-  {
-    id: "4",
-    type: "recruiting",
-    title: "의료 영상 AI 연구팀 모집",
-    description:
-      "폐암 진단 AI 개발을 위한 의료 전문가 및 데이터 사이언티스트 모집",
-    timestamp: "2주 전",
-    isPublic: true,
-    stats: { likes: 45, comments: 12 },
-  },
-  {
-    id: "5",
-    type: "showcase",
-    title: "Chest X-Ray Classification Model",
-    description: "흉부 X-Ray 이미지 분류를 위한 ResNet 기반 모델",
-    timestamp: "3주 전",
-    isPublic: true,
-    stats: { likes: 234, comments: 18 },
-    isExpertVerified: true,
-  },
-  {
-    id: "6",
-    type: "dataset",
-    title: "Medical Image Segmentation Dataset",
-    description: "CT 이미지 세그멘테이션을 위한 라벨링 데이터셋",
-    timestamp: "3주 전",
-    isPublic: true,
-    stats: { likes: 189, downloads: 567 },
-  },
-  {
-    id: "7",
-    type: "qna",
-    title: "GAN을 활용한 의료 이미지 생성",
-    description: "Q&A 답변: 개인정보 보호 측면에서 매우 중요한 연구입니다.",
-    timestamp: "1개월 전",
-    isPublic: true,
-    stats: { likes: 42 },
-  },
-  {
-    id: "8",
-    type: "showcase",
-    title: "Skin Lesion Classification Pipeline",
-    description: "피부 병변 분류를 위한 전문가 검증 파이프라인",
-    timestamp: "1개월 전",
-    isPublic: true,
-    stats: { likes: 423, comments: 31 },
-  },
-  {
-    id: "9",
-    type: "recruiting",
-    title: "뇌 MRI 종양 탐지 프로젝트 팀원 모집",
-    description: "딥러닝 기반 뇌 MRI 종양 탐지 시스템 개발",
-    timestamp: "1개월 전",
-    isPublic: false,
-    stats: { likes: 28, comments: 9 },
-  },
-  {
-    id: "10",
-    type: "dataset",
-    title: "Retinal OCT Image Dataset",
-    description: "망막 OCT 이미지 데이터셋 (84,495 files)",
-    timestamp: "2개월 전",
-    isPublic: true,
-    stats: { likes: 521, downloads: 1834 },
-    isExpertVerified: true,
-  },
-];
 
 export default function ProfilePage() {
   const { 
@@ -169,74 +75,52 @@ export default function ProfilePage() {
   } = useAuthStore();
 
   const { userId: paramUserId } = useParams();
+  const [searchParams] = useSearchParams();
   const isOwnProfile = !paramUserId || Number(paramUserId) === user?.userId;
 
   const [communityActivities, setCommunityActivities] =
-    useState<CommunityActivity[]>(initialActivities);
+    useState<CommunityActivity[]>([]);
   const [isCommunityPublic, setIsCommunityPublic] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [activityNotice, setActivityNotice] = useState<string | null>(null);
+  const [savingVisibility, setSavingVisibility] = useState(false);
+  const [activityError, setActivityError] = useState<string | null>(null);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [activityCursor, setActivityCursor] = useState<string | null>(null);
+  const [activityHasNext, setActivityHasNext] = useState(false);
   const [visibleActivityCount, setVisibleActivityCount] = useState(5);
 
   const [otherUser, setOtherUser] = useState<any>(null);
 
   useEffect(() => {
+    setCommunityActivities([]); setOtherUser(null); setProfileError(null);
     if (isOwnProfile && user?.userId) {
-      fetchUserProfile(user.userId);
-    } else if (!isOwnProfile && paramUserId) {
-      api.get(`/users/${paramUserId}`)
-        .then((res) => {
-          if (res.data?.success && res.data?.data) {
-            setOtherUser(res.data.data);
-            if (res.data.data.publicActivities && Array.isArray(res.data.data.publicActivities)) {
-              const mapped = res.data.data.publicActivities.map((it: any) => ({
-                id: it.id?.toString() || Math.random().toString(),
-                type: it.activityType?.toLowerCase() === 'project' ? 'showcase' : (it.activityType?.toLowerCase() || 'showcase'),
-                title: it.title || '활동 내역',
-                description: it.description || (it.myRole ? `역할: ${it.myRole}` : ''),
-                timestamp: it.createdAt ? new Date(it.createdAt).toLocaleDateString() : '최근',
-                isExpertVerified: it.expertVerified || false,
-                isPublic: true,
-                stats: {
-                  likes: it.likeCount,
-                  downloads: it.downloadCount,
-                  comments: it.commentCount
-                }
-              }));
-              if (mapped.length > 0) {
-                setCommunityActivities(mapped);
-              }
-            }
-          }
-        })
-        .catch(() => {
-          setOtherUser({
-            name: `연구자 #${paramUserId}`,
-            nickname: `Researcher_${paramUserId}`,
-            bio: "바이오메디컬 AI 연구 및 데이터 증강을 전문으로 하는 연구자입니다.",
-            organization: "의료인공지능 연구소",
-            websiteUrl: "https://github.com",
-            email: "researcher@bifusion.ai",
-            profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-            role: "RESEARCHER",
-            createdAt: "2026-01-15",
-          });
-        });
+      void fetchUserProfile(user.userId);
+      return;
     }
+    if (!paramUserId) return;
+    const controller = new AbortController();
+    setProfileLoading(true);
+    api.get(`/users/${paramUserId}`, { params: { size: 100 }, signal: controller.signal })
+      .then((res) => {
+        if (controller.signal.aborted) return;
+        const data = res.data.data;
+        if (!data?.userId) throw new Error('프로필 응답을 확인할 수 없습니다.');
+        setOtherUser({ ...data, bio: data.introduction, organization: data.location, websiteUrl: data.website, profileImage: data.profileImageUrl });
+        const activities = data.publicActivities ?? [];
+        setCommunityActivities(activities.filter((it: ActivityItem) => it.type !== ('PROJECT' as string)).map(mapActivity));
+        const visible = activities.filter((it: { type: string }) => it.type === 'PROJECT').map((it: { activityId: number; title: string; myRole: string; bannerImageUrl: string }) => ({ id: String(it.activityId), title: it.title, role: it.myRole === 'MANAGER' ? '관리자' : '멤버', coverImage: it.bannerImageUrl || '', isPublic: true }));
+        setProjects(visible); setHasNext(false); setTotalCount(visible.length);
+      }).catch((err) => { if (!controller.signal.aborted) setProfileError(requestMessage(err)); })
+      .finally(() => { if (!controller.signal.aborted) setProfileLoading(false); });
+    return () => controller.abort();
   }, [isOwnProfile, user?.userId, paramUserId, fetchUserProfile]);
 
-  const activeUser = isOwnProfile ? user : (otherUser || {
-    name: `연구자 #${paramUserId}`,
-    nickname: `Researcher_${paramUserId}`,
-    bio: "바이오메디컬 AI 연구 및 데이터 증강을 전문으로 하는 연구자입니다.",
-    organization: "의료인공지능 연구소",
-    websiteUrl: "https://github.com",
-    email: "researcher@bifusion.ai",
-    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-    role: "RESEARCHER",
-    createdAt: "2026-01-15",
-  });
+  const activeUser = isOwnProfile ? user : otherUser;
 
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<SettingsTab>("plan");
+  const [showSettingsModal, setShowSettingsModal] = useState(searchParams.get('settings') === 'account');
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>(searchParams.get("settings") === "account" ? "account" : "plan");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isChangingPlan, setIsChangingPlan] = useState(false);
@@ -425,6 +309,7 @@ export default function ProfilePage() {
   const isFetchingRef = useRef(false);
 
   const fetchProfileProjects = useCallback(async (cursor?: string | null) => {
+    if (!isOwnProfile) return;
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     setIsLoadingProjects(true);
@@ -453,54 +338,30 @@ export default function ProfilePage() {
         setTotalCount(newTotalCount);
       }
     } catch (error) {
-      console.error("Failed to fetch profile projects:", error);
+      setProfileError(requestMessage(error));
     } finally {
       isFetchingRef.current = false;
       setIsLoadingProjects(false);
     }
-  }, []);
+  }, [isOwnProfile]);
 
   useEffect(() => {
     fetchProfileProjects();
   }, [fetchProfileProjects]);
 
   useEffect(() => {
-    if (isOwnProfile) {
-      api.get('/mypage/activities?size=20')
-        .then((res) => {
-          if (res.data?.success && res.data?.data?.items) {
-            const items = res.data.data.items;
-            const mapped: CommunityActivity[] = items.map((it: {
-              activityId: number | string;
-              type: string;
-              title: string;
-              description?: string;
-              createdAt?: string;
-              isPublic?: boolean;
-              likeCount?: number;
-              downloadCount?: number;
-              commentCount?: number;
-            }) => ({
-              id: it.activityId.toString(),
-              type: it.type === 'RECIPE' ? 'showcase' : it.type === 'DATASET' ? 'dataset' : it.type === 'QNA' ? 'qna' : 'recruiting',
-              title: it.title,
-              description: it.description,
-              timestamp: it.createdAt ? new Date(it.createdAt).toLocaleDateString() : '최근',
-              isPublic: it.isPublic ?? true,
-              stats: {
-                likes: it.likeCount,
-                downloads: it.downloadCount,
-                comments: it.commentCount
-              }
-            }));
-            setCommunityActivities(mapped);
-          }
-        })
-        .catch((err) => {
-          console.warn('Failed to load mypage activities, using fallback:', err);
-        });
-    }
-  }, [isOwnProfile]);
+    if (!isOwnProfile) return;
+    const controller = new AbortController();
+    setActivitiesLoading(true); setActivityError(null); setActivityHasNext(false); setActivityCursor(null);
+    api.get('/mypage/activities', { params: { size: 20 }, signal: controller.signal })
+      .then((res) => {
+        if (controller.signal.aborted) return;
+        const data = res.data.data as ActivityPage;
+        setCommunityActivities(data.items.map(mapActivity)); setActivityHasNext(data.hasNext); setActivityCursor(data.nextCursor);
+      }).catch((err) => { if (!controller.signal.aborted) setActivityError(requestMessage(err)); })
+      .finally(() => { if (!controller.signal.aborted) setActivitiesLoading(false); });
+    return () => controller.abort();
+  }, [isOwnProfile, user?.userId]);
 
   const displayedProjects = projects.filter((project) => project.isPublic);
 
@@ -512,7 +373,7 @@ export default function ProfilePage() {
     0,
     visibleActivityCount,
   );
-  const hasMoreActivities = visibleActivityCount < availableActivities.length;
+  const hasMoreActivities = visibleActivityCount < availableActivities.length || activityHasNext;
   const settingsTabs: Array<{
     id: SettingsTab;
     label: string;
@@ -618,60 +479,30 @@ export default function ProfilePage() {
     setDraggingProjectId(null);
   };
 
-  const toggleActivityVisibility = async (activityId: string) => {
+  const saveActivityVisibility = async (activityId: string, visible: boolean) => {
     const target = communityActivities.find((activity) => activity.id === activityId);
-    if (!target) return;
-
-    const newPublic = !target.isPublic;
-    const beType =
-      target.type === 'showcase'
-        ? 'RECIPE'
-        : target.type === 'dataset'
-        ? 'DATASET'
-        : target.type === 'qna'
-        ? 'QNA'
-        : 'RECRUITMENT';
-
-    // Optimistic update
-    setCommunityActivities((prev) =>
-      prev.map((activity) =>
-        activity.id === activityId
-          ? { ...activity, isPublic: newPublic }
-          : activity,
-      ),
-    );
-
+    if (!target || savingVisibility) return;
+    const type = target.type === 'showcase' ? 'RECIPE' : target.type === 'dataset' ? 'DATASET' : target.type === 'qna' ? 'QNA' : 'RECRUITMENT';
+    setSavingVisibility(true); setActivityError(null); setActivityNotice(null);
     try {
-      await api.patch('/users/me/activities/visibility', {
-        items: [
-          {
-            type: beType,
-            id: Number(activityId),
-            isPublic: newPublic,
-          },
-        ],
-      });
-    } catch (err) {
-      console.error('Failed to update activity visibility:', err);
-      // Rollback
-      setCommunityActivities((prev) =>
-        prev.map((activity) =>
-          activity.id === activityId
-            ? { ...activity, isPublic: !newPublic }
-            : activity,
-        ),
-      );
-    }
+      await api.patch('/users/me/activities/visibility', { items: [{ type, id: Number(activityId.split(':').pop()), isPublic: visible }] });
+      setActivityNotice(`프로필에서 ${visible ? '표시' : '숨김'} 처리했습니다.`);
+    } catch (err) { setActivityError(requestMessage(err, '프로필 노출 설정을 저장하지 못했습니다.')); }
+    finally { setSavingVisibility(false); }
   };
 
-  const loadMoreActivities = () => {
-    if (!hasMoreActivities) {
-      return;
-    }
-
-    setVisibleActivityCount((prev) =>
-      Math.min(prev + 5, communityActivities.length),
-    );
+  const loadMoreActivities = async () => {
+    if (activitiesLoading) return;
+    if (visibleActivityCount < availableActivities.length) { setVisibleActivityCount((count) => count + 5); return; }
+    if (!isOwnProfile || !activityHasNext || !activityCursor) return;
+    setActivitiesLoading(true); setActivityError(null);
+    try {
+      const res = await api.get('/mypage/activities', { params: { size: 20, cursor: activityCursor } });
+      const data = res.data.data as ActivityPage;
+      setCommunityActivities((previous) => [...previous, ...data.items.map(mapActivity)]);
+      setActivityHasNext(data.hasNext); setActivityCursor(data.nextCursor); setVisibleActivityCount((count) => count + 5);
+    } catch (err) { setActivityError(requestMessage(err)); }
+    finally { setActivitiesLoading(false); }
   };
 
   const handleActivityScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -684,8 +515,11 @@ export default function ProfilePage() {
     }
   };
 
+  if (!isOwnProfile && (profileLoading || profileError || !otherUser)) return <div className="p-8"><p role={profileError ? 'alert' : undefined}>{profileError || '프로필을 불러오는 중…'}</p><a href="/dashboard/community">커뮤니티로 돌아가기</a></div>;
+
   return (
     <div className="p-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+      {profileError && <p role="alert" className="text-red-500">{profileError}</p>}
       {/* --- Left Column: Profile Card --- */}
       <div className="lg:w-1/3 space-y-6">
         <div className="bg-card rounded-3xl p-8 border border-border shadow-sm flex flex-col items-center text-center">
@@ -857,7 +691,7 @@ export default function ProfilePage() {
             ) : (
               <div className="space-y-2.5">
                 <a
-                  href={`mailto:${activeUser?.email || 'contact@bifusion.ai'}`}
+                  href={activeUser?.email ? `mailto:${activeUser.email}` : undefined}
                   className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Mail size={16} /> 이메일로 문의하기
@@ -1053,18 +887,21 @@ export default function ProfilePage() {
                 }`}
               >
                 {isCommunityPublic ? <Eye size={16} /> : <EyeOff size={16} />}
-                {isCommunityPublic ? "공개" : "비공개"}
+                {isCommunityPublic ? "전체 활동 보기" : "공개 활동만 보기"}
               </button>
             )}
           </div>
 
           <div
             className={`max-h-170 overflow-y-auto pr-2 space-y-3 custom-scrollbar transition-opacity ${
-              isCommunityPublic ? "opacity-100" : "opacity-70"
+              isCommunityPublic ? "opacity-100" : "opacity-100"
             }`}
             onScroll={handleActivityScroll}
           >
-            {displayedActivities.length === 0 && (
+            {activityNotice && <p role="status" className="text-primary">{activityNotice}</p>}
+            {activityError && <p role="alert" className="text-red-500">{activityError}</p>}
+            {activitiesLoading && <p>활동 조회 중…</p>}
+            {!activitiesLoading && !activityError && displayedActivities.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
                 표시할 커뮤니티 활동이 없습니다.
               </p>
@@ -1126,24 +963,11 @@ export default function ProfilePage() {
                           )}
                         </div>
 
-                        {isOwnProfile && (
-                          <button
-                            onClick={() => toggleActivityVisibility(activity.id)}
-                            disabled={!isCommunityPublic}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                              activity.isPublic
-                                ? "bg-primary/10 text-primary"
-                                : "bg-muted text-muted-foreground"
-                            } ${!isCommunityPublic ? "cursor-not-allowed opacity-50" : ""}`}
-                          >
-                            {activity.isPublic ? (
-                              <Eye size={13} />
-                            ) : (
-                              <EyeOff size={13} />
-                            )}
-                            {activity.isPublic ? "공개" : "비공개"}
-                          </button>
-                        )}
+                        {isOwnProfile && <div className="flex flex-wrap gap-2 text-xs">
+                          <span className="text-muted-foreground">콘텐츠 {activity.isPublic ? '공개' : '비공개'}</span>
+                          <button disabled={savingVisibility || !activity.isPublic} className="text-primary disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, true)}>프로필에 표시</button>
+                          <button disabled={savingVisibility} className="text-muted-foreground disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, false)}>프로필에서 숨김</button>
+                        </div>}
                       </div>
 
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -1181,9 +1005,7 @@ export default function ProfilePage() {
                 onClick={loadMoreActivities}
                 className="w-full py-3 rounded-xl border border-border text-muted-foreground font-bold hover:bg-muted transition-colors"
               >
-                더보기 (+
-                {Math.min(5, communityActivities.length - visibleActivityCount)}
-                )
+                {activitiesLoading ? '불러오는 중…' : '활동 더 보기'}
               </button>
             )}
           </div>

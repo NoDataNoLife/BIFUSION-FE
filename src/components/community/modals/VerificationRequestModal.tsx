@@ -1,23 +1,30 @@
 import { X, Award, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { requestMessage } from '../../../lib/liveData';
 import { useAuthStore } from '../../../store/useAuthStore';
 
 interface VerificationRequestModalProps {
   onClose: () => void;
-  onSubmit: (reason: string, reward: number) => void;
+  onSubmit: (reason: string, reward: number) => void | Promise<void>;
   assetTitle: string;
 }
 
 export default function VerificationRequestModal({ onClose, onSubmit, assetTitle }: VerificationRequestModalProps) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [reward, setReward] = useState<number | string>(500);
   const { user } = useAuthStore();
   const currentPoints = user?.points || 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reason.trim() || Number(reward) > currentPoints) return;
-    onSubmit(reason, Number(reward));
+    const points = Number(reward);
+    if (busy || !reason.trim() || !Number.isInteger(points) || points < 0 || points > currentPoints) return;
+    setBusy(true); setError(null);
+    try { await onSubmit(reason.trim(), points); }
+    catch (err) { setError(requestMessage(err, '검증 요청에 실패했습니다.')); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -41,6 +48,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
           </button>
         </div>
 
+        {error && <p role="alert" className="px-8 pt-4 text-red-500">{error}</p>}
         {/* Content */}
         <div className="p-8 space-y-6">
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3 text-primary">
@@ -109,7 +117,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
           <button
             type="submit"
             form="verification-form"
-            disabled={!reason.trim() || Number(reward) > currentPoints}
+            disabled={busy || !reason.trim() || Number(reward) > currentPoints}
             className="px-8 py-3.5 bg-primary text-primary-foreground rounded-xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             신청하기

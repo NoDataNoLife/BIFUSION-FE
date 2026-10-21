@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, XCircle, MessageSquare, X, Save } from 'lucide-react';
+import { requestMessage } from '../../lib/liveData';
 import { useExpertStore } from '../../store/useExpertStore';
 
 interface ReviewRequest {
@@ -14,9 +15,9 @@ interface ReviewRequest {
   requestDate: string;
   thumbnail: string;
   parameters: {
-    imagesPerClass: number;
-    samplingSteps: number;
-    guidanceScale: number;
+    imagesPerClass?: number;
+    samplingSteps?: number;
+    guidanceScale?: number;
   };
   status: 'pending' | 'reviewing' | 'completed';
   reviewResult?: 'approved' | 'rejected';
@@ -46,11 +47,11 @@ export default function ReviewDetailPage({
   onReject,
   onSaveDraft,
 }: ReviewDetailPageProps) {
-  const { 
-    inspectionDetail, 
-    fetchInspectionDetail, 
-    saveDraftComment, 
-    saveImageComment, 
+  const {
+    inspectionDetail, isLoadingDetail, error,
+    fetchInspectionDetail,
+    saveDraftComment,
+    saveImageComment,
     approveInspection,
     rejectInspection
   } = useExpertStore();
@@ -89,23 +90,9 @@ export default function ReviewDetailPage({
     }
   }, [inspectionDetail]);
 
-  // Image list (from real inspectionDetail or fallback sampleImages)
-  const displayImages: ImageDetail[] = 
-    inspectionDetail?.images && inspectionDetail.images.length > 0
-      ? inspectionDetail.images.map((img) => ({
-          id: img.imageId,
-          fileName: `sample_${img.imageId}.png`,
-          label: img.label || '정상',
-          url: img.imageUrl,
-        }))
-      : [
-          { id: 1, fileName: 'chest_xray_001.png', label: '정상', url: request.thumbnail },
-          { id: 2, fileName: 'chest_xray_002.png', label: '이상', url: request.thumbnail },
-          { id: 3, fileName: 'chest_xray_003.png', label: '정상', url: request.thumbnail },
-          { id: 4, fileName: 'chest_xray_004.png', label: '이상', url: request.thumbnail },
-          { id: 5, fileName: 'chest_xray_005.png', label: '정상', url: request.thumbnail },
-          { id: 6, fileName: 'chest_xray_006.png', label: '이상', url: request.thumbnail },
-        ];
+  const displayImages: ImageDetail[] = (inspectionDetail?.images ?? []).map((image) => ({
+    id: image.imageId, fileName: image.imageName || `File #${image.imageId}`, label: image.label || '라벨 정보 없음', url: image.imageUrl,
+  }));
 
   const handleImageClick = (image: ImageDetail) => {
     setSelectedImage(image);
@@ -118,21 +105,14 @@ export default function ReviewDetailPage({
   };
 
   const handleSaveImageComment = async () => {
-    if (selectedImage) {
-      setImageComments((prev) => ({
-        ...prev,
-        [selectedImage.id]: imageComment,
-      }));
-
-      if (numericId) {
-        try {
-          await saveImageComment(numericId, selectedImage.id, imageComment);
-        } catch (e) {
-          console.error('Failed to save image comment to API:', e);
-        }
-      }
-    }
-    handleCloseImageModal();
+    if (!selectedImage || !numericId || isSaving) return;
+    setIsSaving(true);
+    try {
+      await saveImageComment(numericId, selectedImage.id, imageComment);
+      setImageComments((previous) => ({ ...previous, [selectedImage.id]: imageComment }));
+      handleCloseImageModal();
+    } catch (err) { setSaveMessage(requestMessage(err, '이미지 의견 저장에 실패했습니다.')); }
+    finally { setIsSaving(false); }
   };
 
   const handleSaveDraft = async () => {
@@ -147,15 +127,13 @@ export default function ReviewDetailPage({
       } catch (e) {
         console.error('Failed to save draft comment:', e);
         setSaveMessage('임시저장에 실패했습니다.');
+        return;
       } finally {
         setIsSaving(false);
       }
     } else {
-      setTimeout(() => {
-        setIsSaving(false);
-        setSaveMessage('임시 저장되었습니다.');
-        setTimeout(() => setSaveMessage(''), 3000);
-      }, 300);
+      setIsSaving(false); setSaveMessage('유효한 검수 번호를 확인할 수 없습니다.');
+      return;
     }
 
     if (onSaveDraft) {
@@ -168,13 +146,19 @@ export default function ReviewDetailPage({
       alert('검수 종합 의견을 입력해 주세요.');
       return;
     }
+    if (!numericId || isSaving) return;
+    setIsSaving(true);
     if (numericId) {
       try {
         await approveInspection(numericId, reviewComment);
       } catch (e) {
         console.error('Failed to submit inspection approval:', e);
+        setIsSaving(false);
+        setSaveMessage(requestMessage(e));
+        return;
       }
     }
+    setIsSaving(false);
     onApprove(reviewComment, imageComments);
   };
 
@@ -183,20 +167,30 @@ export default function ReviewDetailPage({
       alert('반려 사유 및 종합 의견을 입력해 주세요.');
       return;
     }
+    if (!numericId || isSaving) return;
+    setIsSaving(true);
     if (numericId) {
       try {
         await rejectInspection(numericId, reviewComment);
       } catch (e) {
         console.error('Failed to submit inspection rejection:', e);
+        setIsSaving(false);
+        setSaveMessage(requestMessage(e));
+        return;
       }
     }
+    setIsSaving(false);
     onReject(reviewComment, imageComments);
   };
 
   const commentedCount = Object.values(imageComments).filter((c) => c && c.trim().length > 0).length;
 
+  if (isLoadingDetail) return <div className="p-8">검수 상세를 불러오는 중…</div>;
+  if (!inspectionDetail || inspectionDetail.inspectionId !== numericId) return <div className="p-8"><p role="alert">{error || '검수 상세를 확인할 수 없습니다.'}</p><button onClick={() => fetchInspectionDetail(numericId)}>다시 시도</button><button onClick={onBack}>목록으로</button></div>;
+
   return (
     <div className="min-h-screen bg-background">
+      {error && <p role="alert" className="p-4 text-red-500">{error}</p>}
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-5xl mx-auto px-8 py-8">
@@ -274,7 +268,7 @@ export default function ReviewDetailPage({
                   클래스당 수량
                 </p>
                 <p className="text-lg font-black text-foreground">
-                  {request.parameters.imagesPerClass}
+                  {inspectionDetail?.augmentationParams?.imagesPerClass ?? '정보 없음'}
                 </p>
               </div>
               <div className="p-4 bg-muted rounded-2xl text-center">
@@ -282,7 +276,7 @@ export default function ReviewDetailPage({
                   스텝 수
                 </p>
                 <p className="text-lg font-black text-foreground">
-                  {request.parameters.samplingSteps}
+                  {inspectionDetail?.augmentationParams?.sampling ?? '정보 없음'}
                 </p>
               </div>
               <div className="p-4 bg-muted rounded-2xl text-center">
@@ -290,7 +284,7 @@ export default function ReviewDetailPage({
                   CFG 스케일
                 </p>
                 <p className="text-lg font-black text-foreground">
-                  {request.parameters.guidanceScale}
+                  {inspectionDetail?.augmentationParams?.guidance ?? '정보 없음'}
                 </p>
               </div>
             </div>
@@ -395,13 +389,13 @@ export default function ReviewDetailPage({
               />
               <div className="flex justify-end gap-4 pt-4 border-t border-border">
                 <button
-                  onClick={handleRejectClick}
+                  disabled={isSaving} onClick={handleRejectClick}
                   className="px-8 py-4 bg-card border border-red-200 text-red-600 rounded-2xl font-black text-sm hover:bg-red-50 transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <XCircle size={20} /> 검수 반려
                 </button>
                 <button
-                  onClick={handleApproveClick}
+                  disabled={isSaving} onClick={handleApproveClick}
                   className="px-10 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
                 >
                   <CheckCircle size={20} /> 최종 승인

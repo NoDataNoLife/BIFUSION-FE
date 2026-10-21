@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -21,29 +21,9 @@ import {
 } from "lucide-react";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useAuthStore } from "../../store/useAuthStore";
-import api from "../../lib/axios";
+import { useProjectJobs, type ProjectJobItem } from "../../hooks/useProjectJobs";
 
-// --- Types ---
-interface ProjectJobItem {
-  jobId: number | string;
-  jobCode?: string;
-  type: string;
-  status: string;
-  seedNumber?: number | string;
-  createdBy?: {
-    userId?: number | null;
-    nickname?: string | null;
-    email?: string | null;
-  } | null;
-  createdAt: string;
-  finishedAt?: string | null;
-  currentStep?: string | null;
-  error?: string | null;
-  retryable?: boolean;
-  retryOfJobId?: number | string | null;
-}
-
-type StatusTab = "all" | "queue" | "processing" | "completed" | "failed";
+type StatusTab = "all" | "queue" | "processing" | "completed" | "failed" | "cancelled";
 type JobTypeFilter = "all" | "Augment" | "Train" | "Inference";
 
 export default function ProjectDetailPage() {
@@ -53,59 +33,17 @@ export default function ProjectDetailPage() {
   const { user } = useAuthStore();
   const { currentProject, fetchProjectDetail, updateProjectInfo, inviteMember, removeMember, updateMemberRole } = useProjectStore();
 
-  const [jobs, setJobs] = useState<ProjectJobItem[]>([]);
-  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [loadingJobs, setLoadingJobs] = useState(true);
-  const [jobsError, setJobsError] = useState<string | null>(null);
-
-  const fetchJobs = useCallback(async () => {
-    if (!projectId) return;
-    try {
-      setJobsError(null);
-      const res = await api.get(`/projects/${projectId}/jobs`);
-      const payload = res.data?.data ?? res.data;
-      const items = Array.isArray(payload?.items)
-        ? payload.items
-        : Array.isArray(payload)
-          ? payload
-          : [];
-      setJobs(items);
-      if (payload?.statusCounts) {
-        setStatusCounts(payload.statusCounts);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '작업 목록을 불러오지 못했습니다.';
-      setJobsError(msg);
-    } finally {
-      setLoadingJobs(false);
-    }
-  }, [projectId]);
-
-  useEffect(() => {
-    if (projectId) {
-      fetchProjectDetail(projectId);
-      fetchJobs();
-    }
-  }, [projectId, fetchProjectDetail, fetchJobs]);
-
-  // Periodic polling when any job is running/pending
-  useEffect(() => {
-    const hasActiveJob = jobs.some((j) =>
-      ['PENDING', 'STARTED', 'RUNNING'].includes(j.status?.toUpperCase())
-    );
-    if (!hasActiveJob) return;
-
-    const timer = setInterval(() => {
-      fetchJobs();
-    }, 4000);
-
-    return () => clearInterval(timer);
-  }, [jobs, fetchJobs]);
-
   const [selectedTab, setSelectedTab] = useState<StatusTab>("all");
-  const [selectedTypeFilter, setSelectedTypeFilter] =
-    useState<JobTypeFilter>("all");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<JobTypeFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const type = { all: undefined, Augment: 'AUGMENTATION', Train: 'TRAINING', Inference: 'INFERENCE' }[selectedTypeFilter];
+  const status = { all: undefined, queue: 'PENDING', processing: 'RUNNING', completed: 'SUCCESS', failed: 'FAILED', cancelled: 'CANCELLED' }[selectedTab];
+  const { jobs, statusCounts, loadingJobs, jobsError, hasNext, fetchJobs, loadMoreJobs } = useProjectJobs(projectId, type, status, searchQuery);
+
+  useEffect(() => {
+    if (projectId) void fetchProjectDetail(projectId);
+  }, [projectId, fetchProjectDetail]);
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const [editTitle, setEditTitle] = useState("");
@@ -122,40 +60,14 @@ export default function ProjectDetailPage() {
     }
   }, [currentProject]);
 
-  // Statistics
   const stats = {
-    queue: statusCounts?.PENDING ?? jobs.filter((j) => j.status?.toUpperCase() === "PENDING").length,
-    processing:
-      (statusCounts?.STARTED ?? 0) + (statusCounts?.RUNNING ?? 0) ||
-      jobs.filter((j) => ["STARTED", "RUNNING"].includes(j.status?.toUpperCase())).length,
-    completed:
-      (statusCounts?.SUCCESS ?? 0) + (statusCounts?.COMPLETED ?? 0) ||
-      jobs.filter((j) => ["SUCCESS", "COMPLETED"].includes(j.status?.toUpperCase())).length,
-    failed:
-      (statusCounts?.FAILED ?? 0) + (statusCounts?.CANCELLED ?? 0) ||
-      jobs.filter((j) => ["FAILED", "CANCELLED"].includes(j.status?.toUpperCase())).length,
+    queue: statusCounts.PENDING ?? 0,
+    processing: statusCounts.RUNNING ?? 0,
+    completed: statusCounts.SUCCESS ?? 0,
+    failed: statusCounts.FAILED ?? 0,
+    cancelled: statusCounts.CANCELLED ?? 0,
   };
-
-  const filteredJobs = jobs.filter((j) => {
-    const s = j.status?.toUpperCase();
-    if (selectedTab === "queue" && s !== "PENDING") return false;
-    if (selectedTab === "processing" && !["STARTED", "RUNNING"].includes(s)) return false;
-    if (selectedTab === "completed" && !["SUCCESS", "COMPLETED"].includes(s)) return false;
-    if (selectedTab === "failed" && !["FAILED", "CANCELLED"].includes(s)) return false;
-
-    const t = j.type?.toUpperCase();
-    if (selectedTypeFilter === "Augment" && !t.includes("AUGMENT")) return false;
-    if (selectedTypeFilter === "Train" && !t.includes("TRAIN")) return false;
-    if (selectedTypeFilter === "Inference" && !t.includes("INFERENCE")) return false;
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const codeMatch = String(j.jobCode || j.jobId).toLowerCase().includes(q);
-      const userMatch = (j.createdBy?.nickname || j.createdBy?.email || "").toLowerCase().includes(q);
-      if (!codeMatch && !userMatch) return false;
-    }
-    return true;
-  });
+  const filteredJobs = jobs;
 
   const statCards: Array<{
     label: string;
@@ -191,6 +103,13 @@ export default function ProjectDetailPage() {
       icon: XCircle,
       color: "red",
       id: "failed",
+    },
+    {
+      label: "취소됨",
+      value: stats.cancelled,
+      icon: XCircle,
+      color: "yellow",
+      id: "cancelled",
     },
   ];
 
@@ -405,7 +324,7 @@ export default function ProjectDetailPage() {
         </section>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {statCards.map((stat) => (
             <button
               key={stat.id}
@@ -621,6 +540,13 @@ export default function ProjectDetailPage() {
               </tbody>
             </table>
           </div>
+          {hasNext && (
+            <div className="p-4 border-t border-border text-center">
+              <button onClick={loadMoreJobs} disabled={loadingJobs} className="px-6 py-2 rounded-xl bg-muted text-sm font-semibold disabled:opacity-50">
+                {loadingJobs ? '불러오는 중…' : '이전 작업 더 보기'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

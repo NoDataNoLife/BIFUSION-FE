@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../../lib/axios';
 import { useCommunityStore } from '../../../store/useCommunityStore';
-import { Sparkles, Layers, Sliders, Cpu, Plus, X, ArrowRight } from 'lucide-react';
+import { Sparkles, Layers, Sliders, Cpu, X, ArrowRight } from 'lucide-react';
 
 interface ShowcaseCreateFormProps {
   onClose: () => void;
@@ -24,7 +24,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
   const [cfgScale, setCfgScale] = useState<number>(7.5);
   const [seed, setSeed] = useState<number>(42);
   const [resolution, setResolution] = useState('512x512');
-  const [batchSize, setBatchSize] = useState<number>(4);
+  const batchSize = 4;
 
   // Features & Recommendations
   const [features, setFeatures] = useState<string[]>(['고해상도 CT 정밀 복원', '노이즈 왜곡 최소화']);

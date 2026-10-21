@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useJobStore, getJobErrorMessage, isSuccessfulJobStatus, isTerminalJobStatus, type JobDetail } from '../store/useJobStore';
+import { shouldRetryJobQuery } from '../lib/jobErrors';
 
 interface UseJobPollingOptions {
   jobId?: string;
@@ -17,7 +18,7 @@ export function useJobPolling({
   onError,
 }: UseJobPollingOptions) {
   const { currentJob, fetchJobStatus } = useJobStore();
-  const [queryError, setQueryError] = useState<{ jobId: string; message: string } | null>(null);
+  const [queryError, setQueryError] = useState<{ jobId: string; message: string; retrying: boolean } | null>(null);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
 
@@ -46,7 +47,9 @@ export function useJobPolling({
         }
       } catch (error) {
         if (disposed) return;
-        setQueryError({ jobId, message: getJobErrorMessage(error, '작업 상태를 확인하지 못했습니다.') });
+        const retrying = shouldRetryJobQuery(error);
+        setQueryError({ jobId, message: getJobErrorMessage(error, '작업 상태를 확인하지 못했습니다.'), retrying });
+        if (!retrying) return;
       }
       if (!disposed) timer = setTimeout(() => { void poll(); }, intervalMs);
     };
@@ -65,6 +68,7 @@ export function useJobPolling({
     status: job?.status,
     currentStep: job?.currentStep,
     error,
+    isRetryingQuery: Boolean(error && queryError?.retrying),
     isPolling: Boolean(jobId && enabled && !error && !isTerminalJobStatus(job?.status)),
   };
 }

@@ -1,6 +1,9 @@
 import { create } from 'zustand';
-import { isAxiosError } from 'axios';
 import api from '../lib/axios';
+import { useAuthStore } from './useAuthStore';
+import { submitJobRequest } from '../lib/jobSubmission';
+import { getJobErrorMessage } from '../lib/jobErrors';
+export { getJobErrorMessage } from '../lib/jobErrors';
 
 export type JobType = 'AUGMENTATION' | 'TRAINING' | 'INFERENCE';
 export type JobStatus = 'PENDING' | 'STARTED' | 'RUNNING' | 'SUCCESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
@@ -15,6 +18,8 @@ export interface JobDetail {
   seed?: string | number;
   result?: Record<string, unknown> | null;
   error?: string | null;
+  retryable?: boolean;
+  retryOfJobId?: string | number | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -26,14 +31,6 @@ interface JobState {
   createJob: (projectId: string | number, type: JobType, payload: Record<string, unknown>) => Promise<JobDetail>;
   fetchJobStatus: (jobId: string) => Promise<JobDetail>;
   resetCurrentJob: () => void;
-}
-
-export function getJobErrorMessage(error: unknown, fallback: string): string {
-  if (isAxiosError(error)) {
-    const message = error.response?.data?.message;
-    return typeof message === 'string' && message.trim() ? message : fallback;
-  }
-  return error instanceof Error ? error.message : fallback;
 }
 
 export function isSuccessfulJobStatus(status?: JobStatus): boolean {
@@ -77,6 +74,8 @@ function parseJob(
     seed: data.seedNumber as string | number | undefined ?? data.seed as string | number | undefined ?? fallback.seed,
     result: data.result && typeof data.result === 'object' ? data.result as Record<string, unknown> : null,
     error: typeof data.error === 'string' ? data.error : null,
+    retryable: typeof data.retryable === 'boolean' ? data.retryable : undefined,
+    retryOfJobId: data.retryOfJobId as string | number | null | undefined,
     createdAt: data.createdAt as string | undefined,
     updatedAt: data.updatedAt as string | undefined,
   };
@@ -91,14 +90,15 @@ export const useJobStore = create<JobState>((set, get) => ({
     if (get().isLoading) throw new Error('작업 시작 요청을 처리하고 있습니다.');
     set({ isLoading: true, error: null, currentJob: null });
     try {
-      const response = await api.post(`/projects/${projectId}/jobs`, { ...payload, type });
+      const { response, confirm } = await submitJobRequest(useAuthStore.getState().user?.userId, projectId, { ...payload, type });
       const job = parseJob(response.data, { projectId, type, seed: payload.seed as number | undefined });
+      confirm();
       set({ currentJob: job, isLoading: false });
       return job;
     } catch (error) {
       const message = getJobErrorMessage(error, '작업을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       set({ isLoading: false, error: message });
-      throw new Error(message);
+      throw error;
     }
   },
 
@@ -117,7 +117,7 @@ export const useJobStore = create<JobState>((set, get) => ({
     } catch (error) {
       const message = getJobErrorMessage(error, '작업 상태를 불러오지 못했습니다. 잠시 후 다시 확인합니다.');
       set({ error: message });
-      throw new Error(message);
+      throw error;
     }
   },
 

@@ -348,7 +348,7 @@ export default function ProjectDetailPage() {
                 {stat.label}
               </p>
               <p className="text-3xl font-black text-foreground mt-1">
-                {stat.value}
+                {jobsError || loadingJobs ? '—' : stat.value}
               </p>
               {selectedTab === stat.id && (
                 <div
@@ -447,7 +447,7 @@ export default function ProjectDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {loadingJobs && filteredJobs.length === 0 ? (
+                {jobsError ? (<tr><td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">작업 목록을 조회하지 못했습니다. 위의 다시 시도 버튼을 이용해 주세요.</td></tr>) : loadingJobs && filteredJobs.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center text-muted-foreground">

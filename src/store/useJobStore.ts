@@ -96,7 +96,7 @@ export const useJobStore = create<JobState>((set, get) => ({
       set({ currentJob: job, isLoading: false });
       return job;
     } catch (error) {
-      const message = getJobErrorMessage(error, '작업을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      const message = getJobErrorMessage(error, '작업을 시작하지 못했습니다. 작업 목록에서 접수 여부를 확인해 주세요.');
       set({ isLoading: false, error: message });
       throw error;
     }

@@ -4,27 +4,20 @@ import {
   ArrowLeft, 
   Download, 
   Play, 
-  MessageSquare, 
+
   ChevronRight,
   TrendingUp,
   Target,
   Activity,
-  Send,
   CheckCircle2,
   AlertTriangle,
   Loader2,
   HardDrive
 } from 'lucide-react';
 
-import { useJobStore, getJobErrorMessage, type JobDetail } from '../../store/useJobStore';
+import JobStatusPage from '../../components/jobs/JobStatusPage';
 
-interface Comment {
-  id: string;
-  user: string;
-  time: string;
-  content: string;
-  avatar: string;
-}
+import { useJobStore, getJobErrorMessage, type JobDetail } from '../../store/useJobStore';
 
 export default function TrainResultPage() {
   const { projectId, jobId } = useParams();
@@ -36,17 +29,6 @@ export default function TrainResultPage() {
   );
   const [loading, setLoading] = useState(!job);
   const [error, setError] = useState<string | null>(null);
-
-  const [newComment, setNewComment] = useState('');
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: '1',
-      user: '김성한',
-      time: '이전 기록',
-      content: '모델 성능 지표를 검토하고 필요시 추론 테스트를 진행해 주세요.',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim'
-    }
-  ]);
 
   useEffect(() => {
     if (!jobId) return;
@@ -103,20 +85,6 @@ export default function TrainResultPage() {
     });
   };
 
-  const handlePostComment = () => {
-    if (newComment.trim()) {
-      const comment: Comment = {
-        id: Date.now().toString(),
-        user: '사용자',
-        time: '방금 전',
-        content: newComment.trim(),
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'
-      };
-      setComments([...comments, comment]);
-      setNewComment('');
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground">
@@ -145,6 +113,7 @@ export default function TrainResultPage() {
   }
 
   const isSuccess = job.status === 'SUCCESS' || job.status === 'COMPLETED';
+  if (!isSuccess) return <JobStatusPage title="모델 학습 상태" resultSection="train" />;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -195,20 +164,6 @@ export default function TrainResultPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
-        {!isSuccess && (
-          <div className="p-6 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-between">
-            <div className="space-y-1">
-              <h3 className="font-bold text-foreground">학습이 아직 완료되지 않았습니다 (현재 상태: {job.status})</h3>
-              <p className="text-xs text-muted-foreground">진행 상황 또는 에러 메시지를 확인해 주세요.</p>
-            </div>
-            <button
-              onClick={() => navigate(`/dashboard/projects/${projectId}/train/${jobId}/progress`)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors"
-            >
-              진행 상태 확인
-            </button>
-          </div>
-        )}
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -259,52 +214,6 @@ export default function TrainResultPage() {
           </div>
         </div>
 
-        {/* Interaction Section */}
-        <div className="bg-card rounded-4xl p-10 border border-border shadow-sm space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-muted text-muted-foreground rounded-2xl">
-              <MessageSquare className="w-6 h-6" />
-            </div>
-            <h3 className="text-2xl font-black text-foreground tracking-tight">팀 코멘트</h3>
-          </div>
-
-          {/* Comment Input */}
-          <div className="relative">
-            <textarea 
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="학습 결과에 대한 의견을 공유하세요..."
-              className="w-full p-6 bg-muted/50 border border-border rounded-3xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium resize-none text-foreground min-h-30"
-            />
-            <button 
-              onClick={handlePostComment}
-              disabled={!newComment.trim()}
-              className={`absolute bottom-4 right-4 p-4 rounded-2xl transition-all shadow-lg cursor-pointer ${
-                newComment.trim() ? 'bg-primary text-white shadow-primary/20 hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'
-              }`}
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Comments List */}
-          <div className="space-y-4 pt-2">
-            {comments.map((comment) => (
-              <div key={comment.id} className="flex gap-4 p-4 bg-muted/40 rounded-2xl border border-border">
-                <img src={comment.avatar} alt={comment.user} className="w-10 h-10 rounded-xl bg-muted shrink-0" />
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-foreground text-sm">{comment.user}</span>
-                    <span className="text-[10px] text-muted-foreground">{comment.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                    {comment.content}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

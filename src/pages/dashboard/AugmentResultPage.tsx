@@ -4,7 +4,7 @@ import {
   ArrowLeft, 
   Download, 
   Play, 
-  MessageSquare, 
+
   ChevronRight,
   Clock,
   HardDrive,
@@ -12,19 +12,12 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  Send,
   ExternalLink,
 } from 'lucide-react';
 
-import { useJobStore, getJobErrorMessage, type JobDetail } from '../../store/useJobStore';
+import JobStatusPage from '../../components/jobs/JobStatusPage';
 
-interface Comment {
-  id: string;
-  user: string;
-  time: string;
-  content: string;
-  avatar: string;
-}
+import { useJobStore, getJobErrorMessage, type JobDetail } from '../../store/useJobStore';
 
 export default function AugmentResultPage() {
   const { projectId, jobId } = useParams();
@@ -36,17 +29,6 @@ export default function AugmentResultPage() {
   );
   const [loading, setLoading] = useState(!job);
   const [error, setError] = useState<string | null>(null);
-
-  const [newComment, setNewComment] = useState('');
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: '1',
-      user: '김성한',
-      time: '이전 기록',
-      content: '증강 생성 품질을 확인하고 학습 단계로 넘어가 주세요.',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim'
-    }
-  ]);
 
   useEffect(() => {
     if (!jobId) return;
@@ -88,8 +70,6 @@ export default function AugmentResultPage() {
   const datasetId = result.datasetId ?? result.dataset_id;
   const generatedCount = result.generatedCount ?? result.generated_count ?? 0;
   const totalSampleCount = result.totalSampleCount ?? result.total_sample_count ?? generatedCount;
-  const normalCount = Math.floor(generatedCount / 2);
-  const anomalyCount = generatedCount - normalCount;
   const previewUrl = result.previewUrl ?? result.preview_url ?? result.artifacts?.preview_url ?? null;
   const downloadUrl = result.downloadUrl ?? result.download_url ?? result.artifacts?.dataset_url ?? null;
 
@@ -97,7 +77,7 @@ export default function AugmentResultPage() {
     if (downloadUrl) {
       window.open(downloadUrl, '_blank');
     } else {
-      alert('다운로드 파일이 준비되지 않았거나 S3 발행(AUGMENTATION_PUBLISH_S3)이 비활성화되어 있습니다.');
+      alert('다운로드 파일이 준비되지 않았거나 결과 파일을 제공할 수 없습니다. 잠시 후 다시 확인해 주세요.');
     }
   };
 
@@ -105,20 +85,6 @@ export default function AugmentResultPage() {
     navigate(`/dashboard/projects/${projectId}/train/new/setup`, {
       state: { datasetId }
     });
-  };
-
-  const handlePostComment = () => {
-    if (newComment.trim()) {
-      const comment: Comment = {
-        id: Date.now().toString(),
-        user: '사용자',
-        time: '방금 전',
-        content: newComment.trim(),
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'
-      };
-      setComments([...comments, comment]);
-      setNewComment('');
-    }
   };
 
   if (loading) {
@@ -149,6 +115,7 @@ export default function AugmentResultPage() {
   }
 
   const isSuccess = job.status === 'SUCCESS' || job.status === 'COMPLETED';
+  if (!isSuccess) return <JobStatusPage title="데이터 증강 상태" resultSection="jobs" />;
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
@@ -199,20 +166,6 @@ export default function AugmentResultPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-8 space-y-8">
-        {!isSuccess && (
-          <div className="p-6 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-between">
-            <div className="space-y-1">
-              <h3 className="font-bold text-foreground">작업이 아직 완료되지 않았습니다 (현재 상태: {job.status})</h3>
-              <p className="text-xs text-muted-foreground">진행 중이거나 오류가 발생한 작업의 상세 상태를 확인하세요.</p>
-            </div>
-            <button
-              onClick={() => navigate(`/dashboard/projects/${projectId}/jobs/${jobId}/progress`)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors"
-            >
-              진행 상태 확인
-            </button>
-          </div>
-        )}
 
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -222,7 +175,6 @@ export default function AugmentResultPage() {
             </div>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">생성된 이미지 수</p>
             <p className="text-3xl font-black text-foreground mb-1">{generatedCount}장</p>
-            <p className="text-xs font-bold text-muted-foreground">Normal {normalCount}장 / Anomaly {anomalyCount}장</p>
           </div>
 
           <div className="bg-card rounded-3xl p-7 border border-border shadow-sm">
@@ -284,62 +236,13 @@ export default function AugmentResultPage() {
               <ImageIcon className="w-10 h-10 text-muted-foreground mx-auto opacity-50" />
               <p className="text-sm font-semibold text-foreground">미리보기 이미지가 준비되지 않았습니다</p>
               <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                서버의 S3 업로드 설정(AUGMENTATION_PUBLISH_S3)이 활성화되어 있지 않거나, 아직 결과 파일이 동기화 중일 수 있습니다. 생성된 데이터셋 ID는 다음 학습 단계에서 그대로 사용할 수 있습니다.
+                서버에서 미리보기 주소를 제공하지 않았습니다. 생성된 데이터셋 ID는 다음 학습 단계에서 그대로 사용할 수 있습니다.
               </p>
             </div>
           )}
         </div>
 
-        {/* Interaction Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-2 bg-card rounded-[2.5rem] p-10 border border-border shadow-sm space-y-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-muted text-muted-foreground rounded-2xl">
-                  <MessageSquare className="w-6 h-6" />
-                </div>
-                <h3 className="text-2xl font-black text-foreground tracking-tight">
-                  팀 코멘트 <span className="text-primary ml-1">{comments.length}</span>
-                </h3>
-              </div>
-            </div>
-
-            {/* Comment Input */}
-            <div className="relative group">
-              <textarea 
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="결과에 대한 의견을 남겨주세요..."
-                className="w-full p-6 bg-muted border border-transparent rounded-4xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary transition-all font-medium resize-none text-foreground min-h-30"
-              />
-              <button 
-                onClick={handlePostComment}
-                disabled={!newComment.trim()}
-                className={`absolute bottom-4 right-4 p-4 rounded-2xl transition-all shadow-lg active:scale-95 cursor-pointer ${
-                  newComment.trim() ? 'bg-primary text-white shadow-primary/20' : 'bg-muted text-muted-foreground cursor-not-allowed'
-                }`}
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Comments List */}
-            <div className="space-y-4">
-              {comments.map((comment) => (
-                <div key={comment.id} className="p-5 bg-muted/40 rounded-3xl border border-border flex items-start gap-4">
-                  <img src={comment.avatar} alt={comment.user} className="w-10 h-10 rounded-xl" />
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-foreground text-sm">{comment.user}</span>
-                      <span className="text-xs text-muted-foreground">{comment.time}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed font-medium">{comment.content}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        <div>
           {/* Quick Guide */}
           <div className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-8 space-y-4">
             <h3 className="font-bold text-foreground text-lg">다음 권장 단계</h3>

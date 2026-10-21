@@ -3,15 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Download, 
-  MessageSquare, 
+
   ChevronRight,
-  Send,
   CheckCircle2,
   AlertTriangle,
   Loader2,
   FileText,
   SlidersHorizontal,
 } from 'lucide-react';
+
+import InferenceInputPreview from '../../components/jobs/InferenceInputPreview';
+import { readInferenceInputs } from '../../lib/inferenceInputs';
+import JobStatusPage from '../../components/jobs/JobStatusPage';
 
 import { useJobStore, getJobErrorMessage, type JobDetail } from '../../store/useJobStore';
 
@@ -26,14 +29,6 @@ interface PredictionItem {
   };
 }
 
-interface Comment {
-  id: string;
-  user: string;
-  time: string;
-  content: string;
-  avatar: string;
-}
-
 export default function InferenceResultPage() {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
@@ -46,17 +41,6 @@ export default function InferenceResultPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.0);
-  const [newComment, setNewComment] = useState('');
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: '1',
-      user: '염승빈',
-      time: '이전 기록',
-      content: '추론 결과 신뢰도와 정상/이상 분포를 확인해 주세요.',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yeom'
-    }
-  ]);
-
   useEffect(() => {
     if (!jobId) return;
     let isMounted = true;
@@ -84,6 +68,7 @@ export default function InferenceResultPage() {
     ? rawResult.predictions
     : [];
 
+  const inputFiles = readInferenceInputs(projectId ?? '', jobId ?? '');
   const totalCount = predictions.length;
   const normalPredictions = predictions.filter(
     (p) => p.predictedClass?.toUpperCase() === 'NORMAL'
@@ -115,20 +100,6 @@ export default function InferenceResultPage() {
     downloadAnchor.remove();
   };
 
-  const handlePostComment = () => {
-    if (newComment.trim()) {
-      const comment: Comment = {
-        id: Date.now().toString(),
-        user: '사용자',
-        time: '방금 전',
-        content: newComment.trim(),
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'
-      };
-      setComments([...comments, comment]);
-      setNewComment('');
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground">
@@ -157,6 +128,7 @@ export default function InferenceResultPage() {
   }
 
   const isSuccess = job.status === 'SUCCESS' || job.status === 'COMPLETED';
+  if (!isSuccess) return <JobStatusPage title="모델 추론 상태" resultSection="inference" />;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -200,20 +172,6 @@ export default function InferenceResultPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-8 space-y-8">
-        {!isSuccess && (
-          <div className="p-6 bg-orange-500/10 border border-orange-500/20 rounded-3xl flex items-center justify-between">
-            <div className="space-y-1">
-              <h3 className="font-bold text-foreground">추론 작업이 아직 완료되지 않았습니다 (현재 상태: {job.status})</h3>
-              <p className="text-xs text-muted-foreground">진행 상황 또는 에러 메시지를 확인해 주세요.</p>
-            </div>
-            <button
-              onClick={() => navigate(`/dashboard/projects/${projectId}/inference/${jobId}/progress`)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors"
-            >
-              진행 상태 확인
-            </button>
-          </div>
-        )}
 
         {/* Metrics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -294,14 +252,16 @@ export default function InferenceResultPage() {
                 <tbody className="divide-y divide-border">
                   {filteredPredictions.map((item, idx) => {
                     const isNormal = item.predictedClass?.toUpperCase() === 'NORMAL';
-                    const sampleId = item.fileId ? `File #${item.fileId}` : `#${(item.sampleIndex ?? idx) + 1}`;
+                    const inputFile = inputFiles.find((file) => file.fileId === item.fileId);
                     const confPct = ((item.confidence ?? 0) * 100).toFixed(1);
                     const normProb = item.probabilities ? `${(item.probabilities.normal * 100).toFixed(1)}%` : '-';
                     const anomProb = item.probabilities ? `${(item.probabilities.anomaly * 100).toFixed(1)}%` : '-';
 
                     return (
-                      <tr key={idx} className="hover:bg-muted/40 transition-colors font-medium">
-                        <td className="px-5 py-4 font-bold text-foreground">{sampleId}</td>
+                      <tr key={item.fileId ?? item.sampleIndex ?? idx} className="hover:bg-muted/40 transition-colors font-medium">
+                        <td className="px-5 py-4 font-bold text-foreground">
+                          <InferenceInputPreview fileId={item.fileId} originalFileName={inputFile?.originalFileName} sampleNumber={(item.sampleIndex ?? idx) + 1} />
+                        </td>
                         <td className="px-5 py-4">
                           <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
                             isNormal
@@ -323,52 +283,6 @@ export default function InferenceResultPage() {
           )}
         </div>
 
-        {/* Interaction Section */}
-        <div className="bg-card rounded-[2.5rem] p-8 border border-border shadow-sm space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-muted text-muted-foreground rounded-2xl">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <h3 className="text-xl font-bold tracking-tight">팀 코멘트</h3>
-          </div>
-
-          {/* Comment Input */}
-          <div className="relative">
-            <textarea 
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="추론 결과에 대한 소견이나 피드백을 남겨주세요..."
-              className="w-full p-5 bg-muted/50 border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium resize-none text-foreground min-h-24 text-sm"
-            />
-            <button 
-              onClick={handlePostComment}
-              disabled={!newComment.trim()}
-              className={`absolute bottom-3 right-3 p-3 rounded-xl transition-all shadow-md cursor-pointer ${
-                newComment.trim() ? 'bg-primary text-white hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'
-              }`}
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Comments List */}
-          <div className="space-y-3">
-            {comments.map((comment) => (
-              <div key={comment.id} className="flex gap-3.5 p-4 bg-muted/40 rounded-2xl border border-border">
-                <img src={comment.avatar} alt={comment.user} className="w-9 h-9 rounded-xl bg-muted shrink-0" />
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-foreground text-xs">{comment.user}</span>
-                    <span className="text-[10px] text-muted-foreground">{comment.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                    {comment.content}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

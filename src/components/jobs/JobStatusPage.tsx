@@ -21,7 +21,7 @@ const statusLabels: Record<JobStatus, string> = {
 export default function JobStatusPage({ title, resultSection }: JobStatusPageProps) {
   const { projectId, jobId } = useParams();
   const navigate = useNavigate();
-  const { job, status, currentStep, error, isPolling } = useJobPolling({
+  const { job, status, currentStep, error, isPolling, isRetryingQuery } = useJobPolling({
     jobId,
     onComplete: () => {
       navigate(`/dashboard/projects/${projectId}/${resultSection}/${jobId}/result`, { replace: true });
@@ -59,7 +59,7 @@ export default function JobStatusPage({ title, resultSection }: JobStatusPagePro
           <div className="space-y-3">
             <h2 className="text-2xl font-bold">{label}</h2>
             <p role={error || failed ? 'alert' : undefined} className="text-muted-foreground break-words">{description}</p>
-            {error && <p className="text-sm text-muted-foreground">연결 오류는 작업 실패를 의미하지 않습니다. 상태를 다시 확인하고 있습니다.</p>}
+            {error && <p className="text-sm text-muted-foreground">{isRetryingQuery ? '연결 오류는 작업 실패를 의미하지 않습니다. 상태를 다시 확인하고 있습니다.' : '자동 조회를 중단했습니다. 접근 권한과 작업 번호를 확인해 주세요.'}</p>}
           </div>
           <p className="text-sm text-muted-foreground">프로젝트로 돌아가도 진행 중인 작업은 취소되지 않습니다.</p>
           <button type="button" onClick={() => navigate(`/dashboard/projects/${projectId}`)} className="px-6 py-3 bg-primary text-white rounded-xl font-bold cursor-pointer hover:bg-primary/90">

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Moon, Sun } from "lucide-react";
+import { Bell, Moon, Sun, Menu } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import NotificationCenter from "./NotificationCenter";
 import { useThemeMode } from "../../hooks/useThemeMode";
 import ImageWithFallback from "../common/ImageWithFallback";
 
-export default function DashboardHeader() {
+export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const { user } = useAuthStore();
   const { isDark, toggleTheme } = useThemeMode();
@@ -15,8 +15,9 @@ export default function DashboardHeader() {
   const userInitial = user?.name ? user.name.slice(0, 2).toUpperCase() : "??";
 
   return (
-    <header className="h-20 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-border dark:border-border flex items-center justify-end px-10 shrink-0 z-40 transition-colors">
-      <div className="flex items-center gap-6 ml-auto">
+    <header className="h-20 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-border dark:border-border flex items-center justify-end px-4 sm:px-10 shrink-0 z-40 transition-colors">
+      <button onClick={onMenuClick} aria-label="탐색 메뉴 열기" className="md:hidden p-3 rounded-2xl bg-muted text-muted-foreground"><Menu size={20} /></button>
+      <div className="flex items-center gap-3 sm:gap-6 ml-auto">
         <button
           onClick={toggleTheme}
           className="p-3 rounded-2xl bg-muted dark:bg-muted text-muted-foreground dark:text-foreground/70 hover:bg-muted dark:hover:bg-muted/80 transition-all active:scale-95"
@@ -27,6 +28,7 @@ export default function DashboardHeader() {
 
         <div className="relative">
           <button
+            aria-label="알림 열기"
             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
             className={`relative p-3 rounded-2xl transition-all active:scale-95 ${
               isNotificationOpen

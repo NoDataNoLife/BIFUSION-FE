@@ -15,9 +15,10 @@ import ImageWithFallback from "../common/ImageWithFallback";
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }
 
-export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ isCollapsed, onToggle, onNavigate }: SidebarProps) {
   const { user } = useAuthStore();
 
   const menuItems = [
@@ -45,7 +46,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`bg-card dark:bg-card border-r border-border dark:border-border flex flex-col transition-all duration-300 ${
+      className={`bg-card dark:bg-card border-r border-border dark:border-border flex flex-col shrink-0 transition-all duration-300 ${
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
@@ -62,6 +63,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         )}
         <button
           onClick={onToggle}
+          aria-label={isCollapsed ? '메뉴 펼치기' : '메뉴 닫기'}
           className={`p-2 hover:bg-muted rounded-lg transition-colors ${
             isCollapsed ? "mx-auto" : ""
           }`}
@@ -75,7 +77,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav aria-label="대시보드 탐색" className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
 
@@ -83,6 +85,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <NavLink
               key={item.id}
               to={item.path}
+              onClick={onNavigate}
+              aria-label={item.label}
               end={item.path === "/dashboard"}
               className={({ isActive }) => `
                 flex items-center gap-3 px-4 py-3 rounded-xl transition-all
@@ -107,6 +111,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <div className="p-4 border-t border-border dark:border-border">
         <NavLink
           to="/dashboard/profile"
+          onClick={onNavigate}
+          aria-label="내 프로필"
           className={({ isActive }) => `
             flex items-center gap-3 px-3 py-3 rounded-xl transition-all
             ${isActive ? "bg-muted dark:bg-muted" : "hover:bg-muted dark:hover:bg-muted"}
@@ -130,7 +136,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 {user?.nickname || user?.name || "사용자"}
               </p>
               <p className="text-xs text-muted-foreground dark:text-muted-foreground truncate">
-                {user?.email || "user@example.com"}
+                {user?.email || ""}
               </p>
             </div>
           )}

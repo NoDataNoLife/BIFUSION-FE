@@ -11,6 +11,8 @@ import {
 import ReviewDetailPage from '../../components/dashboard/ReviewDetailPage';
 import { useApiQuery } from '../../hooks/useApiQuery';
 import { useExpertStore } from '../../store/useExpertStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import ExpertAccessGate from '../../components/dashboard/ExpertAccessGate';
 
 interface ReviewRequest {
   id: string;
@@ -35,6 +37,12 @@ interface ReviewRequest {
 }
 
 export default function ExpertDashboard() {
+  const user = useAuthStore(state => state.user);
+  // Mounting the authorized dashboard starts protected queries, so gate it first.
+  return user?.expertStatus === 'APPROVED' ? <CertifiedExpertDashboard key={user.userId} /> : <ExpertAccessGate />;
+}
+
+function CertifiedExpertDashboard() {
   const performance = useApiQuery<{ isExpertCertified: boolean; totalReward: number; topPercent: number | null; completedCount: number; feedbackSatisfaction: number | null }>('/experts/me/performance');
   const [selectedTab, setSelectedTab] = useState<'pending' | 'reviewing' | 'completed'>('pending');
   const [selectedRequest, setSelectedRequest] = useState<ReviewRequest | null>(null);

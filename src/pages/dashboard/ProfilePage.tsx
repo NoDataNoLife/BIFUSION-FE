@@ -119,8 +119,10 @@ export default function ProfilePage() {
 
   const activeUser = isOwnProfile ? user : otherUser;
 
-  const [showSettingsModal, setShowSettingsModal] = useState(searchParams.get('settings') === 'account');
-  const [settingsTab, setSettingsTab] = useState<SettingsTab>(searchParams.get("settings") === "account" ? "account" : "plan");
+  const requestedSettings = searchParams.get('settings');
+  const initialSettingsTab: SettingsTab = requestedSettings === 'account' || requestedSettings === 'verification' ? requestedSettings : 'plan';
+  const [showSettingsModal, setShowSettingsModal] = useState(requestedSettings === 'account' || requestedSettings === 'verification');
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>(initialSettingsTab);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isChangingPlan, setIsChangingPlan] = useState(false);

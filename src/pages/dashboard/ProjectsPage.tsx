@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useEffect } from "react";
+import { useAuthStore } from "../../store/useAuthStore";
+import ProfileAvatar from "../../components/common/ProfileAvatar";
 
 interface Project {
   id: string;
@@ -27,6 +29,7 @@ interface Project {
 
 export default function ProjectListPage() {
   const navigate = useNavigate();
+  const user = useAuthStore(state => state.user);
   const { managingProjects, participatingProjects, fetchMyProjects, createProject, isLoading } = useProjectStore();
   
   const [projects, setProjects] = useState<Project[]>([]);
@@ -44,14 +47,14 @@ export default function ProjectListPage() {
       coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
       teamMembers: p.members?.map(m => ({
         name: m.nickname || "사용자",
-        avatar: m.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`
+        avatar: m.profileImageUrl || (m.userId === user?.userId ? user?.profileImage || user?.profileImageUrl : null) || '/defaultUserProfile.png'
       })) || [],
       role: p.role === "MANAGER" ? "manager" : "member",
       isFavorite: p.isFavorited,
       lastActivity: p.lastActivityAt ? new Date(p.lastActivityAt).toLocaleDateString() : "방금 전"
     }));
     setProjects(mappedProjects);
-  }, [managingProjects, participatingProjects]);
+  }, [managingProjects, participatingProjects, user]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({
@@ -331,7 +334,7 @@ function ProjectCard({
         <div className="flex items-center justify-between pt-5 border-t border-border">
           <div className="flex -space-x-2">
             {project.teamMembers.slice(0, 3).map((member, idx) => (
-              <img
+              <ProfileAvatar
                 key={idx}
                 src={member.avatar}
                 alt={member.name}

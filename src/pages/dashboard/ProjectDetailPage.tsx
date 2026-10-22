@@ -22,6 +22,7 @@ import {
 import { useProjectStore } from "../../store/useProjectStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useProjectJobs, type ProjectJobItem } from "../../hooks/useProjectJobs";
+import ProfileAvatar from "../../components/common/ProfileAvatar";
 
 type StatusTab = "all" | "queue" | "processing" | "completed" | "failed" | "cancelled";
 type JobTypeFilter = "all" | "Augment" | "Train" | "Inference";
@@ -269,9 +270,9 @@ export default function ProjectDetailPage() {
             <div className="ml-auto flex items-center gap-3">
               <div className="flex -space-x-2 mr-4">
                 {currentProject?.members?.map((member) => (
-                  <img
+                  <ProfileAvatar
                     key={member.userId}
-                    src={member.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.userId}`}
+                    src={member.profileImageUrl || (member.userId === user?.userId ? user?.profileImage || user?.profileImageUrl : null)}
                     alt={member.nickname || "사용자"}
                     className="w-8 h-8 rounded-full border-2 border-border ring-1 ring-border shadow-sm"
                     title={member.nickname || "사용자"}
@@ -460,6 +461,8 @@ export default function ProjectDetailPage() {
                   filteredJobs.map((job) => {
                     const jobLabel = job.jobCode || `JOB-${job.jobId}`;
                     const userName = job.createdBy?.nickname || job.createdBy?.email || "시스템";
+                    const creator = currentProject?.members?.find(member => member.userId === job.createdBy?.userId);
+                    const creatorImage = creator?.profileImageUrl || (job.createdBy?.userId === user?.userId ? user?.profileImage || user?.profileImageUrl : null);
                     const formattedDate = job.createdAt
                       ? new Date(job.createdAt).toLocaleDateString("ko-KR")
                       : "-";
@@ -501,8 +504,8 @@ export default function ProjectDetailPage() {
                         </td>
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-2">
-                            <img
-                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userName)}`}
+                            <ProfileAvatar
+                              src={creatorImage}
                               alt={userName}
                               className="w-6 h-6 rounded-full bg-muted ring-1 ring-border shadow-sm"
                             />
@@ -653,8 +656,8 @@ export default function ProjectDetailPage() {
                       className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <img
-                          src={member.profileImageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.userId}`}
+                        <ProfileAvatar
+                          src={member.profileImageUrl || (member.userId === user?.userId ? user?.profileImage || user?.profileImageUrl : null)}
                           alt={member.nickname || "사용자"}
                           className="w-10 h-10 rounded-full object-cover"
                         />

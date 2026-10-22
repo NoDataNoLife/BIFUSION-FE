@@ -24,6 +24,8 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { useAssetStore } from './src/store/useAssetStore';
   export { useExpertStore } from './src/store/useExpertStore';
   export { useCommunityStore } from './src/store/useCommunityStore';
+  export { useAuthStore } from './src/store/useAuthStore';
+  export { MemoryRouter } from 'react-router-dom';
   export { default as RecruitmentDetail } from './src/components/dashboard/RecruitmentDetail';
   export { default as QnaDetail } from './src/components/dashboard/QnaDetail';
   export { default as ExpertPage } from './src/pages/dashboard/ExpertPage';
@@ -146,8 +148,41 @@ test('Q&A lookup errors show an error instead of an endless loading screen', () 
 });
 
 test('expert dashboard does not invent rewards, percentile or satisfaction', () => {
-  const html = app.renderToString(app.createElement(app.ExpertPage));
+  const html = renderExpert('APPROVED');
   const visible = html.replace(/<[^>]*>/g, '');
   assert.doesNotMatch(visible, /12,500|상위 5%|4\.9/);
   assert.match(visible, /평가 없음/);
+});
+
+function renderExpert(status) {
+  const initial = app.useAuthStore.getInitialState();
+  const previous = initial.user;
+  initial.user = { userId: 1, expertStatus: status, isExpert: true };
+  try {
+    return app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.ExpertPage)));
+  } finally { initial.user = previous; }
+}
+
+test('uncertified experts see an application gate rather than protected tasks or HTTP errors', () => {
+  const initial = app.useExpertStore.getInitialState();
+  const previous = { error: initial.error, groupedTasks: initial.groupedTasks };
+  initial.error = 'Request failed with status code 403';
+  initial.groupedTasks = { PENDING: [{ reviewCode: 'PRIVATE', requester: { nickname: '비공개 요청자' }, projectName: '보호할 프로젝트', status: 'PENDING' }], IN_PROGRESS: [], COMPLETED: [] };
+  try {
+    const html = renderExpert('NONE');
+    assert.match(html, /전문가로 함께해 주세요/);
+    assert.match(html, /href="\/dashboard\/profile\?settings=verification"/);
+    assert.match(html, /aria-hidden="true" inert=""/);
+    assert.doesNotMatch(html, /비공개 요청자|보호할 프로젝트|403|검수 시작하기/);
+  } finally { Object.assign(initial, previous); }
+});
+
+test('pending and rejected applications have distinct guidance even with a stale expert flag', () => {
+  const pending = renderExpert('PENDING');
+  assert.match(pending, /전문가 인증 심사 중입니다/);
+  assert.match(pending, /신청 상태 확인하기/);
+  assert.doesNotMatch(pending, /검수 시작하기/);
+  const rejected = renderExpert('REJECTED');
+  assert.match(rejected, /인증 서류를 다시 확인해 주세요/);
+  assert.match(rejected, /서류 확인하고 다시 신청하기/);
 });

@@ -364,6 +364,7 @@ function Workflow() {
           h-[4px]
           rounded-full
           bg-[#B7B9BB]
+          dark:bg-[#4B5563]
         "
       />
 
@@ -389,6 +390,7 @@ function Workflow() {
             text-[120px]
             leading-[120px]
             text-[#4A5565]
+            dark:text-muted-foreground
           "
         >
           1
@@ -404,6 +406,7 @@ function Workflow() {
             text-[27px]
             leading-[28px]
             text-[#4A5565]
+            dark:text-muted-foreground
           "
         >
           데이터
@@ -452,6 +455,7 @@ function Workflow() {
             text-[27px]
             leading-[28px]
             text-[#4A5565]
+            dark:text-muted-foreground
           "
         >
           AI 처리
@@ -464,6 +468,7 @@ function Workflow() {
             text-[120px]
             leading-[120px]
             text-[#4A5565]
+            dark:text-muted-foreground
           "
         >
           2
@@ -494,6 +499,7 @@ function Workflow() {
             text-[120px]
             leading-[120px]
             text-[#4A5565]
+            dark:text-muted-foreground
           "
         >
           3
@@ -508,6 +514,7 @@ function Workflow() {
             text-[27px]
             leading-[28px]
             text-[#4A5565]
+            dark:text-muted-foreground
           "
         >
           전문가 검토
@@ -577,6 +584,7 @@ function Workflow() {
               text-[120px]
               leading-[120px]
               text-[#4A5565]
+              dark:text-muted-foreground
               translate-y-[20px]
             "
           >
@@ -591,6 +599,7 @@ function Workflow() {
               text-[27px]
               leading-[28px]
               text-[#4A5565]
+              dark:text-muted-foreground
             "
           >
             다운로드 및
@@ -750,15 +759,15 @@ export default function LandingPage() {
       <section className="bg-muted/30 border-y border-border py-24 px-6 transition-colors">
         <div className="container mx-auto">
           <div className="flex flex-col items-center text-center">
-            <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29]">
+            <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29] dark:bg-[#FFDEA8]/15 dark:text-[#FFC76A]">
               주요 기능
             </div>
 
-            <h2 className="mt-6 font-hbios text-[48px] leading-[48px] text-[#101828]">
+            <h2 className="mt-6 font-hbios text-[48px] leading-[48px] text-[#101828] dark:text-foreground">
               의료 AI에 필요한 모든 것
             </h2>
 
-            <p className="mt-4 font-hbios text-[20px] leading-[28px] text-[#4A5565]">
+            <p className="mt-4 font-hbios text-[20px] leading-[28px] text-[#4A5565] dark:text-muted-foreground">
               의료 연구자와 의료 AI 개발자를 위해 특별히 설계된 강력한 기능
             </p>
 
@@ -771,15 +780,15 @@ export default function LandingPage() {
       <section className="py-24 px-6">
         <div className="container mx-auto">
           <div className="flex flex-col items-center text-center">
-            <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29]">
+            <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29] dark:bg-[#FFDEA8]/15 dark:text-[#FFC76A]">
               작동 방식
             </div>
 
-            <h2 className="mt-6 font-hbios text-[48px] leading-[48px] text-[#101828]">
+            <h2 className="mt-6 font-hbios text-[48px] leading-[48px] text-[#101828] dark:text-foreground">
               4단계로 데이터에서 인사이트까지
             </h2>
 
-            <p className="mt-4 font-hbios text-[20px] leading-[28px] text-[#4A5565]">
+            <p className="mt-4 font-hbios text-[20px] leading-[28px] text-[#4A5565] dark:text-muted-foreground">
               의료 연구를 위해 설계된 간단하고 효율적인 워크플로우
             </p>
           </div>
@@ -788,75 +797,168 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SHOWCASE */}
-      <section className="bg-secondary py-24 px-6 text-[#f7f2e8] overflow-hidden transition-colors">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold font-hbios mb-4">
-              Workspace Preview
+      {/* ANT POINT SYSTEM */}
+      <section className="overflow-hidden border-y border-border bg-muted/30 px-6 py-24 transition-colors">
+        <style>{`
+          @keyframes ant-coin-flip {
+            0%, 10%, 28%, 42%, 60%, 100% {
+              transform: translateY(0) rotateY(0deg) scale(1);
+            }
+            16% {
+              transform: translateY(-14px) rotateY(100deg) scale(1.04);
+            }
+            22% {
+              transform: translateY(-25px) rotateY(260deg) scale(1.06);
+            }
+            28% {
+              transform: translateY(0) rotateY(360deg) scale(1);
+            }
+            48% {
+              transform: translateY(-14px) rotateY(-100deg) scale(1.04);
+            }
+            54% {
+              transform: translateY(-25px) rotateY(-260deg) scale(1.06);
+            }
+            60% {
+              transform: translateY(0) rotateY(-360deg) scale(1);
+            }
+          }
+
+          @keyframes ant-coin-shadow {
+            0%, 10%, 28%, 42%, 60%, 100% {
+              transform: translateX(-50%) scale(1);
+              opacity: 0.22;
+            }
+            16%, 48% {
+              transform: translateX(-50%) scale(0.82);
+              opacity: 0.15;
+            }
+            22%, 54% {
+              transform: translateX(-50%) scale(0.65);
+              opacity: 0.09;
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .ant-coin-motion,
+            .ant-coin-shadow {
+              animation: none !important;
+            }
+          }
+        `}</style>
+
+        <div className="mx-auto w-full max-w-[1116px]">
+          {/* 상단 텍스트 */}
+          <div className="text-center">
+            <div className="mx-auto inline-flex rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29] dark:bg-[#FFDEA8]/15 dark:text-[#FFC76A]">
+              THE ANT SYSTEM
+            </div>
+
+            <h2 className="mt-6 font-hbios text-[36px] leading-tight text-[#101828] dark:text-foreground md:text-[48px] md:leading-[56px]">
+              기여할수록 쌓이는 가치, Ants
             </h2>
 
-            <p className="text-[#f7f2e8]/70">
-              복잡한 과정을 직관적인 인터페이스로 해결하세요.
+            <p className="mx-auto mt-4 max-w-[680px] font-hbios text-[17px] leading-[28px] text-[#4A5565] dark:text-muted-foreground md:text-[20px]">
+              AI 데이터 증강에 사용하고, 프로젝트와 지식 공유를 통해 <br />
+              앤트를 획득하세요.
             </p>
           </div>
 
-          <div className="max-w-6xl mx-auto bg-card rounded-t-2xl shadow-2xl overflow-hidden border border-[#f7f2e8]/15 transition-colors">
-            <div className="bg-muted h-10 border-b border-border flex items-center px-4 gap-2 transition-colors">
-              <div className="w-3 h-3 rounded-full bg-red-400" />
-              <div className="w-3 h-3 rounded-full bg-yellow-400" />
-              <div className="w-3 h-3 rounded-full bg-green-400" />
+          {/* 중앙 코인 애니메이션 */}
+          <div className="relative mx-auto mt-8 flex h-[190px] w-full max-w-[300px] items-center justify-center">
+            <div
+              className="ant-coin-shadow absolute bottom-[22px] left-1/2 h-[15px] w-[82px] rounded-[50%] bg-[#172F29] dark:bg-black blur-[7px]"
+              style={{
+                animation: "ant-coin-shadow 5.2s ease-in-out infinite",
+              }}
+            />
+
+            <img
+              src="/coin_ant.png"
+              alt="Ant coin"
+              className="ant-coin-motion relative z-10 h-[116px] w-[116px] object-contain"
+              style={{
+                transformStyle: "preserve-3d",
+                animation: "ant-coin-flip 5.2s ease-in-out infinite",
+              }}
+            />
+          </div>
+
+          {/* 앤트 획득 / 사용 */}
+          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">
+            <div className="rounded-2xl border border-border bg-card p-7 md:p-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F0F5E9] text-[#547448] dark:bg-[#547448]/20 dark:text-[#A8C79B]">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    className="h-6 w-6"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold tracking-wide text-[#7A8B70] dark:text-[#A8C79B]">
+                    EARN ANTS
+                  </p>
+                  <h3 className="mt-1 font-hbios text-[24px] text-[#101828] dark:text-foreground">
+                    앤트를 획득하세요
+                  </h3>
+                </div>
+              </div>
+
+              <p className="mt-5 text-[15px] leading-7 text-[#4A5565] dark:text-muted-foreground">
+                필요한 앤트를 충전하거나, 프로젝트 공유와 전문가 Q&amp;A 등
+                <br />
+                서비스 기여 활동을 통해 앤트를 획득할 수 있습니다.
+              </p>
             </div>
 
-            <div className="aspect-video bg-background flex items-center justify-center transition-colors">
-              <span className="text-muted-foreground font-hbios text-sm tracking-widest italic opacity-50">
-                bifusion_dashboard_preview.png
-              </span>
+            <div className="rounded-2xl border border-border bg-card p-7 md:p-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFF3D9] text-[#B27D29] dark:bg-[#B27D29]/20 dark:text-[#FFC76A]">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    className="h-6 w-6"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 3v12m-5-5 5 5 5-5" />
+                    <path d="M5 17v3h14v-3" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold tracking-wide text-[#B27D29] dark:text-[#FFC76A]">
+                    SPEND ANTS
+                  </p>
+                  <h3 className="mt-1 font-hbios text-[24px] text-[#101828] dark:text-foreground">
+                    앤트로 작업하세요
+                  </h3>
+                </div>
+              </div>
+
+              <p className="mt-5 text-[15px] leading-7 text-[#4A5565] dark:text-muted-foreground">
+                보유한 앤트를 사용해 AI 데이터 증강 작업을 실행하고, <br />
+                프로젝트 Fork 등 제공되는 기능을 이용할 수 있습니다.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* FINAL CTA */}
-      <section className="py-32 px-6 text-center transition-colors">
-        <div className="container mx-auto max-w-3xl">
-          <h2 className="text-4xl lg:text-6xl font-bold font-hbios mb-8 transition-colors">
-            Ready to{" "}
-            <span className="text-primary italic transition-colors">Fuse?</span>
-          </h2>
-
-          <p className="text-muted-foreground text-xl mb-12 leading-relaxed transition-colors">
-            더 빠르고 안전한 의료 AI 연구의 시작. <br />
-            지금 바로 bifusion 워크스페이스에 참여하세요.
-          </p>
-
-          <button
-            onClick={handleGoogleLogin}
-            className="h-20 px-12 bg-card border-2 border-border rounded-3xl flex items-center justify-center gap-4 hover:bg-muted transition-all mx-auto active:scale-[0.98]"
-          >
-            <svg className="w-8 h-8" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
-
-            <span className="text-xl font-bold text-foreground transition-colors">
-              Sign in with Google
-            </span>
-          </button>
+          {/* 하단 핵심 메시지 */}
+          <div className="mt-6 rounded-2xl bg-[#E58D00] dark:bg-[#B86F00] px-6 py-7 text-center md:px-10">
+            <p className="font-hbios text-[22px] leading-relaxed text-white md:text-[28px]">
+              Earn through contribution.
+              <span className="text-[#FFFBF4]"> Build through Ants.</span>
+            </p>
+            <p className="mt-0 text-sm leading-6 text-white/75 md:text-base">
+              기여로 앤트를 얻고, 앤트로 더 많은 가능성을 실험하세요.
+            </p>
+          </div>
         </div>
       </section>
 

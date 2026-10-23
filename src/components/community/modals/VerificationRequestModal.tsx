@@ -80,9 +80,9 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground flex justify-between items-end">
-                <span>리워드(포인트) 설정</span>
+                <span>검수 보상 앤트</span>
                 <span className={`text-xs font-bold ${Number(reward) > currentPoints ? 'text-red-500' : 'text-primary'}`}>
-                  내 보유 포인트: {currentPoints.toLocaleString()} P
+                  내 보유 앤트: {currentPoints.toLocaleString()} 앤트
                 </span>
               </label>
               <div className="relative">
@@ -95,11 +95,11 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
                   className={`w-full h-14 px-5 bg-background border ${Number(reward) > currentPoints ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-primary'} rounded-2xl text-foreground font-bold focus:outline-none focus:ring-1 transition-all`}
                 />
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold flex items-center gap-2">
-                  <span>P</span>
+                  <span>앤트</span>
                 </div>
               </div>
               {Number(reward) > currentPoints && (
-                <p className="text-xs text-red-500 font-bold mt-1">보유 포인트가 부족합니다.</p>
+                <p className="text-xs text-red-500 font-bold mt-1">보유 앤트가 부족합니다.</p>
               )}
             </div>
           </form>

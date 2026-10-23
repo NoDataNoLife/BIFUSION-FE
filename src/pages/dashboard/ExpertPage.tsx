@@ -157,7 +157,7 @@ function CertifiedExpertDashboard() {
         <div className="bg-primary rounded-3xl p-8 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
           <Award className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 group-hover:scale-110 transition-transform" />
           <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-2">총 획득 리워드</p>
-          <p className="text-4xl font-black">{performance.data?.totalReward?.toLocaleString() ?? '—'} <span className="text-lg font-bold opacity-70">P</span></p>
+          <p className="text-4xl font-black">{performance.data?.totalReward?.toLocaleString() ?? '—'} <span className="text-lg font-bold opacity-70">앤트</span></p>
           <div className="mt-6 flex items-center gap-2 text-xs font-bold bg-white/20 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm">
             <TrendingUp size={14} /> {performance.data?.topPercent != null ? `상위 ${performance.data.topPercent}%` : '순위 정보 없음'}
           </div>

@@ -32,13 +32,13 @@ export default function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLIma
 
   const encodedSrc = src ? safeEncodeUrl(src) : src
 
-  return didError ? (
+  return didError || !encodedSrc ? (
     <div
       className={`inline-block bg-muted text-center align-middle ${className ?? ''}`}
       style={style}
     >
       <div className="flex items-center justify-center w-full h-full">
-        <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={encodedSrc} />
+        <img src={ERROR_IMG_SRC} alt={alt ? `${alt} 이미지 없음` : "이미지 없음"} {...rest} />
       </div>
     </div>
   ) : (

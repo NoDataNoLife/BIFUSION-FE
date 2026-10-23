@@ -132,7 +132,7 @@ export default function DashboardHome() {
                   <Award className="w-7 h-7 text-amber-500" />
                 </div>
                 <div>
-                  <h4 className="font-black text-foreground">리워드 포인트</h4>
+                  <h4 className="font-black text-foreground">보유 앤트</h4>
                   <p className="text-xs text-muted-foreground font-medium mt-0.5">
                     커뮤니티 및 검수 기여
                   </p>

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Moon, Sun, Menu } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
+import api from "../../lib/axios";
+import { useNotificationStore } from "../../store/useNotificationStore";
 import NotificationCenter from "./NotificationCenter";
 import { useThemeMode } from "../../hooks/useThemeMode";
 import ImageWithFallback from "../common/ImageWithFallback";
@@ -11,6 +13,21 @@ export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => v
   const { user } = useAuthStore();
   const { isDark, toggleTheme } = useThemeMode();
   const navigate = useNavigate();
+
+  const unreadCount = useNotificationStore(state => state.unreadCount);
+  useEffect(() => {
+    if (!user?.userId) return;
+    let disposed = false;
+    const refresh = async () => {
+      try {
+        const response = await api.get('/notifications', { params: { isRead: false, size: 1 } });
+        if (!disposed) useNotificationStore.setState({ unreadCount: response.data?.data?.totalElements ?? 0 });
+      } catch { /* 목록을 열면 조회 오류를 안내합니다. */ }
+    };
+    void refresh();
+    const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 30000);
+    return () => { disposed = true; window.clearInterval(timer); };
+  }, [user?.userId]);
 
   const userInitial = user?.name ? user.name.slice(0, 2).toUpperCase() : "??";
 
@@ -37,7 +54,7 @@ export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => v
             }`}
           >
             <Bell size={22} />
-            <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-white dark:border-background animate-pulse"></span>
+            {unreadCount > 0 && <span aria-label={`읽지 않은 알림 ${unreadCount}개`} className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-white dark:border-background" />}
           </button>
 
           <NotificationCenter

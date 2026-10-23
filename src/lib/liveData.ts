@@ -32,6 +32,7 @@ export interface ActivityItem {
   title: string;
   description?: string;
   isPublic: boolean;
+  isMyPageVisible?: boolean;
   createdAt: string;
   likeCount?: number;
   downloadCount?: number;

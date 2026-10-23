@@ -31,6 +31,9 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as ExpertPage } from './src/pages/dashboard/ExpertPage';
   export { notificationTarget } from './src/lib/notificationTarget';
   export { formatBytes, requestMessage } from './src/lib/liveData';
+  export { activityVisible, usagePercent, requestInspection, cancelInspection } from './src/lib/backendContracts';
+  export { ResourceUsageSummary } from './src/components/dashboard/ResourceUsageCards';
+  export { AugmentedInspectionCard } from './src/components/dashboard/AugmentedAssetsView';
   export { default as VerificationResultModal } from './src/components/community/modals/VerificationResultModal';
   export { renderToString } from 'react-dom/server';
   export { createElement } from 'react';
@@ -185,4 +188,48 @@ test('pending and rejected applications have distinct guidance even with a stale
   const rejected = renderExpert('REJECTED');
   assert.match(rejected, /인증 서류를 다시 확인해 주세요/);
   assert.match(rejected, /서류 확인하고 다시 신청하기/);
+});
+
+
+test('resource limits keep unknown values separate from real zero usage', () => {
+  const data = { storageUsedBytes: 0, storageLimitBytes: null, storageUnmeasuredFileCount: 2,
+    monthlyAugmentations: null, monthlyAugmentationLimit: null, periodStart: null, periodEnd: null, timezone: 'Asia/Seoul' };
+  const html = app.renderToString(app.createElement(app.ResourceUsageSummary, { data, loading: false, error: null, onRetry() {} }));
+  assert.match(html, /0 B/);
+  assert.match(html, /집계하지 못했습니다/);
+  assert.match(html, /크기 미확인 파일/);
+  assert.doesNotMatch(html, /role="progressbar"/);
+  assert.equal(app.usagePercent(0, 100), 0);
+  assert.equal(app.usagePercent(200, 100), 100);
+  assert.equal(app.usagePercent(null, 100), null);
+  assert.equal(app.usagePercent(20, null), null);
+});
+
+test('profile visibility respects both content privacy and saved profile setting', () => {
+  assert.equal(app.activityVisible({ isPublic: true, isMyPageVisible: false }), false);
+  assert.equal(app.activityVisible({ isPublic: false, isMyPageVisible: true }), false);
+  assert.equal(app.activityVisible({ isPublic: true, isMyPageVisible: true }), true);
+});
+
+test('inspection submits target ID and cancels request ID, not dataset or assignment ID', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => { calls.push(config); return response(config, { inspectionRequestId: 45, status: 'PENDING' }); };
+  const result = await app.requestInspection({ targetType: 'AUGMENTED_DATA', targetId: 123, canRequest: true }, '검수 요청', 500);
+  assert.equal(result.inspectionRequestId, 45);
+  assert.deepEqual(JSON.parse(calls[0].data), { targetType: 'AUGMENTED_DATA', targetId: 123, reason: '검수 요청', rewardPoints: 500 });
+  await app.cancelInspection(result.inspectionRequestId);
+  assert.equal(calls[1].url, '/inspections/requests/45/cancel');
+  assert.equal(calls[1].method, 'patch');
+  await assert.rejects(app.requestInspection({ targetType: 'AUGMENTED_DATA', targetId: 123, canRequest: false }, '메모', 500));
+  assert.equal(calls.length, 2);
+});
+
+test('inspection card links dataset job result but keeps permission and target IDs separate', () => {
+  const item = { datasetId: 9, jobCode: 'JOB-009', totalSampleCount: 30, generatedCount: 10,
+    previewUrl: null, inspectionTarget: { targetType: 'AUGMENTED_DATA', targetId: 123, canRequest: false,
+    inspectionRequestId: 45, status: 'PENDING', result: null } };
+  const html = app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.AugmentedInspectionCard, { item, projectId: 2, onRefresh() {} })));
+  assert.match(html, /projects\/2\/jobs\/9\/result/);
+  assert.match(html, /검수 신청 취소/);
+  assert.doesNotMatch(html, />전문가 검수 신청</);
 });

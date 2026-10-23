@@ -17,7 +17,6 @@ import {
   Check,
   HelpCircle,
   LogOut,
-  Crown,
   AlertTriangle,
   UserX,
   ShieldCheck,
@@ -58,7 +57,7 @@ function mapActivity(item: ActivityItem): CommunityActivity {
   return { id: `${item.type}:${item.activityId}`, type: item.type === 'RECIPE' ? 'showcase' : item.type === 'DATASET' ? 'dataset' : item.type === 'QNA' ? 'qna' : 'recruiting', title: item.title, description: item.description, timestamp: new Date(item.createdAt).toLocaleDateString(), isPublic: item.isPublic, isMyPageVisible: activityVisible(item), stats: { likes: item.likeCount, downloads: item.downloadCount, comments: item.commentCount } };
 }
 
-type SettingsTab = "plan" | "verification" | "account";
+type SettingsTab = "verification" | "account";
 
 
 
@@ -73,7 +72,6 @@ export default function ProfilePage() {
     updateWebsite,
     updateProfileImage,
     fetchUserProfile,
-    changePlan,
     applyExpert
   } = useAuthStore();
 
@@ -123,12 +121,11 @@ export default function ProfilePage() {
   const activeUser = isOwnProfile ? user : otherUser;
 
   const requestedSettings = searchParams.get('settings');
-  const initialSettingsTab: SettingsTab = requestedSettings === 'account' || requestedSettings === 'verification' ? requestedSettings : 'plan';
+  const initialSettingsTab: SettingsTab = requestedSettings === 'account' || requestedSettings === 'verification' ? requestedSettings : 'account';
   const [showSettingsModal, setShowSettingsModal] = useState(requestedSettings === 'account' || requestedSettings === 'verification');
   const [settingsTab, setSettingsTab] = useState<SettingsTab>(initialSettingsTab);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isChangingPlan, setIsChangingPlan] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageClick = () => {
@@ -155,18 +152,6 @@ export default function ProfilePage() {
 
     if (!success) {
       alert("프로필 사진 수정에 실패했습니다. 잠시 후 다시 시도해주세요.");
-    }
-  };
-
-  const handlePlanChange = async (targetPlan: 'BASIC' | 'PRO') => {
-    setIsChangingPlan(true);
-    const success = await changePlan(targetPlan);
-    setIsChangingPlan(false);
-
-    if (success) {
-      alert(`플랜이 ${targetPlan === 'PRO' ? 'Pro' : 'Basic'} 플랜으로 성공적으로 변경되었습니다.`);
-    } else {
-      alert("플랜 변경에 실패했습니다. 잠시 후 다시 시도해주세요.");
     }
   };
 
@@ -382,9 +367,8 @@ export default function ProfilePage() {
   const settingsTabs: Array<{
     id: SettingsTab;
     label: string;
-    icon: typeof Crown;
+    icon: typeof ShieldCheck;
   }> = [
-    { id: "plan", label: "요금제", icon: Crown },
     { id: "verification", label: "전문가 인증", icon: ShieldCheck },
     { id: "account", label: "계정 보안", icon: UserX },
   ];
@@ -1130,7 +1114,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* --- Settings Modal (Plan, Verification, Account) --- */}
+      {/* --- Settings Modal (Verification, Account) --- */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <div className="bg-card rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -1169,82 +1153,6 @@ export default function ProfilePage() {
 
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto p-10 space-y-8">
-              {settingsTab === "plan" && (
-                <div className="space-y-8">
-                  <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10">
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">현재 플랜</p>
-                        <h3 className="text-2xl font-black text-foreground">
-                          {user?.planType === "PRO" ? "Pro Plan" : "Basic Plan"}
-                        </h3>
-                      </div>
-                      <span className="px-4 py-1.5 bg-card border border-primary/20 text-primary rounded-full text-sm font-bold shadow-sm">
-                        {user?.planType === "PRO" ? "유료" : "무료"}
-                      </span>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">플랜 제한사항</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                            <Check size={18} className="text-primary shrink-0" /> 월 {user?.planType === "PRO" ? "무제한" : "100개"} 데이터 증강 작업
-                          </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                            <Check size={18} className="text-primary shrink-0" /> 프로젝트 {user?.planType === "PRO" ? "무제한" : "3개까지"} 생성 가능
-                          </div>
-                          <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                            <Check size={18} className="text-primary shrink-0" /> {user?.planType === "PRO" ? "고급 AI 모델 및 커스텀 설정" : "기본 AI 모델 사용"}
-                          </div>
-                          {user?.planType === "PRO" ? (
-                            <>
-                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                                <Check size={18} className="text-primary shrink-0" /> 우선 지원 및 전용 서버
-                              </div>
-                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                                <Check size={18} className="text-primary shrink-0" /> 팀 협업 기능 제공
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                                <X size={18} className="text-muted-foreground shrink-0" /> 고급 AI 모델 및 커스텀 설정
-                              </div>
-                              <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                                <X size={18} className="text-muted-foreground shrink-0" /> 우선 지원 및 전용 서버
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {user?.planType !== "PRO" && (
-                        <div className="pt-6 border-t border-border">
-                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Pro 플랜 혜택</p>
-                          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                            무제한 데이터 증강, 고급 AI 모델, 우선 지원, 팀 협업 기능 등 모든 기능을 제한 없이 이용해보세요.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => handlePlanChange(user?.planType === "PRO" ? "BASIC" : "PRO")}
-                    disabled={isChangingPlan}
-                    className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isChangingPlan ? (
-                      "처리 중..."
-                    ) : user?.planType === "PRO" ? (
-                      "Basic 플랜으로 변경"
-                    ) : (
-                      "Pro 플랜으로 업그레이드 — 월 $19"
-                    )}
-                  </button>
-                </div>
-              )}
-
               {settingsTab === "verification" && (
                 <div className="space-y-8">
                   {/* Case 1: Already Approved / Verified Expert */}

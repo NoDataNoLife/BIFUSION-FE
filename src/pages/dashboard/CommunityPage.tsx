@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../components/common/ProfileAvatar';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../lib/axios';
@@ -138,7 +139,7 @@ export default function CommunityPage() {
                       <h3 className="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
                       <div className="flex items-center justify-between pt-6 border-t border-border">
                         <div className="flex items-center gap-3">
-                          <img src={post.author?.profileImageUrl || '/defaultUserProfile.png'} alt={post.author?.nickname || '탈퇴한 사용자'} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+                          <ProfileAvatar src={post.author?.profileImageUrl || '/defaultUserProfile.png'} alt={post.author?.nickname || '탈퇴한 사용자'} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
                           <span className="text-sm font-bold text-muted-foreground">{post.author?.nickname || '탈퇴한 사용자'}</span>
                         </div>
                         <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
@@ -193,7 +194,7 @@ export default function CommunityPage() {
                       className="flex items-center gap-3 hover:opacity-80 cursor-pointer group/author"
                       title="작성자 프로필 보기"
                     >
-                      <img src={post.author?.profileImageUrl || '/defaultUserProfile.png'} alt={post.author?.nickname || '탈퇴한 사용자'} className="w-10 h-10 rounded-xl bg-card border border-border group-hover/author:ring-2 group-hover/author:ring-primary transition-all" />
+                      <ProfileAvatar src={post.author?.profileImageUrl || '/defaultUserProfile.png'} alt={post.author?.nickname || '탈퇴한 사용자'} className="w-10 h-10 rounded-xl bg-card border border-border group-hover/author:ring-2 group-hover/author:ring-primary transition-all" />
                       <div className="text-left">
                         <p className="font-bold text-foreground text-sm group-hover/author:text-primary transition-colors">{post.author?.nickname || '탈퇴한 사용자'}</p>
                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">
@@ -272,7 +273,7 @@ export default function CommunityPage() {
                     className="flex items-center gap-4 border-l border-border pl-8 hover:opacity-80 cursor-pointer group/author"
                     title="작성자 프로필 보기"
                   >
-                    <img src={dataset.author?.profileImageUrl || '/defaultUserProfile.png'} alt={dataset.author?.nickname || '탈퇴한 사용자'} className="w-12 h-12 rounded-xl border border-border group-hover/author:ring-2 group-hover/author:ring-primary transition-all" />
+                    <ProfileAvatar src={dataset.author?.profileImageUrl || '/defaultUserProfile.png'} alt={dataset.author?.nickname || '탈퇴한 사용자'} className="w-12 h-12 rounded-xl border border-border group-hover/author:ring-2 group-hover/author:ring-primary transition-all" />
                     <div>
                       <p className="font-bold text-foreground text-sm group-hover/author:text-primary transition-colors">{dataset.author?.nickname || '탈퇴한 사용자'}</p>
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{dataset.license || '라이선스 미등록'}</p>

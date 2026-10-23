@@ -23,7 +23,7 @@ export function AugmentedInspectionCard({ item, projectId, onRefresh }: {
   const status = { PENDING: '검수 대기', APPROVED: '검수 승인', REJECTED: '검수 반려', CANCELLED: '신청 취소' };
   const cancel = async () => {
     const id = target?.inspectionRequestId;
-    if (busy || id == null || !confirm('검수 시작 전인 신청만 취소할 수 있습니다. 취소하고 포인트를 환불받을까요?')) return;
+    if (busy || id == null || !confirm('검수 시작 전인 신청만 취소할 수 있습니다. 취소하고 앤트를 환불받을까요?')) return;
     setBusy(true); setError(null); setNotice(null);
     try {
       const result = await cancelInspection(id);

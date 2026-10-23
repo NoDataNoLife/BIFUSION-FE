@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, MessageCircle, Award, Send, Edit2, Trash2 } from 'lucide-react';
-import ImageWithFallback from '../common/ImageWithFallback';
+import ProfileAvatar from '../common/ProfileAvatar';
 import { useCommunityStore } from '../../store/useCommunityStore';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -107,7 +107,7 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
 
           <div className="flex items-center justify-between pt-8 border-t border-gray-50">
             <div className="flex items-center gap-4 p-3 bg-muted rounded-2xl border border-border">
-              <ImageWithFallback src={qnaDetail.author.profileImageUrl} alt={qnaDetail.author.nickname} className="w-10 h-10 rounded-xl shadow-sm" />
+              <ProfileAvatar src={qnaDetail.author.profileImageUrl} alt={qnaDetail.author.nickname} className="w-10 h-10 rounded-xl shadow-sm" />
               <div>
                 <p className="font-bold text-foreground text-sm">{qnaDetail.author.nickname}</p>
                 <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{new Date(qnaDetail.createdAt).toLocaleDateString()}</p>
@@ -127,7 +127,7 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
               <div key={comment.answerId} className={`p-8 bg-card rounded-4xl border ${comment.isExpert ? 'border-primary/20 shadow-lg shadow-primary/5' : 'border-border shadow-sm'} space-y-6`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <ImageWithFallback src={comment.author.profileImageUrl} alt={comment.author.nickname} className="w-12 h-12 rounded-2xl shadow-sm" />
+                    <ProfileAvatar src={comment.author.profileImageUrl} alt={comment.author.nickname} className="w-12 h-12 rounded-2xl shadow-sm" />
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-foreground">{comment.author.nickname}</p>

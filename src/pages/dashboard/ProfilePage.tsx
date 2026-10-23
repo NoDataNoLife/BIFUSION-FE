@@ -845,7 +845,7 @@ export default function ProfilePage() {
                   key={project.id}
                   className="rounded-xl overflow-hidden border border-border bg-muted/20"
                 >
-                  <img
+                  <ImageWithFallback
                     src={project.coverImage}
                     alt={project.title}
                     className="w-full h-28 object-cover"
@@ -880,7 +880,7 @@ export default function ProfilePage() {
         <section className="bg-card rounded-4xl border border-border shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-              <TrendingUp size={20} className="text-primary" /> {isOwnProfile ? "집단 활동" : `${activeUser?.nickname || "연구자"}님의 공개 활동`}
+              <TrendingUp size={20} className="text-primary" /> {isOwnProfile ? "내 활동" : `${activeUser?.nickname || "연구자"}님의 공개 활동`}
             </h2>
 
             {isOwnProfile && (
@@ -952,7 +952,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-3 mb-1">
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
                         <div className="flex items-center gap-2 min-w-0">
                           <span
                             className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wide ${typeTone}`}
@@ -971,8 +971,9 @@ export default function ProfilePage() {
 
                         {isOwnProfile && <div className="flex flex-wrap gap-2 text-xs">
                           <span className="text-muted-foreground">콘텐츠 {activity.isPublic ? '공개' : '비공개'} · 프로필 {activity.isMyPageVisible ? '표시' : '숨김'}</span>
-                          <button disabled={savingVisibility || !activity.isPublic || activity.isMyPageVisible} className="text-primary disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, true)}>프로필에 표시</button>
-                          <button disabled={savingVisibility || !activity.isMyPageVisible} className="text-muted-foreground disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, false)}>프로필에서 숨김</button>
+                          <button disabled={savingVisibility || !activity.isPublic} className="rounded-lg border border-border px-3 py-1.5 text-primary hover:bg-primary/10 disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, !activity.isMyPageVisible)}>
+                            {savingVisibility ? '저장 중…' : activity.isMyPageVisible ? '프로필에서 숨기기' : '프로필에 표시하기'}
+                          </button>
                         </div>}
                       </div>
 
@@ -982,21 +983,21 @@ export default function ProfilePage() {
 
                       <div className="flex items-center gap-5 pt-3 text-xs font-bold text-muted-foreground">
                         <span>{activity.timestamp}</span>
-                        {activity.stats?.likes && (
+                        {(activity.stats?.likes ?? 0) > 0 && (
                           <span className="flex items-center gap-1 text-red-400">
                             <Heart size={13} fill="currentColor" />{" "}
-                            {activity.stats.likes}
+                            {activity.stats?.likes}
                           </span>
                         )}
-                        {activity.stats?.downloads && (
+                        {(activity.stats?.downloads ?? 0) > 0 && (
                           <span className="flex items-center gap-1 text-green-500">
-                            <Upload size={13} /> {activity.stats.downloads}
+                            <Upload size={13} /> {activity.stats?.downloads}
                           </span>
                         )}
-                        {activity.stats?.comments && (
+                        {(activity.stats?.comments ?? 0) > 0 && (
                           <span className="flex items-center gap-1 text-muted-foreground">
                             <MessageSquare size={13} />{" "}
-                            {activity.stats.comments}
+                            {activity.stats?.comments}
                           </span>
                         )}
                       </div>
@@ -1059,7 +1060,7 @@ export default function ProfilePage() {
                     }`}
                   >
                     <GripVertical className="w-5 h-5 text-muted-foreground" />
-                    <img
+                    <ImageWithFallback
                       src={project.coverImage}
                       alt={project.title}
                       className="w-18 h-12 rounded-lg object-cover"

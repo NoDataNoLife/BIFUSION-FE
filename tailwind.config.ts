@@ -24,8 +24,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        hbios: ['HBIOS-SYS', 'monospace'],
+        sans: ['Inter', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'sans-serif'],
+        hbios: ['HBIOS-SYS', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'sans-serif'],
       },
     },
   },

@@ -1,6 +1,29 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/InterVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/PretendardVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "HBIOS-SYS";
+  src: url("/fonts/HBIOS-SYS.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+
 :root {
   /* Brand Colors (Warm Golden Honey & Coffee) */
   --primary: #e68a00;
@@ -58,8 +81,8 @@
   --color-card-foreground: var(--card-foreground);
 
   /* Fonts */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-hbios: "HBIOS-SYS", monospace;
+  --font-sans: "Inter", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-hbios: "HBIOS-SYS", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 
   --radius-lg: 0.5rem;
   --radius-md: calc(0.5rem - 2px);

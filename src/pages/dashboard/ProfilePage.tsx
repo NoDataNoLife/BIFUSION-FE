@@ -815,7 +815,7 @@ export default function ProfilePage() {
       <div className="flex-1 space-y-8">
         {/* My Projects */}
         <section className="bg-card rounded-4xl border border-border shadow-sm p-6">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
             <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
               <AlertTriangle size={20} className="text-primary" /> {isOwnProfile ? "나의 개미집" : `${activeUser?.nickname || "연구자"}님의 프로젝트`}
             </h2>
@@ -878,7 +878,7 @@ export default function ProfilePage() {
 
         {/* Community Activities */}
         <section className="bg-card rounded-4xl border border-border shadow-sm p-6">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
             <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
               <TrendingUp size={20} className="text-primary" /> {isOwnProfile ? "내 활동" : `${activeUser?.nickname || "연구자"}님의 공개 활동`}
             </h2>
@@ -893,7 +893,7 @@ export default function ProfilePage() {
                 }`}
               >
                 {isCommunityPublic ? <Eye size={16} /> : <EyeOff size={16} />}
-                {isCommunityPublic ? "전체 활동 보기" : "프로필 표시 활동만 보기"}
+                {isCommunityPublic ? "숨긴 활동도 보기" : "공개 활동만 보기"}
               </button>
             )}
           </div>
@@ -904,7 +904,7 @@ export default function ProfilePage() {
             }`}
             onScroll={handleActivityScroll}
           >
-            {activityNotice && <p role="status" className="text-primary">{activityNotice}</p>}
+            {activityNotice && <p role="status" className="rounded-xl bg-primary/5 px-4 py-3 text-sm text-muted-foreground">{activityNotice}</p>}
             {activityError && <p role="alert" className="text-red-500">{activityError}</p>}
             {activitiesLoading && <p>활동 조회 중…</p>}
             {!activitiesLoading && !activityError && displayedActivities.length === 0 && (
@@ -943,7 +943,7 @@ export default function ProfilePage() {
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className={`w-11 h-11 rounded-2xl flex items-center justify-center ${leftIconTone}`}
+                      className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center ${leftIconTone}`}
                     >
                       {activity.type === "showcase" && <Award size={20} />}
                       {activity.type === "dataset" && <Database size={20} />}
@@ -952,14 +952,14 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
+                      <div className="mb-2">
+                        <div className="flex flex-wrap items-center gap-2 min-w-0">
                           <span
                             className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wide ${typeTone}`}
                           >
-                            {activity.type}
+                            {{ showcase: "레시피", dataset: "데이터셋", qna: "질문", recruiting: "모집" }[activity.type]}
                           </span>
-                          <h3 className="text-lg font-black text-foreground truncate">
+                          <h3 className="w-full pt-1 text-lg font-bold text-foreground break-words leading-snug">
                             {activity.title}
                           </h3>
                           {activity.isExpertVerified && (
@@ -969,12 +969,7 @@ export default function ProfilePage() {
                           )}
                         </div>
 
-                        {isOwnProfile && <div className="flex flex-wrap gap-2 text-xs">
-                          <span className="text-muted-foreground">콘텐츠 {activity.isPublic ? '공개' : '비공개'} · 프로필 {activity.isMyPageVisible ? '표시' : '숨김'}</span>
-                          <button disabled={savingVisibility || !activity.isPublic} className="rounded-lg border border-border px-3 py-1.5 text-primary hover:bg-primary/10 disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, !activity.isMyPageVisible)}>
-                            {savingVisibility ? '저장 중…' : activity.isMyPageVisible ? '프로필에서 숨기기' : '프로필에 표시하기'}
-                          </button>
-                        </div>}
+
                       </div>
 
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -1003,6 +998,28 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
+                  {isOwnProfile && (
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {activity.isMyPageVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                        <span>{!activity.isPublic ? '비공개 글은 프로필에 표시할 수 없어요' : activity.isMyPageVisible ? '방문자에게 보이는 활동' : '나에게만 보이는 활동'}</span>
+                      </div>
+                      <label className="inline-flex items-center gap-3 text-xs font-medium text-muted-foreground">
+                        프로필에 표시
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={activity.isMyPageVisible}
+                          aria-label={`${activity.title} 프로필에 표시`}
+                          disabled={savingVisibility || !activity.isPublic}
+                          onClick={() => saveActivityVisibility(activity.id, !activity.isMyPageVisible)}
+                          className={`relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-40 ${activity.isMyPageVisible ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+                        >
+                          <span className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${activity.isMyPageVisible ? 'translate-x-5' : 'translate-x-1'}`} />
+                        </button>
+                      </label>
+                    </div>
+                  )}
                 </div>
               );
             })}

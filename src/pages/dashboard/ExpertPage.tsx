@@ -1,3 +1,4 @@
+import ProfileAvatar from '../../components/common/ProfileAvatar';
 import { useState, useEffect } from 'react';
 import {
   CheckCircle,
@@ -223,7 +224,7 @@ function CertifiedExpertDashboard() {
                 <div key={request.id} className="group bg-muted/40 rounded-3xl border border-transparent hover:border-primary/20 hover:bg-card hover:shadow-2xl hover:shadow-primary/5 transition-all p-8">
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-4">
-                      <img src={request.requester.avatar} alt={request.requester.name} className="w-12 h-12 rounded-2xl ring-4 ring-muted shadow-xs" />
+                      <ProfileAvatar src={request.requester.avatar} alt={request.requester.name} className="w-12 h-12 rounded-2xl ring-4 ring-muted shadow-xs" />
                       <div>
                         <p className="font-black text-foreground">{request.requester.name}</p>
                         <p className="text-xs text-muted-foreground font-bold tracking-tight">{request.requester.email}</p>

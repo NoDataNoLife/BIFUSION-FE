@@ -1,3 +1,4 @@
+import ProfileAvatar from '../common/ProfileAvatar';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Briefcase, Clock, CheckCircle, Send, Calendar, Trash2, Tag } from 'lucide-react';
 import api from '../../lib/axios';
@@ -236,7 +237,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                 {recruitmentDetail.applications?.map(app => (
                   <div key={app.applicationId} className="bg-card rounded-2xl p-6 border border-border shadow-sm flex flex-col md:flex-row gap-6">
                     <div className="flex items-start gap-4 flex-1">
-                      <img src={app.profileImageUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'} alt={app.nickname} className="w-12 h-12 rounded-xl shrink-0" />
+                      <ProfileAvatar src={app.profileImageUrl} alt={app.nickname} className="w-12 h-12 rounded-xl shrink-0" />
                       <div className="space-y-2">
                         <h4 className="font-bold text-foreground text-lg">{app.nickname}</h4>
 

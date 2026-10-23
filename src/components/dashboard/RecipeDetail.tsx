@@ -1,3 +1,4 @@
+import ProfileAvatar from '../common/ProfileAvatar';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, GitFork, Share2, Trash2, Award, Star, Check } from 'lucide-react';
@@ -77,7 +78,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
         <div className="p-6 sm:p-10 space-y-6">
           {data.isExpertVerified && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black"><Award size={14}/>전문가 검증</span>}
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight break-words">{data.title}</h1><p className="text-lg text-muted-foreground font-medium leading-relaxed">{data.description}</p>
-          <button disabled={!data.author?.userId} onClick={() => navigate(`/dashboard/profile/${data.author.userId}`)} className="w-full flex items-center gap-4 p-4 bg-muted/40 hover:bg-muted/80 rounded-2xl border border-border text-left"><img src={data.author?.profileImageUrl || '/defaultUserProfile.png'} alt="" className="w-12 h-12 rounded-xl object-cover"/><div><p className="font-bold">{data.author?.nickname || '탈퇴한 사용자'}</p><p className="text-xs text-muted-foreground mt-1">{data.createdAt ? new Date(data.createdAt).toLocaleDateString('ko-KR') : '작성일 미등록'}</p></div></button>
+          <button disabled={!data.author?.userId} onClick={() => navigate(`/dashboard/profile/${data.author.userId}`)} className="w-full flex items-center gap-4 p-4 bg-muted/40 hover:bg-muted/80 rounded-2xl border border-border text-left"><ProfileAvatar src={data.author?.profileImageUrl || '/defaultUserProfile.png'} alt="" className="w-12 h-12 rounded-xl object-cover"/><div><p className="font-bold">{data.author?.nickname || '탈퇴한 사용자'}</p><p className="text-xs text-muted-foreground mt-1">{data.createdAt ? new Date(data.createdAt).toLocaleDateString('ko-KR') : '작성일 미등록'}</p></div></button>
           <div className="grid grid-cols-2 gap-4"><div className="p-4 border border-border rounded-2xl text-center"><p className="text-xs font-bold text-muted-foreground mb-1">평점</p><p className="text-xl font-black text-yellow-500 flex justify-center items-center gap-1"><Star size={18}/>{data.rating ?? '—'}</p></div><div className="p-4 border border-border rounded-2xl text-center"><p className="text-xs font-bold text-muted-foreground mb-1">Fork 수</p><p className="text-xl font-black text-primary flex justify-center items-center gap-1"><GitFork size={18}/>{data.forkCount ?? '—'}</p></div></div>
         </div>
       </section>

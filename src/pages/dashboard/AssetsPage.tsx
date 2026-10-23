@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Star, GitFork, Eye, Search, Plus, Calendar, RefreshCw } from 'lucide-react';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import DatasetDetailView from '../../components/dashboard/DatasetDetailView';
+import AugmentedAssetsView from '../../components/dashboard/AugmentedAssetsView';
 import CreateAssetModal from '../../components/dashboard/CreateAssetModal';
 import { AssetCover, DataState, Pagination } from '../../components/dashboard/DataView';
 import { useApiQuery } from '../../hooks/useApiQuery';
@@ -69,7 +70,7 @@ export default function AssetsPage() {
 
       {/* Grid Content */}
       <div className="min-h-80">
-        {error ? <DataState error={error} onRetry={reload} /> : isLoading ? (
+        {activeTab === 'augmented' ? <AugmentedAssetsView searchQuery={searchQuery} /> : error ? <DataState error={error} onRetry={reload} /> : isLoading ? (
           <div className="py-20 text-center font-bold text-muted-foreground">자산 데이터를 불러오는 중...</div>
         ) : activeTab.includes('recipe') ? (
           displayRecipes.length > 0 ? (
@@ -160,8 +161,8 @@ export default function AssetsPage() {
         )}
       </div>
 
-      {!isLoading && !error && <Pagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onChange={setPage} />}
-      <button onClick={reload} disabled={isLoading} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary"><RefreshCw size={16} />새로고침</button>
+      {activeTab !== 'augmented' && !isLoading && !error && <Pagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onChange={setPage} />}
+      {activeTab !== 'augmented' && <button onClick={reload} disabled={isLoading} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary"><RefreshCw size={16} />새로고침</button>}
       <CreateAssetModal
         isOpen={isCreateModalOpen}
         onClose={() => { setIsCreateModalOpen(false); reload(); }}

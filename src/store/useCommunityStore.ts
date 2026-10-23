@@ -87,12 +87,12 @@ export interface RecipeDetailResponse {
   };
   settings?: {
     model: string;
-    steps: number;
+    steps: number | null;
     sampler: string;
-    cfgScale: number;
+    cfgScale: number | null;
     seed: string;
     resolution: string;
-    batchSize: number;
+    batchSize: number | null;
   };
   inspectionStatus?: string;
   inspectionResult?: InspectionResult | null;

@@ -31,6 +31,8 @@ import { useAuthStore } from "../../store/useAuthStore";
 import api from "../../lib/axios";
 import { requestMessage, type ActivityItem, type ActivityPage } from "../../lib/liveData";
 
+import { activityVisible } from '../../lib/backendContracts';
+
 // --- Types ---
 interface CommunityActivity {
   id: string;
@@ -39,6 +41,7 @@ interface CommunityActivity {
   description?: string;
   timestamp: string;
   isPublic: boolean;
+  isMyPageVisible: boolean;
   stats?: { likes?: number; downloads?: number; comments?: number };
   isExpertVerified?: boolean;
 }
@@ -52,7 +55,7 @@ interface ProfileProject {
 }
 
 function mapActivity(item: ActivityItem): CommunityActivity {
-  return { id: `${item.type}:${item.activityId}`, type: item.type === 'RECIPE' ? 'showcase' : item.type === 'DATASET' ? 'dataset' : item.type === 'QNA' ? 'qna' : 'recruiting', title: item.title, description: item.description, timestamp: new Date(item.createdAt).toLocaleDateString(), isPublic: item.isPublic, stats: { likes: item.likeCount, downloads: item.downloadCount, comments: item.commentCount } };
+  return { id: `${item.type}:${item.activityId}`, type: item.type === 'RECIPE' ? 'showcase' : item.type === 'DATASET' ? 'dataset' : item.type === 'QNA' ? 'qna' : 'recruiting', title: item.title, description: item.description, timestamp: new Date(item.createdAt).toLocaleDateString(), isPublic: item.isPublic, isMyPageVisible: activityVisible(item), stats: { likes: item.likeCount, downloads: item.downloadCount, comments: item.commentCount } };
 }
 
 type SettingsTab = "plan" | "verification" | "account";
@@ -109,7 +112,7 @@ export default function ProfilePage() {
         if (!data?.userId) throw new Error('프로필 응답을 확인할 수 없습니다.');
         setOtherUser({ ...data, bio: data.introduction, organization: data.location, websiteUrl: data.website, profileImage: data.profileImageUrl });
         const activities = data.publicActivities ?? [];
-        setCommunityActivities(activities.filter((it: ActivityItem) => it.type !== ('PROJECT' as string)).map(mapActivity));
+        setCommunityActivities(activities.filter((it: ActivityItem) => it.type !== ('PROJECT' as string)).map((it: ActivityItem) => mapActivity({ ...it, isMyPageVisible: true })));
         const visible = activities.filter((it: { type: string }) => it.type === 'PROJECT').map((it: { activityId: number; title: string; myRole: string; bannerImageUrl: string }) => ({ id: String(it.activityId), title: it.title, role: it.myRole === 'MANAGER' ? '관리자' : '멤버', coverImage: it.bannerImageUrl || '', isPublic: true }));
         setProjects(visible); setHasNext(false); setTotalCount(visible.length);
       }).catch((err) => { if (!controller.signal.aborted) setProfileError(requestMessage(err)); })
@@ -368,8 +371,8 @@ export default function ProfilePage() {
   const displayedProjects = projects.filter((project) => project.isPublic);
 
   const availableActivities = isOwnProfile
-    ? (isCommunityPublic ? communityActivities : communityActivities.filter((a) => a.isPublic))
-    : communityActivities.filter((a) => a.isPublic);
+    ? (isCommunityPublic ? communityActivities : communityActivities.filter((a) => a.isMyPageVisible))
+    : communityActivities.filter((a) => a.isMyPageVisible);
 
   const displayedActivities = availableActivities.slice(
     0,
@@ -488,6 +491,7 @@ export default function ProfilePage() {
     setSavingVisibility(true); setActivityError(null); setActivityNotice(null);
     try {
       await api.patch('/users/me/activities/visibility', { items: [{ type, id: Number(activityId.split(':').pop()), isPublic: visible }] });
+      setCommunityActivities((items) => items.map((item) => item.id === activityId ? { ...item, isMyPageVisible: item.isPublic && visible } : item));
       setActivityNotice(`프로필에서 ${visible ? '표시' : '숨김'} 처리했습니다.`);
     } catch (err) { setActivityError(requestMessage(err, '프로필 노출 설정을 저장하지 못했습니다.')); }
     finally { setSavingVisibility(false); }
@@ -889,7 +893,7 @@ export default function ProfilePage() {
                 }`}
               >
                 {isCommunityPublic ? <Eye size={16} /> : <EyeOff size={16} />}
-                {isCommunityPublic ? "전체 활동 보기" : "공개 활동만 보기"}
+                {isCommunityPublic ? "전체 활동 보기" : "프로필 표시 활동만 보기"}
               </button>
             )}
           </div>
@@ -932,7 +936,7 @@ export default function ProfilePage() {
                 <div
                   key={activity.id}
                   className={`p-5 rounded-2xl border transition-all ${
-                    activity.isPublic && isCommunityPublic
+                    activity.isMyPageVisible
                       ? "border-border bg-card hover:border-primary/30"
                       : "border-border/60 bg-muted/20"
                   }`}
@@ -966,9 +970,9 @@ export default function ProfilePage() {
                         </div>
 
                         {isOwnProfile && <div className="flex flex-wrap gap-2 text-xs">
-                          <span className="text-muted-foreground">콘텐츠 {activity.isPublic ? '공개' : '비공개'}</span>
-                          <button disabled={savingVisibility || !activity.isPublic} className="text-primary disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, true)}>프로필에 표시</button>
-                          <button disabled={savingVisibility} className="text-muted-foreground disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, false)}>프로필에서 숨김</button>
+                          <span className="text-muted-foreground">콘텐츠 {activity.isPublic ? '공개' : '비공개'} · 프로필 {activity.isMyPageVisible ? '표시' : '숨김'}</span>
+                          <button disabled={savingVisibility || !activity.isPublic || activity.isMyPageVisible} className="text-primary disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, true)}>프로필에 표시</button>
+                          <button disabled={savingVisibility || !activity.isMyPageVisible} className="text-muted-foreground disabled:opacity-50" onClick={() => saveActivityVisibility(activity.id, false)}>프로필에서 숨김</button>
                         </div>}
                       </div>
 

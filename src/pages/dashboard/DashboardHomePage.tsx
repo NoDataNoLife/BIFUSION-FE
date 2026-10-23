@@ -2,12 +2,11 @@ import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Users,
-  HardDrive,
   BadgeCheck,
   Award,
-  Zap,
 } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
+import ResourceUsageCards from "../../components/dashboard/ResourceUsageCards";
 
 import { useApiQuery } from '../../hooks/useApiQuery';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -119,70 +118,12 @@ export default function DashboardHome() {
               리소스 사용량
             </h2>
             <p className="text-sm text-muted-foreground mt-1 font-medium">
-              스토리지와 월간 증강 사용량은 집계가 연결되면 표시됩니다.
+              스토리지와 이번 달 증강 작업 사용량입니다.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Storage */}
-            <DashboardCard className="p-7 rounded-3xl border border-border space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                    <HardDrive className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-black text-foreground">스토리지</h4>
-                    <p className="text-xs text-muted-foreground font-medium">클라우드 저장 공간</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">사용량</span>
-                  <span className="text-sm font-black text-foreground">
-                    집계 준비 중
-                  </span>
-                </div>
-                <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: 0 }}
-                  />
-                </div>
-              </div>
-            </DashboardCard>
-
-            {/* Monthly Augmentations */}
-            <DashboardCard className="p-7 rounded-3xl border border-border space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-emerald-500" />
-                  </div>
-                  <div>
-                    <h4 className="font-black text-foreground">월간 증강</h4>
-                    <p className="text-xs text-muted-foreground font-medium">생성 작업 횟수</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">진행률</span>
-                  <span className="text-sm font-black text-foreground">
-                    집계 준비 중
-                  </span>
-                </div>
-                <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
-                    style={{ width: 0 }}
-                  />
-                </div>
-              </div>
-            </DashboardCard>
+            <ResourceUsageCards />
 
             {/* Rewards */}
             <DashboardCard className="p-7 rounded-3xl border border-border flex items-center justify-between">

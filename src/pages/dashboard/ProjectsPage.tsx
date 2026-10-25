@@ -395,7 +395,7 @@ function CreateProjectModal({
                 onChange={(e) =>
                   setNewProject({ ...newProject, name: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-muted border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium"
+                className="w-full px-4 py-3 bg-muted text-foreground placeholder:text-muted-foreground border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary transition-all font-medium"
                 placeholder="예: 심장 질환 분석 프로젝트"
                 required
               />
@@ -410,7 +410,7 @@ function CreateProjectModal({
                 onChange={(e) =>
                   setNewProject({ ...newProject, description: e.target.value })
                 }
-                className="w-full px-4 py-4 bg-muted border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium resize-none"
+                className="w-full px-4 py-4 bg-muted text-foreground placeholder:text-muted-foreground border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary transition-all font-medium resize-none"
                 rows={3}
                 placeholder="프로젝트의 목적과 연구 내용을 입력하세요"
                 required
@@ -444,7 +444,7 @@ function CreateProjectModal({
                     newMembers[0].email = e.target.value;
                     setNewProject({ ...newProject, teamMembers: newMembers });
                   }}
-                  className="flex-1 px-4 py-3 bg-muted border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium"
+                  className="flex-1 px-4 py-3 bg-muted text-foreground placeholder:text-muted-foreground border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary transition-all font-medium"
                   placeholder="팀원 이메일 (예: user@example.com)"
                 />
                 <select
@@ -454,7 +454,7 @@ function CreateProjectModal({
                     newMembers[0].role = e.target.value;
                     setNewProject({ ...newProject, teamMembers: newMembers });
                   }}
-                  className="w-40 px-4 py-3 bg-muted border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary transition-all font-medium cursor-pointer"
+                  className="w-40 px-4 py-3 bg-muted text-foreground placeholder:text-muted-foreground border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary transition-all font-medium cursor-pointer"
                 >
                   <option value="MEMBER">Member</option>
                   <option value="MANAGER">Manager</option>

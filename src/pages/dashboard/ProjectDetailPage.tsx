@@ -24,6 +24,8 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useProjectJobs, type ProjectJobItem } from "../../hooks/useProjectJobs";
 import ProfileAvatar from "../../components/common/ProfileAvatar";
 
+import { AssetCover } from "../../components/dashboard/DataView";
+
 type StatusTab = "all" | "queue" | "processing" | "completed" | "failed" | "cancelled";
 type JobTypeFilter = "all" | "Augment" | "Train" | "Inference";
 
@@ -57,7 +59,7 @@ export default function ProjectDetailPage() {
     if (currentProject) {
       setEditTitle(currentProject.title || "");
       setEditDescription(currentProject.description || "");
-      setCoverImage(currentProject.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1600&q=80");
+      setCoverImage(currentProject.bannerImageUrl || "");
     }
   }, [currentProject]);
 
@@ -126,7 +128,7 @@ export default function ProjectDetailPage() {
     const success = await updateProjectInfo(projectId, {
       title: editTitle,
       description: editDescription,
-      bannerImageUrl: coverImage,
+      bannerImageUrl: coverImage.trim() || null,
     });
     if (success) {
       setIsSettingsOpen(false);
@@ -306,11 +308,7 @@ export default function ProjectDetailPage() {
       <div className="max-w-7xl mx-auto px-8 py-8 space-y-8">
         {/* Cover Image */}
         <section className="relative h-64 md:h-72 rounded-4xl overflow-hidden border border-border shadow-sm">
-          <img
-            src={coverImage}
-            alt={currentProject?.title}
-            className="w-full h-full object-cover"
-          />
+          <AssetCover src={currentProject?.bannerImageUrl} title={currentProject?.title || '프로젝트'} />
           <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-6">
             <div>
@@ -604,11 +602,7 @@ export default function ProjectDetailPage() {
                 </h4>
                 <div className="space-y-4">
                   <div className="relative h-48 rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={coverImage}
-                      alt="Cover preview"
-                      className="w-full h-full object-cover"
-                    />
+                    <AssetCover src={coverImage.trim()} title="배경 이미지 미리보기" />
                   </div>
                   <label className="block">
                     <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">

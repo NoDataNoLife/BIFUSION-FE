@@ -146,11 +146,15 @@ export const useProjectStore = create<ProjectState>((set) => ({
       const response = await api.put(`/projects/${projectId}`, payload);
       if (response.data.success) {
         set((state) => ({
-          currentProject: state.currentProject ? { ...state.currentProject, ...payload } : null,
+          currentProject: state.currentProject?.projectId === Number(projectId)
+            ? { ...state.currentProject, ...payload } : state.currentProject,
+          managingProjects: state.managingProjects.map(project => project.projectId === Number(projectId) ? { ...project, ...payload } : project),
+          participatingProjects: state.participatingProjects.map(project => project.projectId === Number(projectId) ? { ...project, ...payload } : project),
           isLoading: false
         }));
         return true;
       }
+      set({ error: '프로젝트 설정을 저장하지 못했습니다.', isLoading: false });
       return false;
     } catch (error: unknown) {
       console.error('Failed to update project detail:', error);

@@ -111,18 +111,18 @@ export default function DashboardHome() {
           {loading || error ? <DataState loading={loading} error={error} onRetry={reload} /> : displayProjects.length ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{displayProjects.slice(0, 6).map(project => <ProjectCard key={project.projectId} project={project} />)}</div> : <DataState title="첫 프로젝트를 시작해 보세요" description="새 프로젝트에서 데이터를 업로드하고 증강·학습 작업을 진행할 수 있어요." />}
         </section>
 
-        {/* 리소스 사용량 */}
+        {/* 저장 공간 및 앤트 */}
         <section>
           <div className="mb-6">
             <h2 className="text-2xl font-black text-foreground tracking-tight">
-              리소스 사용량
+              저장 공간 및 앤트
             </h2>
             <p className="text-sm text-muted-foreground mt-1 font-medium">
-              스토리지와 이번 달 증강 작업 사용량입니다.
+              저장 공간 사용량과 보유 앤트를 확인하세요.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ResourceUsageCards />
 
             {/* Rewards */}
@@ -134,9 +134,9 @@ export default function DashboardHome() {
                 <div>
                   <h4 className="font-black text-foreground">보유 앤트</h4>
                   <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                    커뮤니티 및 검수 기여
+                    현재 사용 가능한 잔액
                   </p>
-                  <p className="text-2xl font-black text-primary mt-2">{user?.points != null ? `${user.points.toLocaleString()}P` : '집계 준비 중'}</p>
+                  <p className="text-2xl font-black text-primary mt-2">{user?.points != null ? `${user.points.toLocaleString()} 앤트` : '집계 준비 중'}</p>
                 </div>
               </div>
             </DashboardCard>

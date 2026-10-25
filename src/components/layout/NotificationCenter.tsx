@@ -9,7 +9,8 @@ import {
   Check,
   Sparkles,
   ShieldCheck,
-  Info
+  Info,
+  RefreshCw
 } from 'lucide-react';
 import { notificationTarget } from '../../lib/notificationTarget';
 import { requestMessage } from '../../lib/liveData';
@@ -100,7 +101,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
       {/* Notification Panel */}
-      <div className="absolute top-16 right-8 w-105 bg-card rounded-[2.5rem] shadow-2xl border border-border z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+      <div className="fixed top-20 right-4 left-4 sm:absolute sm:top-16 sm:right-0 sm:left-auto sm:w-105 bg-card rounded-[2.5rem] shadow-2xl border border-border z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
         {/* Header */}
         <div className="px-8 py-6 border-b border-border bg-muted/20 flex items-center justify-between">
           <div>
@@ -109,8 +110,10 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
             </h3>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={() => fetchNotifications()} disabled={isLoading} aria-label="알림 새로고침" className="p-2 rounded-xl hover:bg-muted disabled:opacity-40"><RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} /></button>
             <button
               onClick={() => markAllAsRead()}
+              disabled={isLoading || unreadCount === 0}
               className="p-2 hover:bg-muted rounded-xl text-muted-foreground hover:text-primary transition-all cursor-pointer"
               title="모두 읽음 처리"
             >
@@ -126,13 +129,16 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
         </div>
 
         {/* List */}
-        <div className="max-h-125 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+        <div className="max-h-[calc(100dvh-16rem)] sm:max-h-125 overflow-y-auto p-4 space-y-2 custom-scrollbar">
       {error && <p role="alert" className="p-4 text-red-500">{error}</p>}
       {isLoading && <p className="p-4">알림을 불러오는 중…</p>}
           {isLoading || error ? null : notifications.length > 0 ? (
             notifications.map((notification) => (
               <div
                 key={notification.notificationId}
+                role="link"
+                tabIndex={0}
+                onKeyDown={(event) => { if (event.target === event.currentTarget && event.key === 'Enter') void handleItemClick(notification); }}
                 onClick={() => handleItemClick(notification)}
                 className={`group relative p-4 rounded-3xl transition-all cursor-pointer flex gap-4 items-start ${
                   notification.isRead ? 'opacity-60 bg-muted/20 border border-border' : 'bg-card shadow-sm border border-border hover:border-primary/40'
@@ -156,7 +162,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                 {/* Soft Delete Action Button */}
                 <button
                   onClick={(e) => handleDelete(e, notification.notificationId)}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-muted text-muted-foreground hover:text-red-500 rounded-lg transition-all absolute top-3 right-3 cursor-pointer"
+                  className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 p-1.5 hover:bg-muted text-muted-foreground hover:text-red-500 rounded-lg transition-all absolute top-3 right-3 cursor-pointer"
                   title="알림 삭제"
                 >
                   <X className="w-4 h-4" />

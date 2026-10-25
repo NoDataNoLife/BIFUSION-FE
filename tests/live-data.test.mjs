@@ -21,6 +21,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as api } from './src/lib/axios';
   export { AxiosError } from 'axios';
   export { useNotificationStore } from './src/store/useNotificationStore';
+  export { useProjectStore } from './src/store/useProjectStore';
   export { useAssetStore } from './src/store/useAssetStore';
   export { useExpertStore } from './src/store/useExpertStore';
   export { useCommunityStore } from './src/store/useCommunityStore';
@@ -196,7 +197,10 @@ test('resource limits keep unknown values separate from real zero usage', () => 
     monthlyAugmentations: null, monthlyAugmentationLimit: null, periodStart: null, periodEnd: null, timezone: 'Asia/Seoul' };
   const html = app.renderToString(app.createElement(app.ResourceUsageSummary, { data, loading: false, error: null, onRetry() {} }));
   assert.match(html, /0 B/);
-  assert.match(html, /집계하지 못했습니다/);
+  assert.doesNotMatch(html, /월간 증강/);
+  const unknown = app.renderToString(app.createElement(app.ResourceUsageSummary, { data: { ...data, storageUsedBytes: null }, loading: false, error: null, onRetry() {} }));
+  assert.match(unknown, /집계하지 못했습니다/);
+  assert.doesNotMatch(unknown, /0 B/);
   assert.match(html, /크기 미확인 파일/);
   assert.doesNotMatch(html, /role="progressbar"/);
   assert.equal(app.usagePercent(0, 100), 0);
@@ -232,4 +236,23 @@ test('inspection card links dataset job result but keeps permission and target I
   assert.match(html, /projects\/2\/jobs\/9\/result/);
   assert.match(html, /검수 신청 취소/);
   assert.doesNotMatch(html, />전문가 검수 신청</);
+});
+
+
+test('project changes update matching cards without modifying another open project', async () => {
+  const projects = app.useProjectStore;
+  projects.setState({
+    currentProject: { projectId: 2, title: 'Other', bannerImageUrl: 'other.png', members: [] },
+    managingProjects: [{ projectId: 1, title: 'Old', bannerImageUrl: 'old.png', members: [] }],
+    participatingProjects: [{ projectId: 2, title: 'Other', bannerImageUrl: 'other.png', members: [] }],
+  });
+  api.defaults.adapter = async config => response(config, {});
+  assert.equal(await projects.getState().updateProjectInfo('1', { title: 'Updated', description: 'Saved', bannerImageUrl: 'new.png' }), true);
+  assert.equal(projects.getState().managingProjects[0].bannerImageUrl, 'new.png');
+  assert.equal(projects.getState().currentProject.title, 'Other');
+  assert.equal(projects.getState().participatingProjects[0].bannerImageUrl, 'other.png');
+  api.defaults.adapter = async config => ({ ...response(config, null), data: { success: false } });
+  assert.equal(await projects.getState().updateProjectInfo('1', { title: 'Rejected' }), false);
+  assert.equal(projects.getState().isLoading, false);
+  assert.equal(projects.getState().managingProjects[0].title, 'Updated');
 });

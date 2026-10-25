@@ -69,14 +69,12 @@ const cards = [
     x: 0.6,
     rotate: 8,
     y: 34,
-    title: "다양한 포맷",
+    title: "팀 협업",
     description: (
       <>
-        영상, 전자건강기록, 유전체학,
+        연구 팀원을 모집하고
         <br />
-        임상 노트 등 다양한 의료
-        <br />
-        데이터 유형을 지원합니다.
+        초대와 역할 관리, 팀 코멘트로 프로젝트를 함께 진행하세요.
       </>
     ),
   },
@@ -277,22 +275,29 @@ export default function FeatureCards() {
                   }
                 `}
               >
-                {/* =========================
-                    앞면
-                ========================== */}
+                {/* 앞면: 어두운 배경 + 로고 */}
                 <div
                   className="
-                    absolute
-                    inset-0
-                    overflow-hidden
-                    rounded-3xl
-                    [backface-visibility:hidden]
-                  "
+    absolute
+    inset-0
+    flex
+    items-center
+    justify-center
+    overflow-hidden
+    rounded-3xl
+    border
+    border-[#2F4A41]
+    bg-[#172F29]
+    shadow-[0_8px_30px_rgba(0,0,0,0.25)]
+    dark:border-white/15
+    dark:bg-[#1F3A32]
+    [backface-visibility:hidden]
+  "
                 >
                   <img
-                    src="/card.png"
+                    src="/logo1.png"
                     alt=""
-                    className="block h-full w-full object-fill"
+                    className="w-[35px] object-contain"
                   />
                 </div>
 

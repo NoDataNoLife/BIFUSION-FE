@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 const messages = {
   NONE: {
     title: '전문가로 함께해 주세요',
-    description: '전문가 인증을 받으면 증강 데이터의 품질을 검토하고, 검수 활동에 따른 리워드를 받을 수 있어요.',
+    description: '전문가 인증을 받으면 증강 데이터의 품질을 검토하고, 검수 활동에 따른 앤트 보상을 받을 수 있어요.',
     action: '전문가 인증 신청하기',
   },
   PENDING: {
@@ -45,7 +45,7 @@ export default function ExpertAccessGate() {
   };
 
   return <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
-    <header><h1 className="text-3xl font-black text-foreground tracking-tight">전문가 대시보드</h1><p className="mt-1 text-muted-foreground font-medium">데이터 증강 결과 검수 및 리워드 관리</p></header>
+    <header><h1 className="text-3xl font-black text-foreground tracking-tight">전문가 대시보드</h1><p className="mt-1 text-muted-foreground font-medium">데이터 증강 결과 검수 및 앤트 보상 관리</p></header>
     <div className="relative isolate overflow-hidden rounded-4xl border border-border min-h-[36rem]">
       {/* Structural preview only. Protected data and controls are never mounted here. */}
       <div aria-hidden="true" inert className="absolute inset-0 p-5 sm:p-8 space-y-8 blur-sm opacity-45 pointer-events-none select-none">

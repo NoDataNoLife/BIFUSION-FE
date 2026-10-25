@@ -1,3 +1,4 @@
+import AntCoin from "../../common/AntCoin";
 import { X, Award, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { requestMessage } from '../../../lib/liveData';
@@ -80,7 +81,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-foreground flex justify-between items-end">
-                <span>검수 보상 앤트</span>
+                <span className="flex items-center gap-2"><AntCoin className="w-5 h-5" />검수 보상 앤트</span>
                 <span className={`text-xs font-bold ${Number(reward) > currentPoints ? 'text-red-500' : 'text-primary'}`}>
                   내 보유 앤트: {currentPoints.toLocaleString()} 앤트
                 </span>
@@ -95,7 +96,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
                   className={`w-full h-14 px-5 bg-background border ${Number(reward) > currentPoints ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-primary'} rounded-2xl text-foreground font-bold focus:outline-none focus:ring-1 transition-all`}
                 />
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold flex items-center gap-2">
-                  <span>앤트</span>
+                  <AntCoin className="w-5 h-5" /><span>앤트</span>
                 </div>
               </div>
               {Number(reward) > currentPoints && (

@@ -31,6 +31,7 @@ import ProfilePage from "./pages/dashboard/ProfilePage";
 import CommunityPage from "./pages/dashboard/CommunityPage";
 import ActivitiesPage from "./pages/dashboard/ActivitiesPage";
 import NotificationsPage from "./pages/dashboard/NotificationsPage";
+import AntTopupPage from "./pages/dashboard/AntTopupPage";
 import OnboardingPage from "./pages/OnboardingPage";
 
 function App() {
@@ -120,6 +121,7 @@ function App() {
               element={<InferenceResultPage />}
             />
 
+            <Route path="ants/topup" element={<AntTopupPage />} />
             <Route path="assets" element={<AssetsPage />} />
             <Route path="expert" element={<ExpertPage />} />
             <Route path="profile" element={<ProfilePage />} />

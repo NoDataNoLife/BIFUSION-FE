@@ -1,3 +1,4 @@
+import AntCoin from "../../components/common/AntCoin";
 import ProfileAvatar from '../../components/common/ProfileAvatar';
 import { useState, useEffect } from 'react';
 import {
@@ -144,7 +145,7 @@ function CertifiedExpertDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black text-foreground tracking-tight">전문가 대시보드</h1>
-          <p className="text-muted-foreground mt-1 font-medium">데이터 증강 결과 검수 및 리워드 관리</p>
+          <p className="text-muted-foreground mt-1 font-medium">데이터 증강 결과 검수 및 앤트 보상 관리</p>
         </div>
         <div className="flex items-center gap-3 px-5 py-2.5 bg-primary/10 text-primary rounded-2xl border border-primary/20">
           <Award className="w-5 h-5" />
@@ -156,8 +157,8 @@ function CertifiedExpertDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-primary rounded-3xl p-8 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
-          <Award className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 group-hover:scale-110 transition-transform" />
-          <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-2">총 획득 리워드</p>
+          <AntCoin className="absolute -right-4 -bottom-4 w-32 h-32 opacity-20 group-hover:scale-110 transition-transform" />
+          <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-2">총 획득 앤트</p>
           <p className="text-4xl font-black">{performance.data?.totalReward?.toLocaleString() ?? '—'} <span className="text-lg font-bold opacity-70">앤트</span></p>
           <div className="mt-6 flex items-center gap-2 text-xs font-bold bg-white/20 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm">
             <TrendingUp size={14} /> {performance.data?.topPercent != null ? `상위 ${performance.data.topPercent}%` : '순위 정보 없음'}

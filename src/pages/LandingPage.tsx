@@ -756,7 +756,7 @@ export default function LandingPage() {
       </section>
 
       {/* FEATURE GRID */}
-      <section className="bg-muted/30 border-y border-border py-24 px-6 transition-colors">
+      <section id="features" className="scroll-mt-24 bg-muted/30 border-y border-border py-24 px-6 transition-colors">
         <div className="container mx-auto">
           <div className="flex flex-col items-center text-center">
             <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29] dark:bg-[#FFDEA8]/15 dark:text-[#FFC76A]">
@@ -777,7 +777,7 @@ export default function LandingPage() {
       </section>
 
       {/* PROCESS FLOW */}
-      <section className="py-24 px-6">
+      <section id="how-it-works" className="scroll-mt-24 py-24 px-6">
         <div className="container mx-auto">
           <div className="flex flex-col items-center text-center">
             <div className="rounded-full bg-[#FFDEA8] px-5 py-2 text-[16px] leading-[20px] text-[#B27D29] dark:bg-[#FFDEA8]/15 dark:text-[#FFC76A]">
@@ -798,7 +798,7 @@ export default function LandingPage() {
       </section>
 
       {/* ANT POINT SYSTEM */}
-      <section className="overflow-hidden border-y border-border bg-muted/30 px-6 py-24 transition-colors">
+      <section id="ants" className="scroll-mt-24 overflow-hidden border-y border-border bg-muted/30 px-6 py-24 transition-colors">
         <style>{`
           @keyframes ant-coin-flip {
             0%, 10%, 28%, 42%, 60%, 100% {

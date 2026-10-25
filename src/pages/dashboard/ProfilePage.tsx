@@ -1120,7 +1120,7 @@ export default function ProfilePage() {
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
           <div className="bg-card rounded-[2.5rem] shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="px-8 py-6 border-b border-border flex justify-between items-center bg-muted/30">
+            <div className="px-6 sm:px-8 pt-6 pb-4 flex justify-between items-center">
               <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">
                 계정 설정
               </h2>
@@ -1133,28 +1133,27 @@ export default function ProfilePage() {
             </div>
 
             {/* Modal Tabs */}
-            <div className="px-8 border-b border-border flex gap-8 bg-muted/30">
+            <div className="mx-6 sm:mx-8 mb-2 p-1 rounded-2xl bg-muted flex gap-1">
               {settingsTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setSettingsTab(tab.id)}
-                  className={`pb-4 flex items-center gap-2 font-bold text-xs uppercase tracking-widest transition-all relative ${
+                  aria-pressed={settingsTab === tab.id}
+                  className={`flex-1 px-3 py-3 rounded-xl flex justify-center items-center gap-2 font-bold text-sm transition-colors ${
                     settingsTab === tab.id
-                      ? "text-primary"
+                      ? "bg-card text-primary shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <tab.icon size={16} />
                   {tab.label}
-                  {settingsTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full" />
-                  )}
+
                 </button>
               ))}
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-10 space-y-8">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8">
               {settingsTab === "verification" && (
                 <div className="space-y-8">
                   {/* Case 1: Already Approved / Verified Expert */}

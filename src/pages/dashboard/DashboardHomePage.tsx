@@ -3,8 +3,8 @@ import {
   Plus,
   Users,
   BadgeCheck,
-  Award,
 } from "lucide-react";
+import AntCoin from "../../components/common/AntCoin";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import ResourceUsageCards from "../../components/dashboard/ResourceUsageCards";
 
@@ -126,10 +126,10 @@ export default function DashboardHome() {
             <ResourceUsageCards />
 
             {/* Rewards */}
-            <DashboardCard className="p-7 rounded-3xl border border-border flex items-center justify-between">
+            <DashboardCard className="p-7 rounded-3xl border border-border flex flex-wrap items-center justify-between gap-5">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center">
-                  <Award className="w-7 h-7 text-amber-500" />
+                  <AntCoin className="w-10 h-10" />
                 </div>
                 <div>
                   <h4 className="font-black text-foreground">보유 앤트</h4>
@@ -139,6 +139,7 @@ export default function DashboardHome() {
                   <p className="text-2xl font-black text-primary mt-2">{user?.points != null ? `${user.points.toLocaleString()} 앤트` : '집계 준비 중'}</p>
                 </div>
               </div>
+              <button onClick={() => navigate('/dashboard/ants/topup')} className="shrink-0 px-4 py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20">충전하기</button>
             </DashboardCard>
           </div>
         </section>

@@ -172,9 +172,10 @@ export const useProjectStore = create<ProjectState>((set) => ({
         set({ isLoading: false });
         return true;
       }
+      set({ error: '초대를 보내지 못했습니다.', isLoading: false });
       return false;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = error instanceof Error ? error.message : '초대를 보내지 못했습니다.';
       set({ error: errorMessage, isLoading: false });
       return false;
     }

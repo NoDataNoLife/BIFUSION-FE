@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   Award,
   MapPin,
@@ -825,9 +825,11 @@ export default function ProfilePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {displayedProjects.map((project) => (
-                <div
+                <Link
                   key={project.id}
-                  className="rounded-xl overflow-hidden border border-border bg-muted/20"
+                  to={`/dashboard/projects/${project.id}`}
+                  aria-label={`${project.title} 프로젝트 열기`}
+                  className="block rounded-xl overflow-hidden border border-border bg-muted/20 hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
                 >
                   <ImageWithFallback
                     src={project.coverImage}
@@ -842,7 +844,7 @@ export default function ProfilePage() {
                       {project.role}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

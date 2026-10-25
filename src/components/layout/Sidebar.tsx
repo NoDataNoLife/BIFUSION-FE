@@ -55,7 +55,7 @@ export default function Sidebar({ isCollapsed, onToggle, onNavigate }: SidebarPr
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <img
-              src="/B_logo.png"
+              src="/logo_og.png"
               alt="Bifusion"
               className="h-9 w-auto object-contain dark:brightness-105 dark:drop-shadow-[0_2px_8px_rgba(240,165,58,0.25)] transition-all"
             />

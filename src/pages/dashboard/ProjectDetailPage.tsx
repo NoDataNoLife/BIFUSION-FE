@@ -52,6 +52,8 @@ export default function ProjectDetailPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [coverImage, setCoverImage] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [inviteFeedback, setInviteFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
@@ -139,14 +141,15 @@ export default function ProjectDetailPage() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMemberEmail || !projectId) return;
+    if (!newMemberEmail.trim() || !projectId || inviting) return;
     
-    const success = await inviteMember(projectId, newMemberEmail);
-    if (success) {
-      setNewMemberEmail("");
-    } else {
-      alert("초대에 실패했습니다.");
-    }
+    setInviting(true);
+    setInviteFeedback(null);
+    try {
+      const success = await inviteMember(projectId, newMemberEmail.trim());
+      setInviteFeedback({ ok: success, text: success ? '초대를 보냈습니다. 상대방이 수락하면 멤버 목록에 표시됩니다.' : (useProjectStore.getState().error || '초대를 보내지 못했습니다. 다시 시도해 주세요.') });
+      if (success) setNewMemberEmail('');
+    } finally { setInviting(false); }
   };
 
   const handleRemoveMember = async (userId: number) => {
@@ -340,7 +343,7 @@ export default function ProjectDetailPage() {
                 className={`p-3 rounded-2xl bg-${stat.color}-500/10 text-${stat.color}-600 dark:text-${stat.color}-400 inline-block mb-4 group-hover:scale-110 transition-transform`}
               >
                 <stat.icon
-                  className={`w-6 h-6 ${stat.id === "processing" ? "animate-spin" : ""}`}
+                  className={`w-6 h-6 ${stat.id === "processing" && stat.value > 0 ? "animate-spin" : ""}`}
                 />
               </div>
               <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
@@ -629,20 +632,24 @@ export default function ProjectDetailPage() {
                     <input
                       type="email"
                       value={newMemberEmail}
+                      required
+                      disabled={inviting}
                       onChange={(e) => setNewMemberEmail(e.target.value)}
                       placeholder="이메일 주소 입력"
                       className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2"
+                      disabled={inviting || !newMemberEmail.trim()}
+                      className="disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2"
                     >
                       <UserPlus className="w-4 h-4" />
-                      초대
+                      {inviting ? '전송 중…' : '초대'}
                     </button>
                   </div>
                 </form>
 
+                {inviteFeedback && <p role={inviteFeedback.ok ? 'status' : 'alert'} className={`mb-4 text-sm ${inviteFeedback.ok ? 'text-emerald-600' : 'text-red-500'}`}>{inviteFeedback.text}</p>}
                 <div className="space-y-2">
                   {currentProject?.members?.map((member) => (
                     <div

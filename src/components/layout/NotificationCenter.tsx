@@ -1,3 +1,4 @@
+import TeamInvitationActions from '../common/TeamInvitationActions';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -86,6 +87,8 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
 
   const handleItemClick = async (item: NotificationItem) => {
     if (!item.isRead && !await markAsRead(item.notificationId)) return;
+    // Invitees cannot open the project until membership has been granted.
+    if (item.type === 'PROJECT_INVITATION') return;
     try { const link = await notificationTarget(item); navigate(link); onClose(); }
     catch (err) { useNotificationStore.setState({ error: requestMessage(err) }); }
   };
@@ -136,8 +139,8 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
             notifications.map((notification) => (
               <div
                 key={notification.notificationId}
-                role="link"
-                tabIndex={0}
+                role={notification.type === 'PROJECT_INVITATION' ? undefined : 'link'}
+                tabIndex={notification.type === 'PROJECT_INVITATION' ? undefined : 0}
                 onKeyDown={(event) => { if (event.target === event.currentTarget && event.key === 'Enter') void handleItemClick(notification); }}
                 onClick={() => handleItemClick(notification)}
                 className={`group relative p-4 rounded-3xl transition-all cursor-pointer flex gap-4 items-start ${
@@ -152,6 +155,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                   </div>
                   <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{notification.content}</p>
 
+                  {notification.type === 'PROJECT_INVITATION' && <TeamInvitationActions />}
                   {!notification.isRead && (
                     <div className="mt-3 flex justify-end">
                       <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />

@@ -1,3 +1,4 @@
+import TeamInvitationActions from '../../components/common/TeamInvitationActions';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -80,6 +81,7 @@ export default function NotificationsPage() {
 
   const handleNotificationClick = async (item: NotificationItem) => {
     if (!item.isRead && !await markAsRead(item.notificationId)) return;
+    if (item.type === 'PROJECT_INVITATION') return;
     try { navigate(await notificationTarget(item)); }
     catch (err) { useNotificationStore.setState({ error: requestMessage(err) }); }
   };
@@ -236,7 +238,8 @@ export default function NotificationsPage() {
                   {item.content}
                 </p>
 
-                {item.targetId != null && (
+                {item.type === 'PROJECT_INVITATION' && <TeamInvitationActions />}
+                {item.type !== 'PROJECT_INVITATION' && item.targetId != null && (
                   <span className="inline-flex items-center gap-1 text-xs font-black text-primary group-hover:underline">
                     바로가기 <ArrowRight size={13} />
                   </span>

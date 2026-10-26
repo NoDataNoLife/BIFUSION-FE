@@ -8,10 +8,12 @@ type AssetCategory = 'RECIPE' | 'DATASET' | null;
 interface CreateAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialRecipeId?: number;
+  onCreated?: () => void;
 }
 
-export default function CreateAssetModal({ isOpen, onClose }: CreateAssetModalProps) {
-  const [selectedCategory, setSelectedCategory] = useState<AssetCategory>(null);
+export default function CreateAssetModal({ isOpen, onClose, initialRecipeId, onCreated }: CreateAssetModalProps) {
+  const [selectedCategory, setSelectedCategory] = useState<AssetCategory>(initialRecipeId != null ? 'RECIPE' : null);
 
   if (!isOpen) return null;
 
@@ -80,7 +82,7 @@ export default function CreateAssetModal({ isOpen, onClose }: CreateAssetModalPr
         {/* Content Area */}
         <div className="overflow-y-auto flex-1">
           {!selectedCategory && renderCategorySelection()}
-          {selectedCategory === 'RECIPE' && <ShowcaseCreateForm onClose={handleClose} context="ASSET" />}
+          {selectedCategory === 'RECIPE' && <ShowcaseCreateForm onClose={handleClose} onCreated={onCreated} initialSourceId={initialRecipeId} context="ASSET" />}
           {selectedCategory === 'DATASET' && <DatasetCreateForm onClose={handleClose} context="ASSET" />}
         </div>
       </div>

@@ -68,6 +68,7 @@ export interface RecipeListResponse {
 }
 
 export interface RecipeDetailResponse {
+  isDeleted?: boolean;
   recipeId: number;
   title: string;
   description: string;

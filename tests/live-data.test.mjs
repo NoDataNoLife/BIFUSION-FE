@@ -20,6 +20,7 @@ const outfile = resolve(directory, 'live.cjs');
 await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as api } from './src/lib/axios';
   export { recipeReviewPayload } from './src/lib/recipeReviewPayload';
+  export { newRecipeDraft, draftFromRecipe, recipeRegistrationPayload } from './src/lib/recipeDraft';
   export { AxiosError } from 'axios';
   export { useNotificationStore } from './src/store/useNotificationStore';
   export { useProjectStore } from './src/store/useProjectStore';
@@ -349,4 +350,45 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
   assert.equal(await enabled.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), true);
   assert.equal(await enabled.useProjectStore.getState().inviteMember('12', 'member@example.com'), true);
   assert.deepEqual(roles, ['MANAGER', 'MEMBER']);
+});
+
+
+test('imported recipe settings preserve zero, custom choices and batch size without importing ownership', () => {
+  const source = { recipeId: 88, title: '원본', description: '설명', author: { userId: 99 }, isExpertVerified: true,
+    overview: { content: '본문', features: ['특징'], recommendations: ['활용'] },
+    settings: { model: 'model-custom', steps: 250, sampler: 'custom-sampler', cfgScale: 0, seed: '0', resolution: '640x480', batchSize: 12 } };
+  const draft = app.draftFromRecipe(source);
+  assert.equal(draft.cfgScale, '0');
+  assert.equal(draft.seed, '0');
+  assert.equal(draft.sampler, 'custom-sampler');
+  assert.equal(draft.resolution, '640x480');
+  const payload = app.recipeRegistrationPayload(draft, false);
+  assert.equal(payload.batchSize, 12);
+  assert.equal(payload.steps, 250);
+  assert.equal(payload.seed, 0);
+  assert.equal(payload.isPublic, false);
+  assert.equal('forkedFromId' in payload, false);
+  assert.equal('author' in payload, false);
+  assert.equal('isExpertVerified' in payload, false);
+  draft.features.push('새 특징');
+  assert.deepEqual(source.overview.features, ['특징']);
+});
+
+test('missing source parameters remain empty and cannot silently become zero or defaults', () => {
+  const draft = app.draftFromRecipe({ title: '제목', description: '설명', settings: null, overview: null });
+  assert.equal(draft.steps, '');
+  assert.equal(draft.seed, '');
+  assert.equal(draft.modelName, '');
+  assert.deepEqual(draft.features, []);
+  assert.throws(() => app.recipeRegistrationPayload(draft, false));
+  assert.throws(() => app.draftFromRecipe({ isDeleted: true }));
+});
+
+test('new recipe registration rejects invalid numeric input and honors explicit publication context', () => {
+  const draft = { ...app.newRecipeDraft(), title: '새 레시피', description: '설명' };
+  assert.equal(app.recipeRegistrationPayload(draft, true).isPublic, true);
+  assert.equal(app.recipeRegistrationPayload(draft, false).isPublic, false);
+  for (const invalid of [{ steps: '' }, { steps: '1.2' }, { batchSize: '0' }, { seed: '2147483648' }, { cfgScale: 'NaN' }]) {
+    assert.throws(() => app.recipeRegistrationPayload({ ...draft, ...invalid }, false));
+  }
 });

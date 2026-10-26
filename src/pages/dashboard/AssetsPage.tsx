@@ -17,11 +17,20 @@ export default function AssetsPage() {
   const [selected, setSelected] = useState<{ id: number; type: 'recipe' | 'dataset' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createSourceId, setCreateSourceId] = useState<number | undefined>();
   const recipeTab = activeTab === 'recipes' || activeTab === 'uploaded-recipes';
   const types = { recipes: 'FORKED', 'uploaded-recipes': 'MINE', datasets: 'UPLOADED', augmented: 'AUGMENTED' };
   const { data, error, loading: isLoading, reload } = useApiQuery<Page>(recipeTab ? '/assets/recipes' : '/assets/datasets', { type: types[activeTab], page, size: 12 });
   const back = () => { setSelected(null); reload(); };
-  if (selected?.type === 'recipe') return <RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} />;
+  const openFromRecipe = (id: number) => { setCreateSourceId(id); setIsCreateModalOpen(true); };
+  const createModal = <CreateAssetModal
+    key={createSourceId ?? 'new'}
+    isOpen={isCreateModalOpen}
+    initialRecipeId={createSourceId}
+    onClose={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); reload(); }}
+    onCreated={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); setSelected(null); setActiveTab('uploaded-recipes'); setPage(0); reload(); }}
+  />;
+  if (selected?.type === 'recipe') return <><RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} onCreateFromRecipe={activeTab === 'recipes' ? () => openFromRecipe(selected.id) : undefined}/>{createModal}</>;
   if (selected?.type === 'dataset') return <DatasetDetailView key={selected.id} datasetId={selected.id} onBack={back} />;
   const displayRecipes = (recipeTab ? data?.content ?? [] : []).filter((r): r is MyRecipeListResponse => 'recipeId' in r).filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ id: r.recipeId, title: r.title, description: r.description, thumbnailUrl: r.bannerImageUrl, isExpertVerified: r.expertVerified, forkedCount: r.forkCount ?? '—', viewCount: r.viewCount ?? '—' }));
   const displayDatasets = (!recipeTab ? data?.content ?? [] : []).filter((d): d is MyDatasetListResponse => 'datasetId' in d).filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase())).map(d => ({ id: d.datasetId, name: d.name, thumbnail: d.bannerImageUrl, size: formatBytes(d.totalSize), fileCount: d.fileCount, uploadedAt: d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('ko-KR') : '날짜 미등록', format: d.fileFormats?.join(', ') || '형식 미등록' }));
@@ -47,7 +56,7 @@ export default function AssetsPage() {
             />
           </div>
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => { setCreateSourceId(undefined); setIsCreateModalOpen(true); }}
             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm whitespace-nowrap cursor-pointer"
           >
             <Plus size={18} /> 새 자산 추가
@@ -80,11 +89,9 @@ export default function AssetsPage() {
               {displayRecipes.map(recipe => (
                 <div
                   key={recipe.id}
-                  onClick={() => setSelected({ id: recipe.id, type: 'recipe' })}
-                  role="button" tabIndex={0} aria-label={`${recipe.title} 상세 보기`}
-                  onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected({ id: recipe.id, type: 'recipe' }); } }}
                   className="group bg-card rounded-4xl border border-border overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer relative"
                 >
+                  <button type="button" onClick={() => setSelected({ id: recipe.id, type: 'recipe' })} aria-label={`${recipe.title} 상세 보기`} className="block w-full text-left focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px]">
                   <div className="aspect-video relative overflow-hidden bg-muted">
                     <AssetCover src={recipe.thumbnailUrl} title={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     {recipe.isExpertVerified && (
@@ -103,6 +110,8 @@ export default function AssetsPage() {
                       </div>
                     </div>
                   </div>
+                  </button>
+                  {activeTab === 'recipes' && <div className="px-8 pb-6"><button type="button" onClick={() => openFromRecipe(recipe.id)} className="w-full rounded-xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20">내 레시피로 만들기</button></div>}
                 </div>
               ))}
             </div>
@@ -161,10 +170,7 @@ export default function AssetsPage() {
 
       {activeTab !== 'augmented' && !isLoading && !error && <Pagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onChange={setPage} />}
       {activeTab !== 'augmented' && <button onClick={reload} disabled={isLoading} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary"><RefreshCw size={16} />새로고침</button>}
-      <CreateAssetModal
-        isOpen={isCreateModalOpen}
-        onClose={() => { setIsCreateModalOpen(false); reload(); }}
-      />
+      {createModal}
     </div>
   );
 }

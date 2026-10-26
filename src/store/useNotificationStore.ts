@@ -48,6 +48,7 @@ interface NotificationState {
   notifications: NotificationItem[];
   popupNotifications: NotificationItem[];
   unreadCount: number;
+  historyUnreadCount: number;
   totalElements: number;
   totalPages: number;
   currentPage: number;
@@ -102,7 +103,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
     }
   };
   return {
-    notifications: [], popupNotifications: [], unreadCount: 0,
+    notifications: [], popupNotifications: [], unreadCount: 0, historyUnreadCount: 0,
     totalElements: 0, totalPages: 0, currentPage: 0,
     isLoading: false, popupLoading: false, error: null, popupError: null,
     refreshUnreadCount: async () => {
@@ -119,12 +120,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
       lastParams = params;
       set({ isLoading: true, error: null });
       try {
-        const [response] = await Promise.all([api.get('/notifications', { params }), get().refreshUnreadCount()]);
+        const [response, historyUnread] = await Promise.all([api.get('/notifications', { params }), api.get('/notifications', { params: { isRead: false, size: 1 } }), get().refreshUnreadCount()]);
         if (query !== historyQuery) return;
         const data = response.data?.data;
         if (!Array.isArray(data?.content)) throw new Error('알림 목록 응답을 확인할 수 없습니다.');
         set({ notifications: data.content, totalElements: data.totalElements ?? 0,
-          totalPages: data.totalPages ?? 0, currentPage: data.pageNumber ?? 0, isLoading: false });
+          totalPages: data.totalPages ?? 0, currentPage: data.pageNumber ?? 0, historyUnreadCount: historyUnread.data?.data?.totalElements ?? 0, isLoading: false });
       } catch (error) {
         if (query === historyQuery) set({ notifications: [], totalElements: 0, totalPages: 0, isLoading: false, error: requestMessage(error) });
       }

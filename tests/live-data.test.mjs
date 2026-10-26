@@ -39,7 +39,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as VerificationResultModal } from './src/components/community/modals/VerificationResultModal';
   export { renderToString } from 'react-dom/server';
   export { createElement } from 'react';
-` }, outfile, bundle: true, platform: 'node', packages: 'external', format: 'cjs', jsx: 'automatic', define: { 'import.meta.env.VITE_API_URL': "''" } });
+` }, outfile, bundle: true, platform: 'node', packages: 'external', format: 'cjs', jsx: 'automatic', define: { 'import.meta.env': JSON.stringify({ VITE_API_URL: "", VITE_INVITATION_ROLES_ENABLED: "false", VITE_COMMENT_ONLY_REVIEWS_ENABLED: "false" }) } });
 const { default: app } = await import(pathToFileURL(outfile));
 const { api, AxiosError, useNotificationStore: notifications, useAssetStore: assets, useExpertStore: expert } = app;
 const response = (config, data) => ({ config, data: { success: true, data }, status: 200, statusText: 'OK', headers: {} });
@@ -323,4 +323,30 @@ test('comment-only requests omit scores and retain reply relationships', () => {
   assert.deepEqual(app.recipeReviewPayload(' 수정 ', false, 3), { content: '수정', rating: 3 });
   assert.throws(() => app.recipeReviewPayload(' ', true, 5));
   assert.throws(() => app.recipeReviewPayload('의견', false, 0));
+});
+
+
+test('hidden unread history does not create a popup notification badge', async () => {
+  api.defaults.adapter = async config => response(config, { content: [], totalElements: config.url === '/notifications' ? 7 : 0, totalPages: 1, pageNumber: 0 });
+  await notifications.getState().fetchNotifications();
+  assert.equal(notifications.getState().historyUnreadCount, 7);
+  assert.equal(notifications.getState().unreadCount, 0);
+});
+
+
+test('manager role rollout enables explicit MANAGER requests without changing MEMBER defaults', async () => {
+  const enabledFile = resolve(directory, 'enabled.cjs');
+  await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
+    export { default as api } from './src/lib/axios';
+    export { useProjectStore } from './src/store/useProjectStore';
+    export { invitationRolesEnabled, commentOnlyReviewsEnabled } from './src/lib/backendFeatures';
+  ` }, outfile: enabledFile, bundle: true, platform: 'node', packages: 'external', format: 'cjs', define: { 'import.meta.env': JSON.stringify({ VITE_API_URL: '', VITE_INVITATION_ROLES_ENABLED: 'true', VITE_COMMENT_ONLY_REVIEWS_ENABLED: 'true' }) } });
+  const { default: enabled } = await import(pathToFileURL(enabledFile));
+  assert.equal(enabled.invitationRolesEnabled, true);
+  assert.equal(enabled.commentOnlyReviewsEnabled, true);
+  const roles = [];
+  enabled.api.defaults.adapter = async config => { roles.push(JSON.parse(config.data).role); return response(config, {}); };
+  assert.equal(await enabled.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), true);
+  assert.equal(await enabled.useProjectStore.getState().inviteMember('12', 'member@example.com'), true);
+  assert.deepEqual(roles, ['MANAGER', 'MEMBER']);
 });

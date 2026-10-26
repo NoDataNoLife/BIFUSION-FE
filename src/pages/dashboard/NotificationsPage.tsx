@@ -24,7 +24,7 @@ export default function NotificationsPage() {
   const navigate = useNavigate();
   const {
     notifications, error, isLoading, totalPages, currentPage,
-    unreadCount,
+    historyUnreadCount: unreadCount,
     fetchNotifications,
     markAsRead,
     markAllAsRead,

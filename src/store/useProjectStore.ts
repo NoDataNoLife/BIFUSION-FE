@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../lib/axios';
+import { invitationRolesEnabled } from '../lib/backendFeatures';
 
 export interface ProjectMember {
   userId: number;
@@ -50,7 +51,7 @@ interface ProjectState {
   fetchProjectDetail: (projectId: string) => Promise<boolean>;
   createProject: (data: any) => Promise<boolean>;
   updateProjectInfo: (projectId: string, data: any) => Promise<boolean>;
-  inviteMember: (projectId: string, email: string) => Promise<boolean>;
+  inviteMember: (projectId: string, email: string, role?: "MEMBER" | "MANAGER") => Promise<boolean>;
   removeMember: (projectId: string, userId: number) => Promise<boolean>;
   updateMemberRole: (projectId: string, userId: number, role: string) => Promise<boolean>;
 }
@@ -164,10 +165,13 @@ export const useProjectStore = create<ProjectState>((set) => ({
     }
   },
 
-  inviteMember: async (projectId: string, email: string) => {
+  inviteMember: async (projectId: string, email: string, role = "MEMBER") => {
+    if (role === "MANAGER" && !invitationRolesEnabled) {
+      set({ error: "관리자 초대는 서버 반영 후 사용할 수 있습니다." }); return false;
+    }
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post(`/projects/${projectId}/invitations`, { email });
+      const response = await api.post(`/projects/${projectId}/invitations`, { email, role });
       if (response.data.success) {
         set({ isLoading: false });
         return true;

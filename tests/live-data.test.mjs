@@ -304,3 +304,13 @@ test('soft delete hides the popup item while preserving the full history item', 
   assert.deepEqual(notifications.getState().popupNotifications, []);
   assert.equal(notifications.getState().unreadCount, 0);
 });
+
+
+test('member invitations send an explicit role and manager invitations wait for backend rollout', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => { calls.push(config); return response(config, {}); };
+  assert.equal(await app.useProjectStore.getState().inviteMember('12', 'member@example.com'), true);
+  assert.deepEqual(JSON.parse(calls[0].data), { email: 'member@example.com', role: 'MEMBER' });
+  assert.equal(await app.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), false);
+  assert.equal(calls.length, 1);
+});

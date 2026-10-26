@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   Award,
+  ClipboardCheck,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import ImageWithFallback from "../common/ImageWithFallback";
@@ -35,6 +36,7 @@ export default function Sidebar({ isCollapsed, onToggle, onNavigate }: SidebarPr
       path: "/dashboard/projects",
     },
     { id: "assets", label: "Assets", icon: Package, path: "/dashboard/assets" },
+    { id: "inspections", label: "내가 요청한 검수", icon: ClipboardCheck, path: "/dashboard/inspections" },
     { id: "expert", label: "Expert", icon: Award, path: "/dashboard/expert" },
     {
       id: "community",

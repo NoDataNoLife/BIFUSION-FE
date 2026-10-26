@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Star, GitFork, Eye, Search, Plus, Calendar, RefreshCw } from 'lucide-react';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import DatasetDetailView from '../../components/dashboard/DatasetDetailView';
@@ -34,6 +35,7 @@ export default function AssetsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
+          <Link to="/dashboard/inspections" className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold hover:bg-muted">내가 요청한 검수</Link>
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input

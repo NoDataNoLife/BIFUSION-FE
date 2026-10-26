@@ -24,6 +24,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useProjectJobs, type ProjectJobItem } from "../../hooks/useProjectJobs";
 import ProfileAvatar from "../../components/common/ProfileAvatar";
 
+import { invitationRolesEnabled } from "../../lib/backendFeatures";
 import { AssetCover } from "../../components/dashboard/DataView";
 
 type StatusTab = "all" | "queue" | "processing" | "completed" | "failed" | "cancelled";
@@ -55,6 +56,8 @@ export default function ProjectDetailPage() {
   const [inviting, setInviting] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [invitationRole, setInvitationRole] = useState<"MEMBER" | "MANAGER">("MEMBER");
+  const canInviteManager = currentProject?.projectId === Number(projectId) && currentProject.members?.some(member => member.userId === user?.userId && member.role === 'MANAGER');
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -143,11 +146,14 @@ export default function ProjectDetailPage() {
     e.preventDefault();
     if (!newMemberEmail.trim() || !projectId || inviting) return;
     
+    if (invitationRole === 'MANAGER' && (!canInviteManager || !invitationRolesEnabled)) {
+      setInviteFeedback({ ok: false, text: '관리자 권한으로 초대할 수 없습니다. 멤버 권한을 선택해 주세요.' }); return;
+    }
     setInviting(true);
     setInviteFeedback(null);
     try {
-      const success = await inviteMember(projectId, newMemberEmail.trim());
-      setInviteFeedback({ ok: success, text: success ? '초대를 보냈습니다. 상대방이 수락하면 멤버 목록에 표시됩니다.' : (useProjectStore.getState().error || '초대를 보내지 못했습니다. 다시 시도해 주세요.') });
+      const success = await inviteMember(projectId, newMemberEmail.trim(), invitationRole);
+      setInviteFeedback({ ok: success, text: success ? `${invitationRole === 'MANAGER' ? '관리자' : '멤버'} 권한으로 초대를 보냈습니다. 상대방이 수락하면 멤버 목록에 표시됩니다.` : (useProjectStore.getState().error || '초대를 보내지 못했습니다. 다시 시도해 주세요.') });
       if (success) setNewMemberEmail('');
     } finally { setInviting(false); }
   };
@@ -628,7 +634,7 @@ export default function ProjectDetailPage() {
                 </h4>
 
                 <form onSubmit={handleAddMember} className="mb-4">
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <input
                       type="email"
                       value={newMemberEmail}
@@ -636,8 +642,12 @@ export default function ProjectDetailPage() {
                       disabled={inviting}
                       onChange={(e) => setNewMemberEmail(e.target.value)}
                       placeholder="이메일 주소 입력"
-                      className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="min-w-0 flex-1 bg-background text-foreground px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
+                    <select aria-label="초대받을 멤버 권한" value={invitationRole} disabled={inviting} onChange={event => setInvitationRole(event.target.value as "MEMBER" | "MANAGER")} className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                      <option value="MEMBER">멤버</option>
+                      {canInviteManager && <option value="MANAGER" disabled={!invitationRolesEnabled}>관리자{!invitationRolesEnabled ? ' (준비 중)' : ''}</option>}
+                    </select>
                     <button
                       type="submit"
                       disabled={inviting || !newMemberEmail.trim()}
@@ -647,6 +657,7 @@ export default function ProjectDetailPage() {
                       {inviting ? '전송 중…' : '초대'}
                     </button>
                   </div>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{invitationRolesEnabled ? '응답 전인 초대를 다시 보내면 지금 선택한 권한으로 변경됩니다. 관리자 초대는 관리자만 할 수 있습니다.' : '현재 멤버 초대를 사용할 수 있습니다. 관리자 초대는 서버 반영 후 제공됩니다.'}</p>
                 </form>
 
                 {inviteFeedback && <p role={inviteFeedback.ok ? 'status' : 'alert'} className={`mb-4 text-sm ${inviteFeedback.ok ? 'text-emerald-600' : 'text-red-500'}`}>{inviteFeedback.text}</p>}

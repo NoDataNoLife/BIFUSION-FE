@@ -19,6 +19,7 @@ after(() => rm(directory, { recursive: true, force: true }));
 const outfile = resolve(directory, 'live.cjs');
 await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as api } from './src/lib/axios';
+  export { recipeReviewPayload } from './src/lib/recipeReviewPayload';
   export { AxiosError } from 'axios';
   export { useNotificationStore } from './src/store/useNotificationStore';
   export { useProjectStore } from './src/store/useProjectStore';
@@ -38,7 +39,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as VerificationResultModal } from './src/components/community/modals/VerificationResultModal';
   export { renderToString } from 'react-dom/server';
   export { createElement } from 'react';
-` }, outfile, bundle: true, platform: 'node', packages: 'external', format: 'cjs', jsx: 'automatic', define: { 'import.meta.env.VITE_API_URL': "''" } });
+` }, outfile, bundle: true, platform: 'node', packages: 'external', format: 'cjs', jsx: 'automatic', define: { 'import.meta.env': JSON.stringify({ VITE_API_URL: "", VITE_INVITATION_ROLES_ENABLED: "false", VITE_COMMENT_ONLY_REVIEWS_ENABLED: "false" }) } });
 const { default: app } = await import(pathToFileURL(outfile));
 const { api, AxiosError, useNotificationStore: notifications, useAssetStore: assets, useExpertStore: expert } = app;
 const response = (config, data) => ({ config, data: { success: true, data }, status: 200, statusText: 'OK', headers: {} });
@@ -255,4 +256,97 @@ test('project changes update matching cards without modifying another open proje
   assert.equal(await projects.getState().updateProjectInfo('1', { title: 'Rejected' }), false);
   assert.equal(projects.getState().isLoading, false);
   assert.equal(projects.getState().managingProjects[0].title, 'Updated');
+});
+
+
+test('popup and history keep separate results even when requests finish in reverse order', async () => {
+  let releaseHistory;
+  api.defaults.adapter = async config => {
+    if (config.params?.isRead === false) return response(config, { content: [], totalElements: 1 });
+    if (config.url === '/notifications') return new Promise(resolve => { releaseHistory = () => resolve(response(config, { content: [{ notificationId: 501 }], totalElements: 1, totalPages: 1, pageNumber: 0 })); });
+    return response(config, { content: [{ notificationId: 502 }], totalElements: 1 });
+  };
+  const history = notifications.getState().fetchNotifications();
+  await notifications.getState().fetchPopupNotifications();
+  releaseHistory();
+  await history;
+  assert.equal(notifications.getState().notifications[0].notificationId, 501);
+  assert.equal(notifications.getState().popupNotifications[0].notificationId, 502);
+});
+
+test('popup falls back only when the new route is not deployed', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => {
+    calls.push(config.url);
+    if (config.url === '/notifications/popup') throw new AxiosError('missing', 'ERR_BAD_REQUEST', config, null, { status: 404, data: {}, config, headers: {} });
+    return response(config, { content: [{ notificationId: 503 }], totalElements: 1 });
+  };
+  await notifications.getState().fetchPopupNotifications();
+  assert.equal(notifications.getState().popupNotifications[0].notificationId, 503);
+  assert.ok(calls.includes('/notifications'));
+  calls.length = 0;
+  api.defaults.adapter = async config => { calls.push(config.url); throw failure(config); };
+  await notifications.getState().fetchPopupNotifications();
+  assert.ok(calls.every(url => url === '/notifications/popup'));
+  assert.equal(notifications.getState().popupError, '서버 오류');
+});
+
+test('soft delete hides the popup item while preserving the full history item', async () => {
+  let hidden = false;
+  api.defaults.adapter = async config => {
+    if (config.method === 'delete') { hidden = true; return response(config, null); }
+    const content = config.url === '/notifications/popup' && hidden ? [] : [{ notificationId: 504 }];
+    return response(config, { content, totalElements: content.length, totalPages: 1, pageNumber: 0 });
+  };
+  await notifications.getState().fetchNotifications();
+  await notifications.getState().fetchPopupNotifications();
+  assert.equal(await notifications.getState().softDeleteNotification(504), true);
+  assert.equal(notifications.getState().notifications[0].notificationId, 504);
+  assert.deepEqual(notifications.getState().popupNotifications, []);
+  assert.equal(notifications.getState().unreadCount, 0);
+});
+
+
+test('member invitations send an explicit role and manager invitations wait for backend rollout', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => { calls.push(config); return response(config, {}); };
+  assert.equal(await app.useProjectStore.getState().inviteMember('12', 'member@example.com'), true);
+  assert.deepEqual(JSON.parse(calls[0].data), { email: 'member@example.com', role: 'MEMBER' });
+  assert.equal(await app.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), false);
+  assert.equal(calls.length, 1);
+});
+
+
+test('comment-only requests omit scores and retain reply relationships', () => {
+  assert.deepEqual(app.recipeReviewPayload(' 의견 ', true, 5), { content: '의견' });
+  assert.deepEqual(app.recipeReviewPayload(' 답글 ', true, 0, 12), { content: '답글', parentReviewId: 12 });
+  assert.deepEqual(app.recipeReviewPayload(' 수정 ', false, 3), { content: '수정', rating: 3 });
+  assert.throws(() => app.recipeReviewPayload(' ', true, 5));
+  assert.throws(() => app.recipeReviewPayload('의견', false, 0));
+});
+
+
+test('hidden unread history does not create a popup notification badge', async () => {
+  api.defaults.adapter = async config => response(config, { content: [], totalElements: config.url === '/notifications' ? 7 : 0, totalPages: 1, pageNumber: 0 });
+  await notifications.getState().fetchNotifications();
+  assert.equal(notifications.getState().historyUnreadCount, 7);
+  assert.equal(notifications.getState().unreadCount, 0);
+});
+
+
+test('manager role rollout enables explicit MANAGER requests without changing MEMBER defaults', async () => {
+  const enabledFile = resolve(directory, 'enabled.cjs');
+  await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
+    export { default as api } from './src/lib/axios';
+    export { useProjectStore } from './src/store/useProjectStore';
+    export { invitationRolesEnabled, commentOnlyReviewsEnabled } from './src/lib/backendFeatures';
+  ` }, outfile: enabledFile, bundle: true, platform: 'node', packages: 'external', format: 'cjs', define: { 'import.meta.env': JSON.stringify({ VITE_API_URL: '', VITE_INVITATION_ROLES_ENABLED: 'true', VITE_COMMENT_ONLY_REVIEWS_ENABLED: 'true' }) } });
+  const { default: enabled } = await import(pathToFileURL(enabledFile));
+  assert.equal(enabled.invitationRolesEnabled, true);
+  assert.equal(enabled.commentOnlyReviewsEnabled, true);
+  const roles = [];
+  enabled.api.defaults.adapter = async config => { roles.push(JSON.parse(config.data).role); return response(config, {}); };
+  assert.equal(await enabled.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), true);
+  assert.equal(await enabled.useProjectStore.getState().inviteMember('12', 'member@example.com'), true);
+  assert.deepEqual(roles, ['MANAGER', 'MEMBER']);
 });

@@ -1,8 +1,10 @@
 import StarRating from '../community/StarRating';
+import { commentOnlyReviewsEnabled } from '../../lib/backendFeatures';
+import { recipeReviewPayload } from '../../lib/recipeReviewPayload';
 import ProfileAvatar from '../common/ProfileAvatar';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, GitFork, Share2, Trash2, Award, Star, Check } from 'lucide-react';
+import { ArrowLeft, GitFork, Share2, Trash2, Award, Check } from 'lucide-react';
 import { AssetCover, DataState } from './DataView';
 import api from '../../lib/axios';
 import { requestMessage } from '../../lib/liveData';
@@ -54,18 +56,17 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3"><ProfileAvatar src={review.profileImageUrl} alt="" className="h-9 w-9 rounded-full object-cover"/><div>
           <strong className="text-sm">{review.author || '탈퇴한 사용자'}</strong>
-          {!isReply && <div className="mt-1">{review.rating != null ? <StarRating value={review.rating}/> : <span className="text-xs text-muted-foreground">평점 정보 없음</span>}</div>}
         </div></div>
         <time className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleString('ko-KR')}</time>
       </div>
       {editing ? <form className="space-y-3" onSubmit={event => {
         event.preventDefault();
-        if (!editContent.trim() || (!isReply && editRating < 1)) return;
-        void run(async () => { await api.put(`/community/recipes/${recipe.id}/reviews/${review.reviewId}`, { content: editContent.trim(), ...(!isReply ? { rating: editRating } : {}) }); setEditingId(null); refresh(); });
+        if (!editContent.trim() || (!commentOnlyReviewsEnabled && !isReply && editRating < 1)) return;
+        void run(async () => { await api.put(`/community/recipes/${recipe.id}/reviews/${review.reviewId}`, recipeReviewPayload(editContent, commentOnlyReviewsEnabled || isReply, editRating)); setEditingId(null); refresh(); });
       }}>
-        {!isReply && <StarRating value={editRating} onChange={setEditRating} disabled={busy} label="수정 평점"/>}
+        {!commentOnlyReviewsEnabled && !isReply && <StarRating value={editRating} onChange={setEditRating} disabled={busy} label="수정 평점"/>}
         <textarea autoFocus aria-label="리뷰 수정 내용" value={editContent} disabled={busy} onChange={event => setEditContent(event.target.value)} className="w-full min-h-28 p-4 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-        <div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={() => setEditingId(null)} className="px-4 py-2 text-sm text-muted-foreground">취소</button><button disabled={busy || !editContent.trim() || (!isReply && editRating < 1)} className="px-4 py-2 rounded-xl bg-primary text-white text-sm disabled:opacity-50">{busy ? '저장 중…' : '수정 저장'}</button></div>
+        <div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={() => setEditingId(null)} className="px-4 py-2 text-sm text-muted-foreground">취소</button><button disabled={busy || !editContent.trim() || (!commentOnlyReviewsEnabled && !isReply && editRating < 1)} className="px-4 py-2 rounded-xl bg-primary text-white text-sm disabled:opacity-50">{busy ? '저장 중…' : '수정 저장'}</button></div>
       </form> : <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{review.content}</p>}
       {!editing && <div className="flex gap-4 text-xs font-medium text-muted-foreground">
         {user && !isReply && <button disabled={busy} onClick={() => { setReplyTo(review.reviewId); setReplyContent(''); setEditingId(null); }}>답글 달기</button>}
@@ -76,7 +77,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
       </div>}
       {replyTo === review.reviewId && <form className="space-y-3 border-t border-border pt-4" onSubmit={event => {
         event.preventDefault(); if (!replyContent.trim()) return;
-        void run(async () => { await api.post(`/community/recipes/${recipe.id}/reviews`, { content: replyContent.trim(), parentReviewId: review.reviewId }); setReplyTo(null); setReplyContent(''); refresh(); });
+        void run(async () => { await api.post(`/community/recipes/${recipe.id}/reviews`, recipeReviewPayload(replyContent, commentOnlyReviewsEnabled, 0, review.reviewId)); setReplyTo(null); setReplyContent(''); refresh(); });
       }}>
         <textarea autoFocus aria-label={`${review.author}님에게 답글`} placeholder="답글을 작성해 주세요" value={replyContent} disabled={busy} onChange={event => setReplyContent(event.target.value)} className="w-full min-h-24 p-4 bg-card border border-border rounded-xl"/>
         <div className="flex justify-end gap-2"><button type="button" disabled={busy} onClick={() => setReplyTo(null)} className="px-4 py-2 text-sm text-muted-foreground">취소</button><button disabled={busy || !replyContent.trim()} className="px-4 py-2 rounded-xl bg-primary text-white text-sm disabled:opacity-50">답글 등록</button></div>
@@ -101,7 +102,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
           {data.isExpertVerified && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black"><Award size={14}/>전문가 검증</span>}
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight break-words">{data.title}</h1><p className="text-lg text-muted-foreground font-medium leading-relaxed">{data.description}</p>
           <button disabled={!data.author?.userId} onClick={() => navigate(`/dashboard/profile/${data.author.userId}`)} className="w-full flex items-center gap-4 p-4 bg-muted/40 hover:bg-muted/80 rounded-2xl border border-border text-left"><ProfileAvatar src={data.author?.profileImageUrl || '/defaultUserProfile.png'} alt="" className="w-12 h-12 rounded-xl object-cover"/><div><p className="font-bold">{data.author?.nickname || '탈퇴한 사용자'}</p><p className="text-xs text-muted-foreground mt-1">{data.createdAt ? new Date(data.createdAt).toLocaleDateString('ko-KR') : '작성일 미등록'}</p></div></button>
-          <div className="grid grid-cols-2 gap-4"><div className="p-4 border border-border rounded-2xl text-center"><p className="text-xs font-bold text-muted-foreground mb-1">평점</p><p className="text-xl font-black text-yellow-500 flex justify-center items-center gap-1"><Star size={18}/>{data.rating ?? '—'}</p></div><div className="p-4 border border-border rounded-2xl text-center"><p className="text-xs font-bold text-muted-foreground mb-1">Fork 수</p><p className="text-xl font-black text-primary flex justify-center items-center gap-1"><GitFork size={18}/>{data.forkCount ?? '—'}</p></div></div>
+          <div className="p-4 border border-border rounded-2xl text-center"><p className="text-xs font-bold text-muted-foreground mb-1">Fork 수</p><p className="text-xl font-black text-primary flex justify-center items-center gap-1"><GitFork size={18}/>{data.forkCount ?? '—'}</p></div>
         </div>
       </section>
       <section className="bg-card rounded-4xl border border-border shadow-sm overflow-hidden">
@@ -117,8 +118,8 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
     {tab === 'reviews' && <section className="space-y-6">
       {reviews.loading ? <p>리뷰를 불러오는 중…</p> : reviews.error ? <p role="alert">{reviews.error} <button onClick={reviews.reload}>다시 시도</button></p> : reviews.data?.content.length ? reviews.data.content.map(renderReview) : <p>작성된 리뷰가 없습니다.</p>}
       <div className="flex gap-4"><button disabled={page === 0 || reviews.loading} onClick={() => setPage((value) => value - 1)}>이전</button><span>{page + 1} 페이지</span><button disabled={reviews.loading || page + 1 >= (reviews.data?.totalPages ?? 0)} onClick={() => setPage((value) => value + 1)}>다음</button></div>
-      <form className="space-y-4 p-6 bg-muted/40 rounded-3xl border border-border" onSubmit={(event) => { event.preventDefault(); if (!content.trim()) return; void run(async () => { await api.post(`/community/recipes/${recipe.id}/reviews`, { content: content.trim(), rating }); setContent(''); refresh(); }); }}>
-        <div><p className="mb-2 text-sm font-bold">이 레시피는 어떠셨나요?</p><StarRating value={rating} onChange={setRating} disabled={busy}/></div>
+      <form className="space-y-4 p-6 bg-muted/40 rounded-3xl border border-border" onSubmit={(event) => { event.preventDefault(); if (!content.trim()) return; void run(async () => { await api.post(`/community/recipes/${recipe.id}/reviews`, recipeReviewPayload(content, commentOnlyReviewsEnabled, rating)); setContent(''); refresh(); }); }}>
+        <div><p className="mb-2 text-sm font-bold">의견을 남겨 주세요</p>{!commentOnlyReviewsEnabled && <StarRating value={rating} onChange={setRating} disabled={busy}/>}</div>
         <textarea disabled={busy} placeholder="사용 경험과 의견을 남겨 주세요" aria-label="리뷰 내용" value={content} onChange={(event) => setContent(event.target.value)} className="w-full min-h-28 p-4 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"/>
         <button disabled={busy || !content.trim()} className="px-5 py-2 bg-primary text-white rounded-xl disabled:opacity-50">리뷰 등록</button>
       </form>

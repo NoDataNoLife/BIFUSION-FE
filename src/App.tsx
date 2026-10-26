@@ -25,6 +25,7 @@ import TrainResultPage from "./pages/dashboard/TrainResultPage";
 import InferenceSetupPage from "./pages/dashboard/InferenceSetupPage";
 import InferenceProgressPage from "./pages/dashboard/InferenceProgressPage";
 import InferenceResultPage from "./pages/dashboard/InferenceResultPage";
+import RequestedInspectionsPage from "./pages/dashboard/RequestedInspectionsPage";
 import AssetsPage from "./pages/dashboard/AssetsPage";
 import ExpertPage from "./pages/dashboard/ExpertPage";
 import ProfilePage from "./pages/dashboard/ProfilePage";
@@ -123,6 +124,7 @@ function App() {
 
             <Route path="ants/topup" element={<AntTopupPage />} />
             <Route path="assets" element={<AssetsPage />} />
+            <Route path="inspections" element={<RequestedInspectionsPage />} />
             <Route path="expert" element={<ExpertPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/:userId" element={<ProfilePage />} />

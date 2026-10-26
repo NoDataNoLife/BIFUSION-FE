@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import RecipeImageField from './RecipeImageField';
 import api from '../../../lib/axios';
 import { useCommunityStore } from '../../../store/useCommunityStore';
 import { Sparkles, Layers, Sliders, Cpu, X, ArrowRight } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [overview, setOverview] = useState('');
+  const [recipeImage, setRecipeImage] = useState<File | null>(null);
 
   // Model & Pipeline Settings
   const [modelName, setModelName] = useState('BIFUSION-Diffusion-v2.1');
@@ -58,6 +60,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || recipeImage) return;
 
     if (!title.trim()) {
       alert('레시피 제목을 입력해 주세요.');
@@ -171,6 +174,8 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
             </div>
           </div>
         </div>
+
+        <RecipeImageField file={recipeImage} onChange={setRecipeImage} disabled={isSubmitting}/>
 
         {/* Section 2: Generation Hyperparameters */}
         <div className="space-y-4">
@@ -362,7 +367,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!recipeImage}
               className="px-8 py-3 rounded-xl font-black text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 text-sm flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
             >
               {isSubmitting ? '저장 중...' : isAsset ? '레시피 저장' : '쇼케이스 등록'}

@@ -24,11 +24,11 @@ export default function NotificationsPage() {
   const navigate = useNavigate();
   const {
     notifications, error, isLoading, totalPages, currentPage,
-    unreadCount,
+    historyUnreadCount: unreadCount,
     fetchNotifications,
     markAsRead,
     markAllAsRead,
-    hardDeleteNotification
+    hardDeleteNotification, hardDeleteAllNotifications
   } = useNotificationStore();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -127,9 +127,13 @@ export default function NotificationsPage() {
         </div>
 
         {/* Top Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button disabled={isLoading} onClick={() => {
+            if (window.confirm('팝업에서 숨긴 알림을 포함하여 모든 알림을 영구 삭제합니다. 되돌릴 수 없습니다. 삭제할까요?')) void hardDeleteAllNotifications();
+          }} className="flex items-center gap-2 rounded-2xl border border-border bg-card px-5 py-3 text-xs font-bold text-red-500 hover:bg-red-500/10 disabled:opacity-50"><Trash2 size={16}/> 전체 영구 삭제</button>
           {unreadCount > 0 && (
             <button
+              disabled={isLoading}
               onClick={() => markAllAsRead()}
               className="flex items-center gap-2 px-5 py-3 bg-card border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-2xl font-bold text-xs transition-all shadow-xs cursor-pointer active:scale-95"
             >
@@ -247,7 +251,7 @@ export default function NotificationsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity self-center">
+              <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity self-center">
                 {!item.isRead && (
                   <button
                     onClick={(e) => {
@@ -263,7 +267,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    hardDeleteNotification(item.notificationId);
+                    if (window.confirm('이 알림을 영구 삭제합니다. 되돌릴 수 없습니다. 삭제할까요?')) void hardDeleteNotification(item.notificationId);
                   }}
                   title="알림 삭제 (영구 삭제)"
                   className="p-2.5 bg-muted hover:bg-red-500/10 hover:text-red-500 rounded-xl text-muted-foreground transition-colors cursor-pointer"

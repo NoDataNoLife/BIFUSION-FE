@@ -180,7 +180,7 @@ function CertifiedExpertDashboard() {
             <Star size={24} />
           </div>
           <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">피드백 만족도</p>
-          <p className="text-3xl font-black text-foreground">{performance.data?.feedbackSatisfaction ?? '평가 없음'} <span className="text-sm font-bold text-muted-foreground ml-1">/ 5.0</span></p>
+          <p className="text-3xl font-black text-foreground">{performance.data?.feedbackSatisfaction ?? '평가 없음'} {performance.data?.feedbackSatisfaction != null && <span className="text-sm font-bold text-muted-foreground ml-1">/ 5.0</span>}</p>
         </div>
       </div>
 

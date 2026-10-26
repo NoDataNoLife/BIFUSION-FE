@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Moon, Sun, Menu } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
-import api from "../../lib/axios";
 import { useNotificationStore } from "../../store/useNotificationStore";
 import NotificationCenter from "./NotificationCenter";
 import { useThemeMode } from "../../hooks/useThemeMode";
@@ -17,16 +16,10 @@ export default function DashboardHeader({ onMenuClick }: { onMenuClick?: () => v
   const unreadCount = useNotificationStore(state => state.unreadCount);
   useEffect(() => {
     if (!user?.userId) return;
-    let disposed = false;
-    const refresh = async () => {
-      try {
-        const response = await api.get('/notifications', { params: { isRead: false, size: 1 } });
-        if (!disposed) useNotificationStore.setState({ unreadCount: response.data?.data?.totalElements ?? 0 });
-      } catch { /* 목록을 열면 조회 오류를 안내합니다. */ }
-    };
+    const refresh = () => useNotificationStore.getState().refreshUnreadCount();
     void refresh();
     const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 30000);
-    return () => { disposed = true; window.clearInterval(timer); };
+    return () => window.clearInterval(timer);
   }, [user?.userId]);
 
   const userInitial = user?.name ? user.name.slice(0, 2).toUpperCase() : "??";

@@ -25,9 +25,9 @@ interface NotificationCenterProps {
 export default function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
   const navigate = useNavigate();
   const {
-    notifications, error, isLoading,
+    popupNotifications: notifications, popupError: error, popupLoading: isLoading,
     unreadCount,
-    fetchNotifications,
+    fetchPopupNotifications,
     markAsRead,
     markAllAsRead,
     softDeleteNotification
@@ -35,9 +35,9 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
 
   useEffect(() => {
     if (isOpen) {
-      fetchNotifications();
+      fetchPopupNotifications();
     }
-  }, [isOpen, fetchNotifications]);
+  }, [isOpen, fetchPopupNotifications]);
 
   if (!isOpen) return null;
 
@@ -90,7 +90,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
     // Invitees cannot open the project until membership has been granted.
     if (item.type === 'PROJECT_INVITATION') return;
     try { const link = await notificationTarget(item); navigate(link); onClose(); }
-    catch (err) { useNotificationStore.setState({ error: requestMessage(err) }); }
+    catch (err) { useNotificationStore.setState({ popupError: requestMessage(err) }); }
   };
 
   const handleDelete = (e: React.MouseEvent, notificationId: number) => {
@@ -113,7 +113,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => fetchNotifications()} disabled={isLoading} aria-label="알림 새로고침" className="p-2 rounded-xl hover:bg-muted disabled:opacity-40"><RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} /></button>
+            <button onClick={() => fetchPopupNotifications()} disabled={isLoading} aria-label="알림 새로고침" className="p-2 rounded-xl hover:bg-muted disabled:opacity-40"><RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} /></button>
             <button
               onClick={() => markAllAsRead()}
               disabled={isLoading || unreadCount === 0}

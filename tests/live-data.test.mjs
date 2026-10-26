@@ -256,3 +256,51 @@ test('project changes update matching cards without modifying another open proje
   assert.equal(projects.getState().isLoading, false);
   assert.equal(projects.getState().managingProjects[0].title, 'Updated');
 });
+
+
+test('popup and history keep separate results even when requests finish in reverse order', async () => {
+  let releaseHistory;
+  api.defaults.adapter = async config => {
+    if (config.params?.isRead === false) return response(config, { content: [], totalElements: 1 });
+    if (config.url === '/notifications') return new Promise(resolve => { releaseHistory = () => resolve(response(config, { content: [{ notificationId: 501 }], totalElements: 1, totalPages: 1, pageNumber: 0 })); });
+    return response(config, { content: [{ notificationId: 502 }], totalElements: 1 });
+  };
+  const history = notifications.getState().fetchNotifications();
+  await notifications.getState().fetchPopupNotifications();
+  releaseHistory();
+  await history;
+  assert.equal(notifications.getState().notifications[0].notificationId, 501);
+  assert.equal(notifications.getState().popupNotifications[0].notificationId, 502);
+});
+
+test('popup falls back only when the new route is not deployed', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => {
+    calls.push(config.url);
+    if (config.url === '/notifications/popup') throw new AxiosError('missing', 'ERR_BAD_REQUEST', config, null, { status: 404, data: {}, config, headers: {} });
+    return response(config, { content: [{ notificationId: 503 }], totalElements: 1 });
+  };
+  await notifications.getState().fetchPopupNotifications();
+  assert.equal(notifications.getState().popupNotifications[0].notificationId, 503);
+  assert.ok(calls.includes('/notifications'));
+  calls.length = 0;
+  api.defaults.adapter = async config => { calls.push(config.url); throw failure(config); };
+  await notifications.getState().fetchPopupNotifications();
+  assert.ok(calls.every(url => url === '/notifications/popup'));
+  assert.equal(notifications.getState().popupError, '서버 오류');
+});
+
+test('soft delete hides the popup item while preserving the full history item', async () => {
+  let hidden = false;
+  api.defaults.adapter = async config => {
+    if (config.method === 'delete') { hidden = true; return response(config, null); }
+    const content = config.url === '/notifications/popup' && hidden ? [] : [{ notificationId: 504 }];
+    return response(config, { content, totalElements: content.length, totalPages: 1, pageNumber: 0 });
+  };
+  await notifications.getState().fetchNotifications();
+  await notifications.getState().fetchPopupNotifications();
+  assert.equal(await notifications.getState().softDeleteNotification(504), true);
+  assert.equal(notifications.getState().notifications[0].notificationId, 504);
+  assert.deepEqual(notifications.getState().popupNotifications, []);
+  assert.equal(notifications.getState().unreadCount, 0);
+});

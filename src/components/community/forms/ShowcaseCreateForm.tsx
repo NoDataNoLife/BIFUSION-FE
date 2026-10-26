@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { isCancel } from 'axios';
+import { requestMessage } from '../../../lib/liveData';
+import { newRecipeDraft, draftFromRecipe, recipeRegistrationPayload, type RecipeDraft } from '../../../lib/recipeDraft';
+import type { RecipeDetailResponse } from '../../../store/useCommunityStore';
+import ForkedRecipePicker from './ForkedRecipePicker';
 import RecipeImageField from './RecipeImageField';
 import api from '../../../lib/axios';
 import { useCommunityStore } from '../../../store/useCommunityStore';
@@ -7,105 +12,105 @@ import { Sparkles, Layers, Sliders, Cpu, X, ArrowRight } from 'lucide-react';
 interface ShowcaseCreateFormProps {
   onClose: () => void;
   context?: 'COMMUNITY' | 'ASSET';
+  initialSourceId?: number;
+  onCreated?: () => void;
 }
 
-export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: ShowcaseCreateFormProps) {
+export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', initialSourceId, onCreated }: ShowcaseCreateFormProps) {
   const isAsset = context === 'ASSET';
   const { fetchRecipeList } = useCommunityStore();
 
-  // Basic Information
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [overview, setOverview] = useState('');
+  const [draft, setDraft] = useState(newRecipeDraft);
+  const { title, description, overview, modelName, steps, sampler, cfgScale, seed, resolution, batchSize, features, recommendations } = draft;
   const [recipeImage, setRecipeImage] = useState<File | null>(null);
-
-  // Model & Pipeline Settings
-  const [modelName, setModelName] = useState('BIFUSION-Diffusion-v2.1');
-  const [steps, setSteps] = useState<number>(50);
-  const [sampler, setSampler] = useState('Euler a');
-  const [cfgScale, setCfgScale] = useState<number>(7.5);
-  const [seed, setSeed] = useState<number>(42);
-  const [resolution, setResolution] = useState('512x512');
-  const batchSize = 4;
-
-  // Features & Recommendations
-  const [features, setFeatures] = useState<string[]>(['고해상도 CT 정밀 복원', '노이즈 왜곡 최소화']);
   const [featureInput, setFeatureInput] = useState('');
-  const [recommendations, setRecommendations] = useState<string[]>(['흉부 질환 분류 모델 학습', '데이터 희소 클래스 증강']);
   const [recommendationInput, setRecommendationInput] = useState('');
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [sourceName, setSourceName] = useState('');
+  const [sourceLoading, setSourceLoading] = useState(false);
+  const [sourceError, setSourceError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const baseline = useRef(JSON.stringify(newRecipeDraft()));
+  const controller = useRef<AbortController | null>(null);
+  const loadingRef = useRef(false);
+  const submitRef = useRef(false);
+  const updateDraft = <K extends keyof RecipeDraft>(key: K, value: RecipeDraft[K]) => setDraft(previous => ({ ...previous, [key]: value }));
+  const loadSource = async (id: number) => {
+    if (loadingRef.current || submitRef.current) return;
+    if ((JSON.stringify(draft) !== baseline.current || recipeImage || featureInput.trim() || recommendationInput.trim()) && !window.confirm('작성 중인 내용을 선택한 레시피의 내용과 설정으로 바꿀까요?')) return;
+    controller.current?.abort();
+    const request = new AbortController(); controller.current = request;
+    loadingRef.current = true; setSourceLoading(true); setSourceError(null);
+    try {
+      const response = await api.get(`/community/recipes/${id}`, { signal: request.signal });
+      if (request.signal.aborted) return;
+      const data = response.data?.data as RecipeDetailResponse | undefined;
+      if (response.data?.success === false || !data || data.recipeId !== id) throw new Error('레시피 정보를 확인할 수 없습니다.');
+      const next = draftFromRecipe(data);
+      setDraft(next); baseline.current = JSON.stringify(next); setSourceName(data.title);
+      setRecipeImage(null); setFeatureInput(''); setRecommendationInput(''); setShowPicker(false); setSubmitError(null);
+    } catch (error) {
+      if (!isCancel(error) && !request.signal.aborted) setSourceError(requestMessage(error, '레시피를 불러오지 못했습니다.'));
+    } finally {
+      if (controller.current === request) { loadingRef.current = false; setSourceLoading(false); }
+    }
+  };
+  useEffect(() => {
+    if (initialSourceId != null) void loadSource(initialSourceId);
+    return () => { controller.current?.abort(); loadingRef.current = false; };
+    // Initial source is scoped to this form instance; manual imports use loadSource.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSourceId]);
 
   const handleAddFeature = () => {
     if (featureInput.trim() && !features.includes(featureInput.trim())) {
-      setFeatures([...features, featureInput.trim()]);
+      updateDraft('features', [...features, featureInput.trim()]);
       setFeatureInput('');
     }
   };
 
   const handleRemoveFeature = (item: string) => {
-    setFeatures(features.filter((f) => f !== item));
+    updateDraft('features', features.filter((f) => f !== item));
   };
 
   const handleAddRecommendation = () => {
     if (recommendationInput.trim() && !recommendations.includes(recommendationInput.trim())) {
-      setRecommendations([...recommendations, recommendationInput.trim()]);
+      updateDraft('recommendations', [...recommendations, recommendationInput.trim()]);
       setRecommendationInput('');
     }
   };
 
   const handleRemoveRecommendation = (item: string) => {
-    setRecommendations(recommendations.filter((r) => r !== item));
+    updateDraft('recommendations', recommendations.filter((r) => r !== item));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting || recipeImage) return;
-
-    if (!title.trim()) {
-      alert('레시피 제목을 입력해 주세요.');
-      return;
-    }
-    if (!description.trim()) {
-      alert('한 줄 요약 설명을 입력해 주세요.');
-      return;
-    }
-    if (!modelName.trim()) {
-      alert('모델명을 입력해 주세요.');
-      return;
-    }
-
+    if (submitRef.current || sourceLoading || loadingRef.current || recipeImage) return;
+    setSubmitError(null);
+    if (initialSourceId != null && !sourceName) { setSubmitError('불러오기를 완료한 뒤 저장해 주세요.'); return; }
+    const isPublic = !isAsset;
+    let payload;
+    try { payload = recipeRegistrationPayload(draft, isPublic); }
+    catch (error) { setSubmitError(requestMessage(error)); return; }
+    submitRef.current = true;
     setIsSubmitting(true);
     try {
-      const isPublic = !isAsset;
-      await api.post('/community/recipes', {
-        title,
-        description,
-        modelName,
-        steps: Number(steps),
-        sampler,
-        cfgScale: Number(cfgScale),
-        seed: Number(seed),
-        resolution,
-        batchSize: Number(batchSize),
-        overview: overview.trim() || undefined,
-        features: features.length > 0 ? features : undefined,
-        recommendations: recommendations.length > 0 ? recommendations : undefined,
-        isPublic,
-      });
+      const response = await api.post('/community/recipes', payload);
+      if (response.data?.success === false) throw new Error(response.data.message || '레시피 등록에 실패했습니다.');
 
       alert(
         isPublic
           ? '연구 쇼케이스(레시피)가 커뮤니티에 성공적으로 공유되었습니다!'
           : '나만의 레시피가 내 자산에 안전하게 저장되었습니다!'
       );
-      fetchRecipeList();
-      onClose();
+      void fetchRecipeList();
+      if (onCreated) onCreated(); else onClose();
     } catch (error) {
-      console.error(error);
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      alert('레시피 등록에 실패했습니다: ' + (err.response?.data?.message || err.message));
+      setSubmitError(requestMessage(error, '레시피 등록에 실패했습니다.'));
     } finally {
+      submitRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -128,7 +133,17 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
           : '검증된 고성능 데이터 생성 파라미터와 노하우를 커뮤니티 연구자들과 공유해 보세요. (공개)'}
       </p>
 
+      <div className="mb-6 space-y-3">
+        <button type="button" disabled={isSubmitting || sourceLoading} onClick={() => setShowPicker(value => !value)} className="rounded-xl border border-border bg-primary/5 px-4 py-3 text-sm font-bold text-primary disabled:opacity-50">포크한 레시피 불러오기</button>
+        <p className="text-xs leading-6 text-muted-foreground">저장한 레시피의 내용과 설정을 가져와 수정할 수 있습니다. 원본은 그대로 두고 새 레시피로 저장합니다.</p>
+        {sourceLoading && <p role="status" className="text-sm text-primary">레시피를 불러오는 중…</p>}
+        {sourceError && <p role="alert" className="text-sm text-red-500">{sourceError} {initialSourceId != null && <button type="button" disabled={sourceLoading} onClick={() => void loadSource(initialSourceId)} className="underline">다시 시도</button>}</p>}
+        {sourceName && <p role="status" className="rounded-xl bg-primary/10 p-3 text-sm text-primary">불러온 레시피: {sourceName}. 비어 있는 필수 설정은 직접 입력해 주세요.</p>}
+        {showPicker && <ForkedRecipePicker onSelect={id => void loadSource(id)} onClose={() => setShowPicker(false)} busy={isSubmitting || sourceLoading}/>}
+      </div>
       <form onSubmit={handleSubmit} className="space-y-8">
+        {submitError && <p role="alert" className="text-sm text-red-500">{submitError}</p>}
+        <fieldset disabled={isSubmitting || sourceLoading} className="space-y-8 disabled:opacity-60">
         {/* Section 1: Basic Information */}
         <div className="space-y-4">
           <h4 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
@@ -142,7 +157,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => updateDraft('title', e.target.value)}
                 placeholder="예: 흉부 CT 노이즈 감소 및 결절 증강 파이프라인"
                 className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary focus:bg-background transition-all font-medium text-sm"
                 required
@@ -155,7 +170,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               <input
                 type="text"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => updateDraft('description', e.target.value)}
                 placeholder="예: 미세 병변의 형태학적 특성을 유지하며 배경 잡음을 효과적으로 증강합니다."
                 className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary focus:bg-background transition-all font-medium text-sm"
                 required
@@ -167,7 +182,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               </label>
               <textarea
                 value={overview}
-                onChange={(e) => setOverview(e.target.value)}
+                onChange={(e) => updateDraft('overview', e.target.value)}
                 placeholder="데이터셋 및 모델에 대한 상세한 설명, 사용 방법, 검증 결과 등을 자유롭게 작성하세요."
                 className="w-full h-24 px-4 py-3 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary focus:bg-background transition-all font-medium text-sm resize-none"
               />
@@ -190,7 +205,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               <input
                 type="text"
                 value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
+                onChange={(e) => updateDraft('modelName', e.target.value)}
                 placeholder="예: BIFUSION-v2.1"
                 className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary font-medium text-sm"
                 required
@@ -203,9 +218,8 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               <input
                 type="number"
                 value={steps}
-                onChange={(e) => setSteps(Number(e.target.value))}
+                onChange={(e) => updateDraft('steps', e.target.value)}
                 min={1}
-                max={200}
                 className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary font-medium text-sm"
                 required
               />
@@ -216,9 +230,11 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               </label>
               <select
                 value={sampler}
-                onChange={(e) => setSampler(e.target.value)}
+                onChange={(e) => updateDraft('sampler', e.target.value)}
                 className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary font-medium text-sm"
               >
+                <option value="">샘플러 선택</option>
+                {sampler && !['Euler a', 'Euler', 'DPM++ 2M Karras', 'DPM++ SDE Karras', 'DDIM'].includes(sampler) && <option value={sampler}>{sampler}</option>}
                 <option value="Euler a">Euler a</option>
                 <option value="Euler">Euler</option>
                 <option value="DPM++ 2M Karras">DPM++ 2M Karras</option>
@@ -232,11 +248,10 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               </label>
               <input
                 type="number"
-                step="0.1"
+                step="any"
                 value={cfgScale}
-                onChange={(e) => setCfgScale(Number(e.target.value))}
-                min={1}
-                max={30}
+                onChange={(e) => updateDraft('cfgScale', e.target.value)}
+                min={0}
                 className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary font-medium text-sm"
                 required
               />
@@ -248,7 +263,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               <input
                 type="number"
                 value={seed}
-                onChange={(e) => setSeed(Number(e.target.value))}
+                onChange={(e) => updateDraft('seed', e.target.value)}
                 className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary font-medium text-sm"
                 required
               />
@@ -259,14 +274,17 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
               </label>
               <select
                 value={resolution}
-                onChange={(e) => setResolution(e.target.value)}
+                onChange={(e) => updateDraft('resolution', e.target.value)}
                 className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary font-medium text-sm"
               >
+                <option value="">해상도 선택</option>
+                {resolution && !['512x512', '768x768', '1024x1024'].includes(resolution) && <option value={resolution}>{resolution}</option>}
                 <option value="512x512">512x512</option>
                 <option value="768x768">768x768</option>
                 <option value="1024x1024">1024x1024</option>
               </select>
             </div>
+            <div><label className="mb-1.5 block text-xs font-bold text-foreground">배치 크기 *</label><input type="number" required min={1} step={1} value={batchSize} onChange={event => updateDraft('batchSize', event.target.value)} className="w-full rounded-xl border border-border bg-muted px-4 py-2.5 text-sm font-medium"/></div>
           </div>
         </div>
 
@@ -367,7 +385,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !!recipeImage}
+              disabled={isSubmitting || sourceLoading || !!recipeImage || (!!initialSourceId && !sourceName)}
               className="px-8 py-3 rounded-xl font-black text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 text-sm flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
             >
               {isSubmitting ? '저장 중...' : isAsset ? '레시피 저장' : '쇼케이스 등록'}
@@ -375,6 +393,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY' }: S
             </button>
           </div>
         </div>
+        </fieldset>
       </form>
     </div>
   );

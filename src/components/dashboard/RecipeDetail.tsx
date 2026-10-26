@@ -15,11 +15,11 @@ import VerificationResultModal from '../community/modals/VerificationResultModal
 import ExpertVerificationCard, { type VerificationStatus } from '../community/ExpertVerificationCard';
 
 export interface Recipe { id: string; title?: string }
-interface Props { recipe: Recipe; onBack: () => void; isAuthor?: boolean; onDelete?: () => void | Promise<void> }
+interface Props { recipe: Recipe; onBack: () => void; isAuthor?: boolean; onDelete?: () => void | Promise<void>; onCreateFromRecipe?: () => void }
 interface Review { reviewId: number; userId: number; author: string; content: string; rating?: number | null; profileImageUrl?: string | null; createdAt: string; parentReviewId: number | null; replies: Review[] }
 interface Reviews { content: Review[]; totalPages: number; totalElements: number }
 
-export default function RecipeDetail({ recipe, onBack }: Props) {
+export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Props) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const detail = useApiQuery<RecipeDetailResponse>(`/community/recipes/${recipe.id}`);
@@ -89,6 +89,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
     <div className="bg-card border-b border-border sticky top-0 z-10"><div className="max-w-7xl mx-auto px-4 sm:px-8 py-5 flex flex-wrap items-center justify-between gap-4">
       <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary font-bold text-sm"><ArrowLeft size={18}/>목록으로 돌아가기</button>
       <div className="flex flex-wrap gap-3">
+        {onCreateFromRecipe && <button disabled={busy || data.isDeleted} onClick={onCreateFromRecipe} className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary disabled:opacity-50"><GitFork size={18}/>내 레시피로 만들기</button>}
         {!own && <button disabled={busy} onClick={() => void run(async () => { await api.post(`/community/recipes/${recipe.id}/fork`); setNotice('내 보관함에 저장했습니다.'); detail.reload(); })} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-primary font-bold text-sm disabled:opacity-50"><GitFork size={18}/>내 보관함에 저장</button>}
         {own && <button disabled={busy} onClick={() => { if (confirm('레시피를 삭제하시겠습니까?')) void run(async () => { await useCommunityStore.getState().deleteRecipe(Number(recipe.id)); onBack(); }); }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted text-red-500 font-bold text-sm"><Trash2 size={18}/>삭제</button>}
         <button disabled={busy} onClick={() => void run(async () => { await navigator.clipboard.writeText(`${window.location.origin}/dashboard/community?recipeId=${recipe.id}`); setNotice('링크를 복사했습니다.'); })} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20"><Share2 size={18}/>공유</button>

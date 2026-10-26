@@ -19,6 +19,7 @@ after(() => rm(directory, { recursive: true, force: true }));
 const outfile = resolve(directory, 'live.cjs');
 await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as api } from './src/lib/axios';
+  export { recipeReviewPayload } from './src/lib/recipeReviewPayload';
   export { AxiosError } from 'axios';
   export { useNotificationStore } from './src/store/useNotificationStore';
   export { useProjectStore } from './src/store/useProjectStore';
@@ -313,4 +314,13 @@ test('member invitations send an explicit role and manager invitations wait for 
   assert.deepEqual(JSON.parse(calls[0].data), { email: 'member@example.com', role: 'MEMBER' });
   assert.equal(await app.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), false);
   assert.equal(calls.length, 1);
+});
+
+
+test('comment-only requests omit scores and retain reply relationships', () => {
+  assert.deepEqual(app.recipeReviewPayload(' 의견 ', true, 5), { content: '의견' });
+  assert.deepEqual(app.recipeReviewPayload(' 답글 ', true, 0, 12), { content: '답글', parentReviewId: 12 });
+  assert.deepEqual(app.recipeReviewPayload(' 수정 ', false, 3), { content: '수정', rating: 3 });
+  assert.throws(() => app.recipeReviewPayload(' ', true, 5));
+  assert.throws(() => app.recipeReviewPayload('의견', false, 0));
 });

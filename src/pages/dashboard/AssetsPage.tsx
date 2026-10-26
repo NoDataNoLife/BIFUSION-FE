@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, GitFork, Eye, Search, Plus, Calendar, RefreshCw } from 'lucide-react';
+import { GitFork, Eye, Search, Plus, Calendar, RefreshCw } from 'lucide-react';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import DatasetDetailView from '../../components/dashboard/DatasetDetailView';
 import AugmentedAssetsView from '../../components/dashboard/AugmentedAssetsView';
@@ -23,7 +23,7 @@ export default function AssetsPage() {
   const back = () => { setSelected(null); reload(); };
   if (selected?.type === 'recipe') return <RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} />;
   if (selected?.type === 'dataset') return <DatasetDetailView key={selected.id} datasetId={selected.id} onBack={back} />;
-  const displayRecipes = (recipeTab ? data?.content ?? [] : []).filter((r): r is MyRecipeListResponse => 'recipeId' in r).filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ id: r.recipeId, title: r.title, description: r.description, thumbnailUrl: r.bannerImageUrl, isExpertVerified: r.expertVerified, rating: r.rating ?? '—', forkedCount: r.forkCount ?? '—', viewCount: r.viewCount ?? '—' }));
+  const displayRecipes = (recipeTab ? data?.content ?? [] : []).filter((r): r is MyRecipeListResponse => 'recipeId' in r).filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ id: r.recipeId, title: r.title, description: r.description, thumbnailUrl: r.bannerImageUrl, isExpertVerified: r.expertVerified, forkedCount: r.forkCount ?? '—', viewCount: r.viewCount ?? '—' }));
   const displayDatasets = (!recipeTab ? data?.content ?? [] : []).filter((d): d is MyDatasetListResponse => 'datasetId' in d).filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase())).map(d => ({ id: d.datasetId, name: d.name, thumbnail: d.bannerImageUrl, size: formatBytes(d.totalSize), fileCount: d.fileCount, uploadedAt: d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('ko-KR') : '날짜 미등록', format: d.fileFormats?.join(', ') || '형식 미등록' }));
   return (
     <div className="p-4 sm:p-8 space-y-10 max-w-7xl mx-auto">
@@ -97,10 +97,6 @@ export default function AssetsPage() {
                     <h3 className="text-lg font-black text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">{recipe.title}</h3>
                     <p className="text-sm text-muted-foreground font-medium line-clamp-2 mb-6">{recipe.description}</p>
                     <div className="flex items-center justify-between pt-6 border-t border-border">
-                      <div className="flex items-center gap-2">
-                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm font-black text-foreground">{recipe.rating}</span>
-                      </div>
                       <div className="flex items-center gap-4 text-muted-foreground font-bold text-xs uppercase tracking-widest">
                         <span className="flex items-center gap-1.5"><GitFork size={14} /> {recipe.forkedCount}</span>
                         <span className="flex items-center gap-1.5"><Eye size={14} /> {recipe.viewCount}</span>

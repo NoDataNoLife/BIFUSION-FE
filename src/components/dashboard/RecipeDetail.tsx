@@ -62,7 +62,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
       {editing ? <form className="space-y-3" onSubmit={event => {
         event.preventDefault();
         if (!editContent.trim() || (!commentOnlyReviewsEnabled && !isReply && editRating < 1)) return;
-        void run(async () => { await api.put(`/community/recipes/${recipe.id}/reviews/${review.reviewId}`, recipeReviewPayload(editContent, commentOnlyReviewsEnabled, editRating, isReply ? review.parentReviewId! : undefined)); setEditingId(null); refresh(); });
+        void run(async () => { await api.put(`/community/recipes/${recipe.id}/reviews/${review.reviewId}`, recipeReviewPayload(editContent, commentOnlyReviewsEnabled || isReply, editRating)); setEditingId(null); refresh(); });
       }}>
         {!commentOnlyReviewsEnabled && !isReply && <StarRating value={editRating} onChange={setEditRating} disabled={busy} label="수정 평점"/>}
         <textarea autoFocus aria-label="리뷰 수정 내용" value={editContent} disabled={busy} onChange={event => setEditContent(event.target.value)} className="w-full min-h-28 p-4 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"/>

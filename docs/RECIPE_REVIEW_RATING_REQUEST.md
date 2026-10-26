@@ -1,3 +1,5 @@
+> 2026-10-26 정책 변경: 레시피·댓글 별점을 제거하기로 했습니다. 아래의 rating 응답 추가 요청은 이전 기록이며 더 이상 요청하지 않습니다. 현재 필요한 변경은 최상위 댓글 POST·PUT의 rating 필수 검증 해제입니다. [최신 연동 현황](FRONTEND_INTEGRATION_HANDOFF.md)을 참고해 주세요.
+
 # 리뷰 별점 응답 보완 요청
 
 레시피 리뷰 작성·수정 API는 rating(1~5)을 받지만, 확인한 로컬 BE의 RecipeReviewResponse에는 rating이 없습니다.

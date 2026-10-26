@@ -16,7 +16,7 @@ export default function RecipeImageField({ file, onChange, disabled = false }: {
   return <section className="space-y-3 rounded-2xl border border-border bg-muted/30 p-5" aria-labelledby={`${id}-label`}>
     <div className="flex flex-wrap items-center justify-between gap-2"><h4 id={`${id}-label`} className="text-sm font-bold">대표 이미지 <span className="font-normal text-muted-foreground">(선택)</span></h4><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">미리보기</span></div>
     <p id={`${id}-help`} className="text-xs leading-6 text-muted-foreground">이미지 등록 기능을 준비 중입니다. 지금은 선택한 이미지를 미리 볼 수 있습니다. 이미지 없이 레시피를 등록할 수 있습니다.</p>
-    <input ref={input} id={id} type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled} aria-describedby={`${id}-help`} aria-invalid={!!error} aria-errormessage={error ? `${id}-error` : undefined} onChange={event => {
+    <input ref={input} id={id} aria-label="레시피 대표 이미지 선택" type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled} aria-describedby={`${id}-help`} aria-invalid={!!error} aria-errormessage={error ? `${id}-error` : undefined} onChange={event => {
       const selected = event.target.files?.[0];
       if (!selected) return;
       if (!['image/png', 'image/jpeg', 'image/webp'].includes(selected.type)) { setError('PNG, JPG, WebP 이미지를 선택해 주세요.'); event.target.value = ''; return; }

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -51,16 +51,22 @@ export default function Sidebar({ isCollapsed, onToggle, onNavigate }: SidebarPr
       }`}
     >
       {/* Header */}
-      <div className="p-6 border-b border-border dark:border-border flex items-center justify-between">
-        {!isCollapsed && (
-          <div className="flex items-center gap-2">
-            <img
-              src="/logo_og.png"
-              alt="Bifusion"
-              className="h-9 w-auto object-contain dark:brightness-105 dark:drop-shadow-[0_2px_8px_rgba(240,165,58,0.25)] transition-all"
-            />
-          </div>
-        )}
+      <div className={`border-b border-border dark:border-border flex items-center ${
+        isCollapsed ? "flex-col gap-3 px-3 py-4" : "justify-between p-6"
+      }`}>
+        <Link
+          to="/dashboard"
+          onClick={onNavigate}
+          aria-label="BIFUSION 대시보드 홈으로 이동"
+          title="대시보드 홈"
+          className="flex items-center rounded-lg hover:opacity-80 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+        >
+          <img
+            src={isCollapsed ? "/logo1.png" : "/logo_og.png"}
+            alt="BIFUSION"
+            className={`${isCollapsed ? "h-8 w-8" : "h-9 w-auto"} object-contain dark:brightness-105 dark:drop-shadow-[0_2px_8px_rgba(240,165,58,0.25)] transition-all`}
+          />
+        </Link>
         <button
           onClick={onToggle}
           aria-label={isCollapsed ? '메뉴 펼치기' : '메뉴 닫기'}

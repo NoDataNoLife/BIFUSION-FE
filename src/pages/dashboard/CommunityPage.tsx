@@ -1,3 +1,4 @@
+import RecipeOrigin from '../../components/community/RecipeOrigin';
 import ProfileAvatar from '../../components/common/ProfileAvatar';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -142,6 +143,7 @@ export default function CommunityPage() {
                           <ProfileAvatar src={post.author?.profileImageUrl || '/defaultUserProfile.png'} alt={post.author?.nickname || '탈퇴한 사용자'} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
                           <span className="text-sm font-bold text-muted-foreground">{post.author?.nickname || '탈퇴한 사용자'}</span>
                         </div>
+                        <div className="mb-3" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}><RecipeOrigin origin={post.forkedFrom}/></div>
                         <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
                           <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkCount ?? '—'}</span>
                           <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount ?? '—'}</span>

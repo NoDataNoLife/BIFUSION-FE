@@ -6,6 +6,7 @@ import type { RecipeDetailResponse } from '../../../store/useCommunityStore';
 import ForkedRecipePicker from './ForkedRecipePicker';
 import RecipeImageField from './RecipeImageField';
 import api from '../../../lib/axios';
+import { uploadTempFiles, type TempUploadedFile } from '../../../lib/fileUpload';
 import { useCommunityStore } from '../../../store/useCommunityStore';
 import { Sparkles, Layers, Sliders, Cpu, X, ArrowRight } from 'lucide-react';
 
@@ -35,6 +36,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
   const controller = useRef<AbortController | null>(null);
   const loadingRef = useRef(false);
   const submitRef = useRef(false);
+  const imageCache = useRef(new Map<File, TempUploadedFile>());
   const updateDraft = <K extends keyof RecipeDraft>(key: K, value: RecipeDraft[K]) => setDraft(previous => ({ ...previous, [key]: value }));
   const loadSource = async (id: number) => {
     if (loadingRef.current || submitRef.current) return;
@@ -87,7 +89,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitRef.current || sourceLoading || loadingRef.current || recipeImage) return;
+    if (submitRef.current || sourceLoading || loadingRef.current) return;
     setSubmitError(null);
     if (initialSourceId != null && !sourceName) { setSubmitError('불러오기를 완료한 뒤 저장해 주세요.'); return; }
     const isPublic = !isAsset;
@@ -97,7 +99,8 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
     submitRef.current = true;
     setIsSubmitting(true);
     try {
-      const response = await api.post('/community/recipes', payload);
+      const uploaded = recipeImage ? await uploadTempFiles([recipeImage], undefined, imageCache.current) : [];
+      const response = await api.post('/community/recipes', { ...payload, ...(uploaded[0] ? { thumbnailFileId: uploaded[0].fileId } : {}) });
       if (response.data?.success === false) throw new Error(response.data.message || '레시피 등록에 실패했습니다.');
 
       alert(
@@ -385,7 +388,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || sourceLoading || !!recipeImage || (!!initialSourceId && !sourceName)}
+              disabled={isSubmitting || sourceLoading || (!!initialSourceId && !sourceName)}
               className="px-8 py-3 rounded-xl font-black text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 text-sm flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
             >
               {isSubmitting ? '저장 중...' : isAsset ? '레시피 저장' : '쇼케이스 등록'}

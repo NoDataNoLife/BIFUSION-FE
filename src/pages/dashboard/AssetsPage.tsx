@@ -1,3 +1,4 @@
+import RecipeOrigin from '../../components/community/RecipeOrigin';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GitFork, Eye, Search, Plus, Calendar, RefreshCw } from 'lucide-react';
@@ -32,7 +33,7 @@ export default function AssetsPage() {
   />;
   if (selected?.type === 'recipe') return <><RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} onCreateFromRecipe={activeTab === 'recipes' ? () => openFromRecipe(selected.id) : undefined}/>{createModal}</>;
   if (selected?.type === 'dataset') return <DatasetDetailView key={selected.id} datasetId={selected.id} onBack={back} />;
-  const displayRecipes = (recipeTab ? data?.content ?? [] : []).filter((r): r is MyRecipeListResponse => 'recipeId' in r).filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ id: r.recipeId, title: r.title, description: r.description, thumbnailUrl: r.bannerImageUrl, isExpertVerified: r.expertVerified, forkedCount: r.forkCount ?? '—', viewCount: r.viewCount ?? '—' }));
+  const displayRecipes = (recipeTab ? data?.content ?? [] : []).filter((r): r is MyRecipeListResponse => 'recipeId' in r).filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ id: r.recipeId, forkedFrom: r.forkedFrom, title: r.title, description: r.description, thumbnailUrl: r.bannerImageUrl, isExpertVerified: r.expertVerified, forkedCount: r.forkCount ?? '—', viewCount: r.viewCount ?? '—' }));
   const displayDatasets = (!recipeTab ? data?.content ?? [] : []).filter((d): d is MyDatasetListResponse => 'datasetId' in d).filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase())).map(d => ({ id: d.datasetId, name: d.name, thumbnail: d.bannerImageUrl, size: formatBytes(d.totalSize), fileCount: d.fileCount, uploadedAt: d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('ko-KR') : '날짜 미등록', format: d.fileFormats?.join(', ') || '형식 미등록' }));
   return (
     <div className="p-4 sm:p-8 space-y-10 max-w-7xl mx-auto">
@@ -111,6 +112,7 @@ export default function AssetsPage() {
                     </div>
                   </div>
                   </button>
+                  {recipe.forkedFrom && <div className="px-8 pb-4"><RecipeOrigin origin={recipe.forkedFrom}/></div>}
                   {activeTab === 'recipes' && <div className="px-8 pb-6"><button type="button" onClick={() => openFromRecipe(recipe.id)} className="w-full rounded-xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/20">내 레시피로 만들기</button></div>}
                 </div>
               ))}

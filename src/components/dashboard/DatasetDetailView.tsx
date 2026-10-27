@@ -1,6 +1,7 @@
+import InspectionPanel from '../community/InspectionPanel';
 import { useState } from 'react';
-import { ArrowLeft, Download, Edit, Trash2, Database, FileText, Code, Info, ShieldCheck } from 'lucide-react';
-import { DataState } from './DataView';
+import { ArrowLeft, Download, Edit, Trash2, FileText, Code, Info, ShieldCheck } from 'lucide-react';
+import { AssetCover, DataState } from './DataView';
 import ReactMarkdown from 'react-markdown';
 import api from '../../lib/axios';
 import { requestMessage } from '../../lib/liveData';
@@ -49,7 +50,7 @@ export default function DatasetDetailView({ datasetId, onBack }: { datasetId: nu
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 space-y-10">
       {actionError && <p role="alert" className="p-4 bg-red-500/10 text-red-500 rounded-2xl">{actionError}</p>}
       <section className="bg-card rounded-[2.5rem] p-6 sm:p-10 border border-border shadow-sm space-y-8">
-        <div className="flex flex-col md:flex-row gap-8"><div className="w-28 h-28 bg-primary/10 rounded-4xl flex items-center justify-center shrink-0"><Database className="w-14 h-14 text-primary"/></div><div className="flex-1 space-y-4"><h1 className="text-3xl sm:text-4xl font-black tracking-tight break-words">{data.title}</h1><p className="text-muted-foreground font-medium leading-relaxed whitespace-pre-wrap">{data.description}</p><div className="flex flex-wrap gap-2">{data.tags?.map(tag => <span key={tag} className="px-4 py-1.5 bg-muted text-muted-foreground rounded-xl text-xs font-bold border border-border">{tag}</span>)}</div>{data.isExpertVerified && <span className="inline-flex items-center gap-2 text-primary text-xs font-black"><ShieldCheck size={16}/>전문가 검증 완료</span>}</div></div>
+        <div className="flex flex-col md:flex-row gap-8"><div className="w-28 h-28 bg-primary/10 rounded-4xl flex items-center justify-center shrink-0"><AssetCover src={data.bannerImageUrl} title={data.title} dataset/></div><div className="flex-1 space-y-4"><h1 className="text-3xl sm:text-4xl font-black tracking-tight break-words">{data.title}</h1><p className="text-muted-foreground font-medium leading-relaxed whitespace-pre-wrap">{data.description}</p><div className="flex flex-wrap gap-2">{data.tags?.map(tag => <span key={tag} className="px-4 py-1.5 bg-muted text-muted-foreground rounded-xl text-xs font-bold border border-border">{tag}</span>)}</div>{data.isExpertVerified && <span className="inline-flex items-center gap-2 text-primary text-xs font-black"><ShieldCheck size={16}/>전문가 검증 완료</span>}</div></div>
         <dl className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-border text-center">{[['파일 크기',data.fileSize],['파일 수',data.fileCount?.toLocaleString()],['다운로드',data.downloadCount?.toLocaleString()],['파일 형식',data.format]].map(([label,value]) => <div key={label}><dt className="text-xs font-bold text-muted-foreground mb-2">{label}</dt><dd className="text-xl font-black break-words">{value ?? '—'}</dd></div>)}</dl>
       </section>
       <div className="grid lg:grid-cols-3 gap-8">
@@ -60,7 +61,7 @@ export default function DatasetDetailView({ datasetId, onBack }: { datasetId: nu
         <aside className="space-y-8">
           <section className="bg-card rounded-4xl p-8 border border-border shadow-sm"><h2 className="text-lg font-black flex items-center gap-2 mb-6"><Info size={18} className="text-primary"/>상세 정보</h2><dl className="space-y-4">{[['라이선스',data.license],['업로드 날짜',data.createdAt ? new Date(data.createdAt).toLocaleDateString('ko-KR') : null],['해상도',data.resolution],['클래스',data.classes],['작성자',data.author?.nickname]].map(([label,value]) => <div key={label} className="flex justify-between gap-4 text-sm"><dt className="text-muted-foreground shrink-0">{label}</dt><dd className="font-bold text-right break-words">{value || '미등록'}</dd></div>)}</dl></section>
           <section className="bg-primary/5 rounded-4xl p-8 border border-primary/10"><h2 className="text-lg font-black text-primary mb-3">데이터 활용 안내</h2><p className="text-sm text-muted-foreground leading-relaxed">데이터를 사용하기 전에 작성자가 등록한 라이선스와 활용 가이드를 확인해 주세요.</p></section>
-          <ExpertVerificationCard status={status} onViewResults={() => setShowResult(true)} />
+          {data.inspectionTarget ? <InspectionPanel target={data.inspectionTarget} title={data.title} reload={reload}/> : <ExpertVerificationCard status={status} onViewResults={() => setShowResult(true)} />}
         </aside>
       </div>
     </div>

@@ -1,3 +1,5 @@
+import RecipeOrigin from '../community/RecipeOrigin';
+import InspectionPanel from '../community/InspectionPanel';
 import StarRating from '../community/StarRating';
 import { commentOnlyReviewsEnabled } from '../../lib/backendFeatures';
 import { recipeReviewPayload } from '../../lib/recipeReviewPayload';
@@ -101,7 +103,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
         <div className="aspect-video md:aspect-auto bg-muted"><AssetCover src={data.bannerUrl} title={data.title}/></div>
         <div className="p-6 sm:p-10 space-y-6">
           {data.isExpertVerified && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black"><Award size={14}/>전문가 검증</span>}
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight break-words">{data.title}</h1><p className="text-lg text-muted-foreground font-medium leading-relaxed">{data.description}</p>
+          <RecipeOrigin origin={data.forkedFrom}/><h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight break-words">{data.title}</h1><p className="text-lg text-muted-foreground font-medium leading-relaxed">{data.description}</p>
           <button disabled={!data.author?.userId} onClick={() => navigate(`/dashboard/profile/${data.author.userId}`)} className="w-full flex items-center gap-4 p-4 bg-muted/40 hover:bg-muted/80 rounded-2xl border border-border text-left"><ProfileAvatar src={data.author?.profileImageUrl || '/defaultUserProfile.png'} alt="" className="w-12 h-12 rounded-xl object-cover"/><div><p className="font-bold">{data.author?.nickname || '탈퇴한 사용자'}</p><p className="text-xs text-muted-foreground mt-1">{data.createdAt ? new Date(data.createdAt).toLocaleDateString('ko-KR') : '작성일 미등록'}</p></div></button>
           <div className="p-4 border border-border rounded-2xl text-center"><p className="text-xs font-bold text-muted-foreground mb-1">Fork 수</p><p className="text-xl font-black text-primary flex justify-center items-center gap-1"><GitFork size={18}/>{data.forkCount ?? '—'}</p></div>
         </div>
@@ -114,7 +116,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
               <div><h3 className="text-lg font-black mb-4">핵심 기능</h3>{data.overview?.features?.length ? <div className="grid sm:grid-cols-2 gap-3">{data.overview.features.map((feature,i) => <div key={i} className="flex items-center gap-3 p-4 bg-muted rounded-2xl border border-border"><Check className="text-emerald-500 shrink-0" size={18}/><span className="text-sm font-bold">{feature}</span></div>)}</div> : <p className="text-sm text-muted-foreground">등록된 핵심 기능이 없습니다.</p>}</div>
             </div>
             <aside className="p-8 bg-primary/5 rounded-4xl border border-primary/10 self-start"><h3 className="text-lg font-black text-primary mb-6">추천 활용 사례</h3>{data.overview?.recommendations?.length ? <ul className="space-y-4">{data.overview.recommendations.map((value,i) => <li key={i} className="flex gap-3 text-sm font-medium text-muted-foreground"><span className="w-1.5 h-1.5 mt-2 bg-primary rounded-full shrink-0"/>{value}</li>)}</ul> : <p className="text-sm text-muted-foreground">등록된 활용 사례가 없습니다.</p>}</aside>
-          </div><ExpertVerificationCard status={status} onViewResults={() => setVerification('result')} /></div>}
+          </div>{data.inspectionTarget ? <InspectionPanel target={data.inspectionTarget} title={data.title} reload={detail.reload}/> : <ExpertVerificationCard status={status} onViewResults={() => setVerification('result')} />}</div>}
           {tab === 'settings' && (data.settings ? <dl className="grid md:grid-cols-2 gap-6">{Object.entries(data.settings).map(([key,value]) => <div key={key} className="flex flex-wrap justify-between items-center gap-3 p-6 bg-muted rounded-2xl border border-border"><dt className="text-sm font-black text-muted-foreground uppercase">{key}</dt><dd className="font-mono font-bold text-primary bg-card px-4 py-1.5 rounded-lg border border-border">{value ?? '—'}</dd></div>)}</dl> : <DataState title="등록된 설정 정보가 없습니다"/>) }
     {tab === 'reviews' && <section className="space-y-6">
       {reviews.loading ? <p>리뷰를 불러오는 중…</p> : reviews.error ? <p role="alert">{reviews.error} <button onClick={reviews.reload}>다시 시도</button></p> : reviews.data?.content.length ? reviews.data.content.map(renderReview) : <p>작성된 리뷰가 없습니다.</p>}

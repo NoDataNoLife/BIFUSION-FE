@@ -1,3 +1,5 @@
+import { useJobEstimate } from '../../hooks/useJobEstimate';
+import JobCostNotice from '../../components/jobs/JobCostNotice';
 import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -74,8 +76,9 @@ export default function AugmentSetupPage() {
     && Number.isInteger(Number(samplingSteps)) && Number(samplingSteps) >= 1 && Number(samplingSteps) <= 200
     && (!fixedSeed || (seed !== '' && Number.isSafeInteger(Number(seed)) && Number(seed) >= 0 && Number(seed) <= 4294967295));
 
+  const estimate = useJobEstimate(Number(imagesPerClass) >= 1 && Number(samplingSteps) >= 1 ? { type: 'AUGMENTATION', num_samples_per_class: Number(imagesPerClass), strength: Number(strength), finetune_steps: Number(finetuneSteps), steps: Number(samplingSteps), ...(fixedSeed ? { seed: Number(seed) } : {}) } : null);
   const handleStartAugmentation = async () => {
-    if (!isValid || submitting.current || isUploading || isLoading || !projectId) return;
+    if (!estimate.data?.affordable || !isValid || submitting.current || isUploading || isLoading || !projectId) return;
     setSubmitError(null);
 
     const normalValidation = validateImageFiles(normalFiles, { minCount: 5, maxCount: 10 });
@@ -160,7 +163,7 @@ export default function AugmentSetupPage() {
             <div className="ml-auto">
               <button
                 onClick={handleStartAugmentation}
-                disabled={!isValid || isUploading || isLoading}
+                disabled={!estimate.data?.affordable || !isValid || isUploading || isLoading}
                 className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
                   isValid && !isUploading && !isLoading
                     ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
@@ -184,6 +187,7 @@ export default function AugmentSetupPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
+        <JobCostNotice estimate={estimate}/>
         {submitError && (
           <p role="alert" className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-500 text-sm font-medium">
             {submitError}

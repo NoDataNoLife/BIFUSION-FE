@@ -1,3 +1,6 @@
+import AugmentedDeleteButton from '../../components/dashboard/AugmentedDeleteButton';
+import { useJobEstimate } from '../../hooks/useJobEstimate';
+import JobCostNotice from '../../components/jobs/JobCostNotice';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -33,6 +36,7 @@ export default function TrainSetupPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [datasets, setDatasets] = useState<AugmentedDataset[]>([]);
   const [loadingDatasets, setLoadingDatasets] = useState(true);
+  const [datasetVersion, setDatasetVersion] = useState(0);
   const [datasetError, setDatasetError] = useState<string | null>(null);
 
   const initialDatasetId = location.state?.datasetId ? String(location.state.datasetId) : '';
@@ -74,7 +78,7 @@ export default function TrainSetupPage() {
     };
     fetchDatasets();
     return () => { isMounted = false; };
-  }, [projectId, initialDatasetId]);
+  }, [projectId, initialDatasetId, datasetVersion]);
 
   const numEpochs = Number(epochs);
   const numQuery = Number(qQuery);
@@ -88,8 +92,9 @@ export default function TrainSetupPage() {
     && Number.isInteger(numEpisodes) && numEpisodes >= 1 && numEpisodes <= 100
     && seed.trim() !== '' && Number.isInteger(numSeed) && numSeed >= 0 && numSeed <= 4294967295;
 
+  const estimate = useJobEstimate({ type: 'TRAINING', ...(selectedAugmentData ? { dataset_id: Number(selectedAugmentData) } : {}), k_shot: kShot, epochs: numEpochs, q_query: numQuery, episodes_per_epoch: numEpisodes, seed: numSeed });
   const handleStartTrain = async () => {
-    if (isLoading || !isValid || !projectId) return;
+    if (!estimate.data?.affordable || isLoading || !isValid || !projectId) return;
     setSubmitError(null);
     try {
       const parsedDatasetId = isNaN(Number(selectedAugmentData))
@@ -137,6 +142,7 @@ export default function TrainSetupPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-6">
+        <JobCostNotice estimate={estimate}/>
         {submitError && (
           <p role="alert" className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-sm font-medium">
             {submitError}
@@ -204,6 +210,7 @@ export default function TrainSetupPage() {
             )}
           </div>
 
+          {selectedAugmentData && projectId && <AugmentedDeleteButton key={selectedAugmentData} projectId={projectId} datasetId={selectedAugmentData} jobCode={datasets.find(d => String(d.datasetId ?? d.id) === selectedAugmentData)?.jobCode} onDeleted={() => { setSelectedAugmentData(''); setDatasetVersion(v => v + 1); }}/>}
           {/* K-shot Selection */}
           <div className="space-y-4">
             <label className="block text-sm font-semibold text-foreground uppercase tracking-wide">
@@ -333,7 +340,7 @@ export default function TrainSetupPage() {
             </button>
             <button
               onClick={handleStartTrain}
-              disabled={!isValid || isLoading || loadingDatasets}
+              disabled={!estimate.data?.affordable || !isValid || isLoading || loadingDatasets}
               className={`px-10 py-4 rounded-2xl font-semibold text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
                 isValid && !isLoading && !loadingDatasets
                   ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'

@@ -1,3 +1,4 @@
+import ExpertTargetDetails from './ExpertTargetDetails';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, XCircle, MessageSquare, X, Save } from 'lucide-react';
 import { requestMessage } from '../../lib/liveData';
@@ -238,6 +239,7 @@ export default function ReviewDetailPage({
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-10 space-y-10">
+        <ExpertTargetDetails detail={inspectionDetail}/>
         {/* Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
@@ -261,7 +263,8 @@ export default function ReviewDetailPage({
           </div>
 
           <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
-            <h3 className="text-lg font-bold text-foreground mb-6">증강 파라미터</h3>
+            <h3 className="text-lg font-bold text-foreground mb-6">검수 대상</h3>
+            {inspectionDetail.targetType === "AUGMENTED_DATA" ? <>
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-muted rounded-2xl text-center">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
@@ -288,10 +291,12 @@ export default function ReviewDetailPage({
                 </p>
               </div>
             </div>
+            </> : <p className="text-sm text-muted-foreground">{inspectionDetail.targetType === 'RECIPE' ? '레시피 내용과 설정을 확인해 주세요.' : '원본 데이터셋 정보와 첨부 파일을 확인해 주세요.'}</p>}
           </div>
         </div>
 
         {/* Image Grid Section */}
+        {inspectionDetail.targetType === "AUGMENTED_DATA" && (
         <div className="bg-card rounded-4xl p-10 border border-border shadow-sm space-y-6">
           <div className="flex justify-between items-center">
             <div>
@@ -348,6 +353,7 @@ export default function ReviewDetailPage({
           </div>
         </div>
 
+        )}
         {/* Final Feedback Section */}
         <div className="bg-card rounded-4xl p-10 border border-border shadow-sm space-y-6">
           <h3 className="text-xl font-black text-foreground">

@@ -1,3 +1,4 @@
+import RecipeOrigin from '../../components/community/RecipeOrigin';
 import ProfileAvatar from '../../components/common/ProfileAvatar';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -137,11 +138,13 @@ export default function CommunityPage() {
                     </div>
                     <div className="p-8 space-y-6">
                       <h3 className="text-xl font-black text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
+                      <div className="mb-3" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}><RecipeOrigin origin={post.forkedFrom}/></div>
                       <div className="flex items-center justify-between pt-6 border-t border-border">
                         <div className="flex items-center gap-3">
                           <ProfileAvatar src={post.author?.profileImageUrl || '/defaultUserProfile.png'} alt={post.author?.nickname || '탈퇴한 사용자'} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
                           <span className="text-sm font-bold text-muted-foreground">{post.author?.nickname || '탈퇴한 사용자'}</span>
                         </div>
+
                         <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
                           <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkCount ?? '—'}</span>
                           <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount ?? '—'}</span>
@@ -250,8 +253,8 @@ export default function CommunityPage() {
             ) : datasetList.map(dataset => (
               <div key={dataset.datasetId} onClick={() => setSelectedId(dataset.datasetId.toString())} role="button" tabIndex={0} aria-label={`${dataset.title} 상세 보기`} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); setSelectedId(dataset.datasetId.toString()); } }} className="bg-card rounded-3xl border border-border p-8 hover:shadow-xl hover:border-primary/40 transition-all cursor-pointer group">
                 <div className="flex flex-col md:flex-row gap-8">
-                  <div className="w-20 h-20 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-3 transition-transform">
-                    <Database size={32} className="text-purple-500" />
+                  <div className="w-20 h-20 overflow-hidden [&>div]:min-h-0 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-3 transition-transform">
+                    <AssetCover src={dataset.bannerImageUrl} title={dataset.title} dataset/>
                   </div>
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">

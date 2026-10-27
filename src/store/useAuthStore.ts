@@ -30,7 +30,6 @@ interface User {
   updatedAt?: string;
   profileImage?: string;
   profileImageUrl?: string;
-  planType?: 'BASIC' | 'PRO';
   expertStatus?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
   // API 응답 매핑 필드 추가
   introduction?: string | null;
@@ -51,7 +50,6 @@ interface AuthState {
   updateOrganization: (organization: string) => Promise<boolean>;
   updateWebsite: (websiteUrl: string) => Promise<boolean>;
   updateProfileImage: (file: File) => Promise<boolean>;
-  changePlan: (planType: 'BASIC' | 'PRO') => Promise<boolean>;
   applyExpert: (file: File) => Promise<boolean>;
   fetchUser: () => Promise<boolean>;
   fetchUserProfile: (userId: number) => Promise<boolean>;
@@ -208,22 +206,6 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      changePlan: async (planType: 'BASIC' | 'PRO') => {
-        try {
-          const response = await api.put('/users/me/plan', { planType });
-          if (response.data.success) {
-            set((state) => ({
-              user: state.user ? { ...state.user, planType } : null
-            }));
-            return true;
-          }
-          return false;
-        } catch (error) {
-          console.error('Failed to change plan:', error);
-          return false;
-        }
-      },
-
       applyExpert: async (file: File) => {
         try {
           const formData = new FormData();
@@ -290,7 +272,6 @@ export const useAuthStore = create<AuthState>()(
                 isExpert: profileData.isExpert ?? state.user.isExpert,
                 createdAt: state.user.createdAt,
                 profileImage: profileData.profileImageUrl ? safeEncodeUrl(profileData.profileImageUrl) : state.user.profileImage,
-                planType: profileData.planType ?? state.user.planType,
               } : {
                 userId: profileData.userId,
                 name: profileData.name,
@@ -304,7 +285,6 @@ export const useAuthStore = create<AuthState>()(
                 website: profileData.website,
                 createdAt: profileData.createdAt,
                 isExpert: profileData.isExpert,
-                planType: profileData.planType,
                 points: 0,
                 profileImage: profileData.profileImageUrl ? safeEncodeUrl(profileData.profileImageUrl) : '/defaultUserProfile.png',
               } as User

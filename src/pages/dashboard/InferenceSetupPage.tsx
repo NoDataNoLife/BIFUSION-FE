@@ -1,3 +1,5 @@
+import { useJobEstimate } from '../../hooks/useJobEstimate';
+import JobCostNotice from '../../components/jobs/JobCostNotice';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -101,6 +103,11 @@ export default function InferenceSetupPage() {
     && uploadedFiles.length >= 1 && uploadedFiles.length <= 20
     && totalBytes <= 20 * 1024 * 1024;
 
+  const [estimatePayload, setEstimatePayload] = useState<Record<string, unknown> | null>(null);
+  const estimate = useJobEstimate(estimatePayload);
+  const latest = useRef({ files: uploadedFiles, model: selectedModel });
+  latest.current = { files: uploadedFiles, model: selectedModel };
+  useEffect(() => { setEstimatePayload(null); }, [uploadedFiles, selectedModel]);
   const handleStartInference = async () => {
     if (submitting.current || isLoading || isUploading || !isValid || !projectId) return;
     setSubmitError(null);
@@ -123,10 +130,11 @@ export default function InferenceSetupPage() {
         ? selectedModel
         : Number(selectedModel);
 
-      const job = await createJob(projectId, 'INFERENCE', {
-        model_id: parsedModelId,
-        fileIds,
-      });
+      if (latest.current.files !== uploadedFiles || latest.current.model !== selectedModel) return;
+      const payload = { type: 'INFERENCE', model_id: parsedModelId, fileIds };
+      if (!estimatePayload) { setEstimatePayload(payload); return; }
+      if (!estimate.data?.affordable) return;
+      const job = await createJob(projectId, 'INFERENCE', { model_id: parsedModelId, fileIds });
 
       saveInferenceInputs(projectId, job.jobId, uploaded);
       navigate(`/dashboard/projects/${projectId}/inference/${job.jobId}/progress`, {
@@ -167,6 +175,7 @@ export default function InferenceSetupPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-8 py-8 space-y-6">
+        <JobCostNotice estimate={estimate}/>
         {submitError && (
           <p role="alert" className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 text-sm font-medium">
             {submitError}
@@ -348,14 +357,14 @@ export default function InferenceSetupPage() {
             </button>
             <button
               onClick={handleStartInference}
-              disabled={!isValid || isLoading || isUploading || loadingModels}
+              disabled={(!!estimatePayload && !estimate.data?.affordable) || !isValid || isLoading || isUploading || loadingModels}
               className={`px-10 py-4 rounded-2xl font-semibold text-sm transition-all shadow-lg active:scale-95 cursor-pointer ${
                 isValid && !isLoading && !isUploading && !loadingModels
                   ? 'bg-primary text-white hover:bg-primary/90 shadow-primary/20'
                   : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none opacity-50'
               }`}
             >
-              {isUploading ? '이미지 업로드 중...' : isLoading ? '추론 요청 중...' : '추론 시작하기'}
+              {isUploading ? '이미지 업로드 중...' : isLoading ? '추론 요청 중...' : estimatePayload ? '추론 시작하기' : '예상 비용 확인하기'}
             </button>
           </div>
         </div>

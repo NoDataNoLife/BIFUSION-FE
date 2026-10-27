@@ -1,3 +1,4 @@
+import AugmentedDeleteButton from './AugmentedDeleteButton';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DataState } from './DataView';
@@ -20,7 +21,7 @@ export function AugmentedInspectionCard({ item, projectId, onRefresh }: {
   const { fetchUser } = useAuthStore();
   const refreshPoints = () => { void fetchUser(); };
   const title = item.jobCode || `증강 작업 ${item.datasetId}`;
-  const status = { PENDING: '검수 대기', APPROVED: '검수 승인', REJECTED: '검수 반려', CANCELLED: '신청 취소' };
+  const status = { PENDING: '검수 대기', IN_PROGRESS: '검수 중', APPROVED: '검수 승인', REJECTED: '검수 반려', CANCELLED: '신청 취소' };
   const cancel = async () => {
     const id = target?.inspectionRequestId;
     if (busy || id == null || !confirm('검수 시작 전인 신청만 취소할 수 있습니다. 취소하고 앤트를 환불받을까요?')) return;
@@ -42,14 +43,15 @@ export function AugmentedInspectionCard({ item, projectId, onRefresh }: {
       {notice && <p role="status" className="text-primary text-sm">{notice}</p>}
       <div className="flex flex-wrap gap-3 text-sm font-bold">
         <Link className="text-primary underline" to={`/dashboard/projects/${projectId}/jobs/${item.datasetId}/result`}>증강 결과·다운로드</Link>
-        {target?.canRequest && <button disabled={busy} onClick={() => { setError(null); setModal('request'); }} className="text-primary underline">전문가 검수 신청</button>}
+        {target?.canRequest && <button disabled={busy || target.minRewardPoints == null || target.maxRewardPoints == null || target.minRewardPoints > target.maxRewardPoints} onClick={() => { setError(null); setModal('request'); }} className="text-primary underline">전문가 검수 신청</button>}
         {target?.result && <button onClick={() => setModal('result')} className="text-primary underline">검수 결과 보기</button>}
         {target?.status === 'PENDING' && target.inspectionRequestId != null && <button disabled={busy} className="text-red-500 underline disabled:opacity-50" onClick={() => void cancel()}>검수 신청 취소</button>}
       </div>
+      <AugmentedDeleteButton projectId={projectId} datasetId={item.datasetId} jobCode={item.jobCode} onDeleted={onRefresh}/>
       {!target && <p className="text-xs text-muted-foreground">이 데이터셋은 검수 신청 대상이 아닙니다.</p>}
       {target?.status === 'PENDING' && <p className="text-xs text-muted-foreground">전문가가 검수를 시작했다면 신청을 취소할 수 없습니다.</p>}
     </div>
-    {modal === 'request' && target && <VerificationRequestModal assetTitle={title} onClose={() => setModal(null)} onSubmit={async (reason, reward) => {
+    {modal === 'request' && target && <VerificationRequestModal minReward={target.minRewardPoints} maxReward={target.maxRewardPoints} assetTitle={title} onClose={() => setModal(null)} onSubmit={async (reason, reward) => {
       const result = await requestInspection(target, reason, reward);
       setModal(null); setNotice(`검수 신청 #${result.inspectionRequestId}이 접수되었습니다.`);
       refreshPoints(); onRefresh();

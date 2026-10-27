@@ -1,7 +1,9 @@
+import type { InspectionTarget } from '../lib/backendContracts';
 import { create } from 'zustand';
 import api from '../lib/axios';
 
 export interface MyDatasetListResponse {
+  inspectionTarget?: InspectionTarget | null;
   datasetId: number;
   name: string;
   expertVerified: boolean;
@@ -13,6 +15,8 @@ export interface MyDatasetListResponse {
 }
 
 export interface MyRecipeListResponse {
+  inspectionTarget?: InspectionTarget | null;
+  forkedFrom?: { recipeId: number; title: string; authorNickname: string; isDeleted: boolean } | null;
   recipeId: number;
   title: string;
   description: string;

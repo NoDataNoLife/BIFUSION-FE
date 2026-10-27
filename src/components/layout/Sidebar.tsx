@@ -36,7 +36,7 @@ export default function Sidebar({ isCollapsed, onToggle, onNavigate }: SidebarPr
       path: "/dashboard/projects",
     },
     { id: "assets", label: "Assets", icon: Package, path: "/dashboard/assets" },
-    { id: "inspections", label: "내가 요청한 검수", icon: ClipboardCheck, path: "/dashboard/inspections" },
+    { id: "inspections", label: "My Inspections", icon: ClipboardCheck, path: "/dashboard/inspections" },
     { id: "expert", label: "Expert", icon: Award, path: "/dashboard/expert" },
     {
       id: "community",

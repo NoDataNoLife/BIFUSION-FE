@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import api from '../lib/axios';
 import { useAuthStore } from './useAuthStore';
-import { submitJobRequest } from '../lib/jobSubmission';
+import { submitJobRequest, submitJobRetry } from '../lib/jobSubmission';
 import { getJobErrorMessage } from '../lib/jobErrors';
 export { getJobErrorMessage } from '../lib/jobErrors';
 
@@ -22,6 +22,9 @@ export interface JobDetail {
   retryOfJobId?: string | number | null;
   createdAt?: string;
   updatedAt?: string;
+  startedAt?: string | null;
+  mlUnreachableSince?: string | null;
+  chargedPoints?: number | null;
 }
 
 interface JobState {
@@ -29,6 +32,7 @@ interface JobState {
   isLoading: boolean;
   error: string | null;
   createJob: (projectId: string | number, type: JobType, payload: Record<string, unknown>) => Promise<JobDetail>;
+  retryJob: (jobId: string) => Promise<JobDetail>;
   fetchJobStatus: (jobId: string) => Promise<JobDetail>;
   resetCurrentJob: () => void;
 }
@@ -78,6 +82,9 @@ function parseJob(
     retryOfJobId: data.retryOfJobId as string | number | null | undefined,
     createdAt: data.createdAt as string | undefined,
     updatedAt: data.updatedAt as string | undefined,
+    startedAt: data.startedAt as string | null | undefined,
+    mlUnreachableSince: data.mlUnreachableSince as string | null | undefined,
+    chargedPoints: data.chargedPoints as number | null | undefined,
   };
 }
 
@@ -93,6 +100,7 @@ export const useJobStore = create<JobState>((set, get) => ({
       const { response, confirm } = await submitJobRequest(useAuthStore.getState().user?.userId, projectId, { ...payload, type });
       const job = parseJob(response.data, { projectId, type, seed: payload.seed as number | undefined });
       confirm();
+      void useAuthStore.getState().fetchUser();
       set({ currentJob: job, isLoading: false });
       return job;
     } catch (error) {
@@ -102,6 +110,16 @@ export const useJobStore = create<JobState>((set, get) => ({
     }
   },
 
+  retryJob: async (jobId) => {
+    const previous = get().currentJob;
+    if (get().isLoading || previous?.jobId !== jobId || previous.status !== 'FAILED' || !previous.retryable) throw new Error('이 작업은 다시 시도할 수 없습니다.');
+    set({ isLoading: true, error: null });
+    try {
+      const { response, confirm } = await submitJobRetry(useAuthStore.getState().user?.userId, jobId);
+      const job = parseJob(response.data, { projectId: previous.projectId, type: previous.type });
+      confirm(); set({ currentJob: job, isLoading: false }); void useAuthStore.getState().fetchUser(); return job;
+    } catch (error) { set({ isLoading: false, error: getJobErrorMessage(error, '재시도를 접수하지 못했습니다.') }); throw error; }
+  },
   fetchJobStatus: async (jobId) => {
     try {
       const response = await api.get(`/jobs/${jobId}`);
@@ -113,6 +131,7 @@ export const useJobStore = create<JobState>((set, get) => ({
         seed: previous?.seed,
       }, jobId);
       set({ currentJob: job, error: null });
+      if (isTerminalJobStatus(job.status) && previous?.status !== job.status) void useAuthStore.getState().fetchUser();
       return job;
     } catch (error) {
       const message = getJobErrorMessage(error, '작업 상태를 불러오지 못했습니다. 잠시 후 다시 확인합니다.');

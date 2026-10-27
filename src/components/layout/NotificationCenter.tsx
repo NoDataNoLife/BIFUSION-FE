@@ -155,7 +155,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                   </div>
                   <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{notification.content}</p>
 
-                  {notification.type === 'PROJECT_INVITATION' && <TeamInvitationActions />}
+                  {notification.type === 'PROJECT_INVITATION' && <TeamInvitationActions invitation={notification.invitation} />}
                   {!notification.isRead && (
                     <div className="mt-3 flex justify-end">
                       <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />

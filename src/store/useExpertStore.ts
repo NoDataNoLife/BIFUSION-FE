@@ -13,6 +13,10 @@ export interface InspectionDetailResponse {
   inspectionId: number;
   targetType: 'RECIPE' | 'UPLOADED_DATA' | 'AUGMENTED_DATA';
   targetId: number;
+  reason?: string | null;
+  previewUrl?: string | null;
+  recipe?: { recipeId: number; title: string; description: string; bannerUrl: string | null; overview: Record<string, unknown> | null; settings: Record<string, unknown> | null; isDeleted: boolean } | null;
+  dataset?: { datasetId: number; title: string; description: string; bannerImageUrl: string | null; fileId: number | null; fileName: string | null; isDeleted: boolean; [key: string]: unknown } | null;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED';
   requester: {
     userId: number;
@@ -44,7 +48,10 @@ export interface ExpertTaskSummaryItem {
     nickname: string;
     email: string;
   };
-  projectName: string;
+  projectName: string | null;
+  targetType?: "RECIPE" | "UPLOADED_DATA" | "AUGMENTED_DATA";
+  targetTitle?: string;
+  targetImageUrl?: string | null;
   requestedAt?: string;
   updatedAt?: string;
 }

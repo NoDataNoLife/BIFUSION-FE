@@ -33,6 +33,7 @@ export interface NotificationItem {
   content: string;
   targetType?: string;
   targetId?: number;
+  invitation?: { invitationId: number; projectId: number; status: string; role: "MEMBER" | "MANAGER" } | null;
   isRead: boolean;
   createdAt: string;
 }
@@ -59,6 +60,7 @@ interface NotificationState {
   fetchNotifications: (params?: NotificationParams) => Promise<void>;
   fetchPopupNotifications: () => Promise<void>;
   refreshUnreadCount: () => Promise<void>;
+  refreshLoadedNotifications: () => Promise<void>;
   markAsRead: (id: number) => Promise<boolean>;
   markAllAsRead: () => Promise<boolean>;
   softDeleteNotification: (id: number) => Promise<boolean>;
@@ -106,6 +108,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
     notifications: [], popupNotifications: [], unreadCount: 0, historyUnreadCount: 0,
     totalElements: 0, totalPages: 0, currentPage: 0,
     isLoading: false, popupLoading: false, error: null, popupError: null,
+    refreshLoadedNotifications: async () => {
+      await Promise.all([
+        historyLoaded ? get().fetchNotifications(lastParams) : Promise.resolve(),
+        popupLoaded ? get().fetchPopupNotifications() : Promise.resolve(),
+        get().refreshUnreadCount(),
+      ]);
+    },
     refreshUnreadCount: async () => {
       const query = ++unreadQuery;
       // Preserve the last known badge on transient errors. List queries show errors separately.
@@ -125,7 +134,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
         const data = response.data?.data;
         if (!Array.isArray(data?.content)) throw new Error('알림 목록 응답을 확인할 수 없습니다.');
         set({ notifications: data.content, totalElements: data.totalElements ?? 0,
-          totalPages: data.totalPages ?? 0, currentPage: data.pageNumber ?? 0, historyUnreadCount: historyUnread.data?.data?.totalElements ?? 0, isLoading: false });
+          totalPages: data.totalPages ?? 0, currentPage: data.page ?? data.pageNumber ?? 0, historyUnreadCount: historyUnread.data?.data?.totalElements ?? 0, isLoading: false });
       } catch (error) {
         if (query === historyQuery) set({ notifications: [], totalElements: 0, totalPages: 0, isLoading: false, error: requestMessage(error) });
       }

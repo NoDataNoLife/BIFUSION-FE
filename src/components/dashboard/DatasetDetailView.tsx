@@ -1,3 +1,4 @@
+import { deleteDatasetWithRefund } from '../../lib/pointActions';
 import InspectionPanel from '../community/InspectionPanel';
 import { useState } from 'react';
 import { ArrowLeft, Download, Edit, Trash2, FileText, Code, Info, ShieldCheck } from 'lucide-react';
@@ -43,7 +44,7 @@ export default function DatasetDetailView({ datasetId, onBack }: { datasetId: nu
   return <div className="min-h-screen bg-background">
     <div className="bg-card border-b border-border sticky top-0 z-10"><div className="max-w-7xl mx-auto px-4 sm:px-8 py-5 flex flex-wrap items-center justify-between gap-4">
       <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary font-bold text-sm"><ArrowLeft size={18}/>목록으로 돌아가기</button>
-      <div className="flex flex-wrap gap-3">{own && <><button disabled={busy} onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2.5 bg-muted rounded-xl font-bold text-sm"><Edit size={18}/>수정</button><button disabled={busy} onClick={() => { if (confirm('데이터셋을 삭제하시겠습니까?')) void run(async () => { await api.delete(`/datasets/${datasetId}`); onBack(); }); }} className="flex items-center gap-2 px-4 py-2.5 bg-muted rounded-xl text-red-500 font-bold text-sm"><Trash2 size={18}/>삭제</button></>}
+      <div className="flex flex-wrap gap-3">{own && <><button disabled={busy} onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2.5 bg-muted rounded-xl font-bold text-sm"><Edit size={18}/>수정</button><button disabled={busy} onClick={() => { if (confirm('데이터셋을 삭제하시겠습니까?')) void run(async () => { await deleteDatasetWithRefund(datasetId); onBack(); }); }} className="flex items-center gap-2 px-4 py-2.5 bg-muted rounded-xl text-red-500 font-bold text-sm"><Trash2 size={18}/>삭제</button></>}
         <button disabled={busy || !data.fileId} onClick={download} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 disabled:opacity-50 text-sm"><Download size={18}/>{busy ? '처리 중…' : data.fileId ? '데이터셋 다운로드' : '다운로드 파일 없음'}</button>
       </div>
     </div></div>

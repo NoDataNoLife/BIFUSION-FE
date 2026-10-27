@@ -1,8 +1,8 @@
+import { AntRequestError } from '../../common/AntActionNotice';
 import { Link } from 'react-router-dom';
 import AntCoin from "../../common/AntCoin";
 import { X, Award, AlertCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { requestMessage } from '../../../lib/liveData';
 import { useAuthStore } from '../../../store/useAuthStore';
 
 interface VerificationRequestModalProps {
@@ -16,7 +16,7 @@ interface VerificationRequestModalProps {
 export default function VerificationRequestModal({ onClose, onSubmit, assetTitle, minReward = 100, maxReward = 1000 }: VerificationRequestModalProps) {
   const lock = useRef(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [reason, setReason] = useState('');
   const [reward, setReward] = useState<number | string>(Math.max(minReward, Math.min(500, maxReward)));
   const { user } = useAuthStore();
@@ -29,7 +29,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
     lock.current = true;
     setBusy(true); setError(null);
     try { await onSubmit(reason.trim(), points); }
-    catch (err) { setError(requestMessage(err, '검증 요청에 실패했습니다.')); }
+    catch (err) { setError(err); }
     finally { lock.current = false; setBusy(false); }
   };
 
@@ -54,7 +54,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
           </button>
         </div>
 
-        {error && <p role="alert" className="px-8 pt-4 text-red-500">{error}</p>}
+        <div className="px-8 pt-4"><AntRequestError error={error} fallback="검수 요청에 실패했습니다."/></div>
         {/* Content */}
         <div className="p-8 space-y-6">
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex gap-3 text-primary">

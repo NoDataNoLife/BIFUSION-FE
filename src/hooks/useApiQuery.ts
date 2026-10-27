@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { isCancel } from 'axios';
+import { isCancel, isAxiosError } from 'axios';
+import { apiErrorCode } from '../lib/apiErrorCode';
 import api from '../lib/axios';
 import { requestMessage } from '../lib/liveData';
 
@@ -7,13 +8,14 @@ export function useApiQuery<T>(path: string, params?: Record<string, string | nu
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [failure, setFailure] = useState<{ status?: number; code?: string | null }>({});
   const [version, setVersion] = useState(0);
   const parameters = JSON.stringify(params ?? {});
   const request = useRef(0);
   useEffect(() => {
     const generation = ++request.current;
     const controller = new AbortController();
-    setLoading(true); setData(null); setError(null);
+    setLoading(true); setData(null); setError(null); setFailure({});
     api.get(path, { params: JSON.parse(parameters), signal: controller.signal })
       .then((response) => {
         if (generation !== request.current || controller.signal.aborted) return;
@@ -21,11 +23,11 @@ export function useApiQuery<T>(path: string, params?: Record<string, string | nu
         setData(response.data?.data ?? response.data);
       })
       .catch((err) => {
-        if (!isCancel(err) && generation === request.current) setError(requestMessage(err));
+        if (!isCancel(err) && generation === request.current) { setError(requestMessage(err)); setFailure({ status: isAxiosError(err) ? err.response?.status : undefined, code: apiErrorCode(err) }); }
       })
       .finally(() => { if (generation === request.current && !controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [path, parameters, version]);
   const reload = useCallback(() => setVersion((value) => value + 1), []);
-  return { data, error, loading, reload };
+  return { data, error, loading, reload, errorStatus: failure.status, errorCode: failure.code };
 }

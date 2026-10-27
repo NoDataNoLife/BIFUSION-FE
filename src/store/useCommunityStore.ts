@@ -1,3 +1,4 @@
+import { refreshPointsAfter } from '../lib/pointActions';
 import type { InspectionTarget } from '../lib/backendContracts';
 import { create } from 'zustand';
 import api from '../lib/axios';
@@ -288,7 +289,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
 
   createQnaAnswer: async (qnaId: number, content: string) => {
     try {
-      await api.post(`/community/qna/${qnaId}/answers`, { content });
+      await refreshPointsAfter(() => api.post(`/community/qna/${qnaId}/answers`, { content }));
       const store = useCommunityStore.getState();
       await store.fetchQnaDetail(qnaId);
     } catch (error: any) {
@@ -411,7 +412,7 @@ export const useCommunityStore = create<CommunityStore>((set) => ({
 
   forkRecipe: async (recipeId: number) => {
     try {
-      await api.post(`/community/recipes/${recipeId}/fork`);
+      await refreshPointsAfter(() => api.post(`/community/recipes/${recipeId}/fork`));
       const store = useCommunityStore.getState();
       await store.fetchRecipeDetail(recipeId);
     } catch (error: any) {

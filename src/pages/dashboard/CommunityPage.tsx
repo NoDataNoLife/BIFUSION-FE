@@ -11,7 +11,7 @@ import QnaDetail from '../../components/dashboard/QnaDetail';
 import RecruitmentDetail from '../../components/dashboard/RecruitmentDetail';
 import CreatePostModal from '../../components/community/CreatePostModal';
 
-import { Search, GitFork, Users, Database, Plus, Award, Heart, CheckCircle, Clock, Building2, Download, HardDrive, RefreshCw } from 'lucide-react';
+import { Search, GitFork, Users, Database, Plus, Award, CheckCircle, Clock, Building2, Download, HardDrive, RefreshCw } from 'lucide-react';
 import { AssetCover, DataState, Pagination } from '../../components/dashboard/DataView';
 import type { RecipeListResponse, DatasetListResponse, ExpertQnAListResponse, RecruitmentResponse } from '../../store/useCommunityStore';
 type Tab = 'showcase' | 'qa' | 'datasets' | 'recruitment';
@@ -108,7 +108,7 @@ export default function CommunityPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {tab === 'showcase' && <select aria-label="레시피 정렬" value={sort} onChange={e => { setSort(e.target.value); setPage(0); }} className="px-4 py-2.5 bg-card border border-border rounded-xl font-bold text-xs"><option value="LATEST">최신순</option><option value="MOST_POPULAR">좋아요순</option><option value="MOST_FORKED">Fork순</option></select>}
+          {tab === 'showcase' && <select aria-label="레시피 정렬" value={sort} onChange={e => { setSort(e.target.value); setPage(0); }} className="px-4 py-2.5 bg-card border border-border rounded-xl font-bold text-xs"><option value="LATEST">최신순</option><option value="MOST_FORKED">Fork순</option></select>}
           <button aria-label="새로고침" onClick={reload} disabled={loading} className="p-2.5 bg-card border border-border text-muted-foreground hover:text-primary rounded-xl"><RefreshCw size={16} /></button>
         </div>
       </div>
@@ -147,7 +147,6 @@ export default function CommunityPage() {
 
                         <div className="flex items-center gap-4 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
                           <span className="flex items-center gap-1.5"><GitFork size={14} /> {post.forkCount ?? '—'}</span>
-                          <span className="flex items-center gap-1.5"><Heart size={14} /> {post.likeCount ?? '—'}</span>
                         </div>
                       </div>
                     </div>

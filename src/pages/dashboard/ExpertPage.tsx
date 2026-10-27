@@ -1,3 +1,4 @@
+import { AssetCover } from '../../components/dashboard/DataView';
 import AntCoin from "../../components/common/AntCoin";
 import ProfileAvatar from '../../components/common/ProfileAvatar';
 import { useState, useEffect } from 'react';
@@ -76,9 +77,9 @@ function CertifiedExpertDashboard() {
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.requester?.nickname || 'expert'}`,
       email: item.requester?.email || '',
     },
-    dataType: '증강 데이터셋',
-    project: item.projectName || '프로젝트 정보 없음',
-    thumbnail: '',
+    dataType: item.targetType === 'RECIPE' ? '레시피' : item.targetType === 'UPLOADED_DATA' ? '원본 데이터셋' : '증강 데이터셋',
+    project: item.targetTitle || item.projectName || '검수 대상 정보 없음',
+    thumbnail: item.targetImageUrl || '',
     parameters: {},
     requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '날짜 정보 없음',
     status: item.status === 'PENDING' ? 'pending' : item.status === 'IN_PROGRESS' ? 'reviewing' : 'completed',
@@ -235,11 +236,11 @@ function CertifiedExpertDashboard() {
                   </div>
 
                   <div className="relative aspect-video rounded-2xl overflow-hidden mb-6 bg-muted">
-                    <img src={request.thumbnail || "/defaultUserProfile.png"} alt={request.project} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <AssetCover src={request.thumbnail} title={request.project} dataset={request.dataType !== "레시피"}/>
                   </div>
 
                   <h3 className="text-lg font-black text-foreground mb-2 line-clamp-1">{request.project}</h3>
-                  <p className="text-xs text-primary font-bold mb-6">요청일: {request.requestDate}</p>
+                  <p className="text-xs text-primary font-bold mb-6">{request.dataType} · 요청일: {request.requestDate}</p>
 
                   {request.status === 'pending' ? (
                     <button onClick={() => handleStartReview(request.id)} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-primary transition-all flex items-center justify-center gap-2 group/btn cursor-pointer">

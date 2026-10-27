@@ -1,6 +1,6 @@
 import AntCoin from "../../common/AntCoin";
 import { X, Award, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { requestMessage } from '../../../lib/liveData';
 import { useAuthStore } from '../../../store/useAuthStore';
 
@@ -8,24 +8,28 @@ interface VerificationRequestModalProps {
   onClose: () => void;
   onSubmit: (reason: string, reward: number) => void | Promise<void>;
   assetTitle: string;
+  minReward?: number;
+  maxReward?: number;
 }
 
-export default function VerificationRequestModal({ onClose, onSubmit, assetTitle }: VerificationRequestModalProps) {
+export default function VerificationRequestModal({ onClose, onSubmit, assetTitle, minReward = 100, maxReward = 1000 }: VerificationRequestModalProps) {
+  const lock = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState('');
-  const [reward, setReward] = useState<number | string>(500);
+  const [reward, setReward] = useState<number | string>(Math.max(minReward, Math.min(500, maxReward)));
   const { user } = useAuthStore();
   const currentPoints = user?.points || 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const points = Number(reward);
-    if (busy || !reason.trim() || !Number.isInteger(points) || points < 0 || points > currentPoints) return;
+    if (lock.current || !reason.trim() || !Number.isInteger(points) || points < minReward || points > maxReward || points > currentPoints) return;
+    lock.current = true;
     setBusy(true); setError(null);
     try { await onSubmit(reason.trim(), points); }
     catch (err) { setError(requestMessage(err, '검증 요청에 실패했습니다.')); }
-    finally { setBusy(false); }
+    finally { lock.current = false; setBusy(false); }
   };
 
   return (
@@ -91,14 +95,16 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
                   type="number"
                   value={reward}
                   onChange={(e) => setReward(e.target.value.replace(/^0+(?=\d)/, ''))}
-                  min={100}
-                  step={100}
+                  min={minReward}
+                  max={maxReward}
+                  step={1}
                   className={`w-full h-14 px-5 bg-background border ${Number(reward) > currentPoints ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-border focus:border-primary focus:ring-primary'} rounded-2xl text-foreground font-bold focus:outline-none focus:ring-1 transition-all`}
                 />
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold flex items-center gap-2">
                   <AntCoin className="w-5 h-5" /><span>앤트</span>
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground">신청 가능 범위: {minReward.toLocaleString()} ~ {maxReward.toLocaleString()} 앤트</p>
               {Number(reward) > currentPoints && (
                 <p className="text-xs text-red-500 font-bold mt-1">보유 앤트가 부족합니다.</p>
               )}
@@ -118,7 +124,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
           <button
             type="submit"
             form="verification-form"
-            disabled={busy || !reason.trim() || Number(reward) > currentPoints}
+            disabled={busy || !reason.trim() || !Number.isInteger(Number(reward)) || Number(reward) < minReward || Number(reward) > maxReward || Number(reward) > currentPoints}
             className="px-8 py-3.5 bg-primary text-primary-foreground rounded-xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             신청하기

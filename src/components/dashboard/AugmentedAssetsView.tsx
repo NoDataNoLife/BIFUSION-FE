@@ -20,7 +20,7 @@ export function AugmentedInspectionCard({ item, projectId, onRefresh }: {
   const { fetchUser } = useAuthStore();
   const refreshPoints = () => { void fetchUser(); };
   const title = item.jobCode || `증강 작업 ${item.datasetId}`;
-  const status = { PENDING: '검수 대기', APPROVED: '검수 승인', REJECTED: '검수 반려', CANCELLED: '신청 취소' };
+  const status = { PENDING: '검수 대기', IN_PROGRESS: '검수 중', APPROVED: '검수 승인', REJECTED: '검수 반려', CANCELLED: '신청 취소' };
   const cancel = async () => {
     const id = target?.inspectionRequestId;
     if (busy || id == null || !confirm('검수 시작 전인 신청만 취소할 수 있습니다. 취소하고 앤트를 환불받을까요?')) return;
@@ -49,7 +49,7 @@ export function AugmentedInspectionCard({ item, projectId, onRefresh }: {
       {!target && <p className="text-xs text-muted-foreground">이 데이터셋은 검수 신청 대상이 아닙니다.</p>}
       {target?.status === 'PENDING' && <p className="text-xs text-muted-foreground">전문가가 검수를 시작했다면 신청을 취소할 수 없습니다.</p>}
     </div>
-    {modal === 'request' && target && <VerificationRequestModal assetTitle={title} onClose={() => setModal(null)} onSubmit={async (reason, reward) => {
+    {modal === 'request' && target && <VerificationRequestModal minReward={target.minRewardPoints} maxReward={target.maxRewardPoints} assetTitle={title} onClose={() => setModal(null)} onSubmit={async (reason, reward) => {
       const result = await requestInspection(target, reason, reward);
       setModal(null); setNotice(`검수 신청 #${result.inspectionRequestId}이 접수되었습니다.`);
       refreshPoints(); onRefresh();

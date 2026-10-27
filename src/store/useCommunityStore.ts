@@ -1,3 +1,4 @@
+import type { InspectionTarget } from '../lib/backendContracts';
 import { create } from 'zustand';
 import api from '../lib/axios';
 import type { InspectionResult } from '../lib/liveData';
@@ -29,6 +30,8 @@ export interface RecruitmentResponse {
 }
 
 export interface DatasetListResponse {
+  inspectionTarget?: InspectionTarget | null;
+  bannerImageUrl?: string | null;
   datasetId: number;
   title: string;
   description: string;
@@ -58,6 +61,8 @@ export interface DatasetDetailResponse extends DatasetListResponse {
 }
 
 export interface RecipeListResponse {
+  inspectionTarget?: InspectionTarget | null;
+  forkedFrom?: { recipeId: number; title: string; authorNickname: string; isDeleted: boolean } | null;
   recipeId: number;
   title: string;
   bannerUrl?: string;
@@ -69,6 +74,8 @@ export interface RecipeListResponse {
 
 export interface RecipeDetailResponse {
   isDeleted?: boolean;
+  inspectionTarget?: InspectionTarget | null;
+  forkedFrom?: { recipeId: number; title: string; authorNickname: string; isDeleted: boolean } | null;
   recipeId: number;
   title: string;
   description: string;

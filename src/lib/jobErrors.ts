@@ -4,6 +4,7 @@ export function getJobErrorMessage(error: unknown, fallback: string): string {
   if (isAxiosError(error)) {
     const message = error.response?.data?.message;
     const detail = typeof message === 'string' && message.trim() ? message : fallback;
+    if (['IS004'].includes(error.response?.data?.code ?? error.response?.data?.errorCode)) return '보유 앤트가 부족합니다. 앤트를 충전한 뒤 다시 실행해 주세요.';
     if (!error.response) return '서버에 연결하지 못했거나 응답을 읽을 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.';
     if (error.response.status === 403) return '이 작업 또는 프로젝트에 접근할 권한이 없습니다.';
     if (error.response.status === 404) return typeof message === 'string' ? message : '요청한 작업이나 파일을 찾을 수 없습니다.';

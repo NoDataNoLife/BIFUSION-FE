@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import AntCoin from "../../common/AntCoin";
 import { X, Award, AlertCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -106,7 +107,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
               </div>
               <p className="text-xs text-muted-foreground">신청 가능 범위: {minReward.toLocaleString()} ~ {maxReward.toLocaleString()} 앤트</p>
               {Number(reward) > currentPoints && (
-                <p className="text-xs text-red-500 font-bold mt-1">보유 앤트가 부족합니다.</p>
+                <p className="text-xs text-red-500 font-bold mt-1">보유 앤트가 부족합니다. <Link className="underline" to="/dashboard/ants/topup">앤트 충전</Link></p>
               )}
             </div>
           </form>

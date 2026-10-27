@@ -24,8 +24,8 @@ export default function AntTopupPage() {
       useAuthStore.setState(state => ({ user: state.user ? { ...state.user, points: result.balance } : null }));
       setPreviewed(true);
     } catch (err) {
-      const code = (err as { response?: { data?: { code?: string; errorCode?: string } } }).response?.data;
-      setError(code?.code === 'U007' || code?.errorCode === 'U007' ? '체험 충전은 준비 중입니다. 잠시 후 다시 확인해 주세요.' : requestMessage(err, '충전을 확인하지 못했습니다. 잔액을 먼저 확인해 주세요.'));
+      const response = (err as { response?: { status?: number } }).response;
+      setError(response?.status === 503 ? '체험 충전은 준비 중입니다. 잠시 후 다시 확인해 주세요.' : requestMessage(err, '충전을 확인하지 못했습니다. 잔액을 먼저 확인해 주세요.'));
       void useAuthStore.getState().fetchUser();
     } finally { lock.current = false; setBusy(false); }
   };

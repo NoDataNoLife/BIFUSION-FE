@@ -51,6 +51,7 @@ export async function requestInspection(target: InspectionTarget, reason: string
   if (!target.canRequest) {
     throw new Error('지금은 이 자산의 검수를 신청할 수 없습니다.');
   }
+  if (!Number.isInteger(rewardPoints) || rewardPoints < (target.minRewardPoints ?? 100) || rewardPoints > (target.maxRewardPoints ?? Number.MAX_SAFE_INTEGER)) throw new Error("안내된 검수 보상 범위 안에서 정수로 입력해 주세요.");
   const response = await api.post<{ data: InspectionResponse }>('/inspections', {
     targetType: target.targetType, targetId: target.targetId, reason, rewardPoints,
   });

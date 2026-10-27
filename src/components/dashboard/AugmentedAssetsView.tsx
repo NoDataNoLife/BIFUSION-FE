@@ -1,3 +1,4 @@
+import AugmentedDeleteButton from './AugmentedDeleteButton';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DataState } from './DataView';
@@ -42,10 +43,11 @@ export function AugmentedInspectionCard({ item, projectId, onRefresh }: {
       {notice && <p role="status" className="text-primary text-sm">{notice}</p>}
       <div className="flex flex-wrap gap-3 text-sm font-bold">
         <Link className="text-primary underline" to={`/dashboard/projects/${projectId}/jobs/${item.datasetId}/result`}>증강 결과·다운로드</Link>
-        {target?.canRequest && <button disabled={busy} onClick={() => { setError(null); setModal('request'); }} className="text-primary underline">전문가 검수 신청</button>}
+        {target?.canRequest && <button disabled={busy || target.minRewardPoints == null || target.maxRewardPoints == null || target.minRewardPoints > target.maxRewardPoints} onClick={() => { setError(null); setModal('request'); }} className="text-primary underline">전문가 검수 신청</button>}
         {target?.result && <button onClick={() => setModal('result')} className="text-primary underline">검수 결과 보기</button>}
         {target?.status === 'PENDING' && target.inspectionRequestId != null && <button disabled={busy} className="text-red-500 underline disabled:opacity-50" onClick={() => void cancel()}>검수 신청 취소</button>}
       </div>
+      <AugmentedDeleteButton projectId={projectId} datasetId={item.datasetId} jobCode={item.jobCode} onDeleted={onRefresh}/>
       {!target && <p className="text-xs text-muted-foreground">이 데이터셋은 검수 신청 대상이 아닙니다.</p>}
       {target?.status === 'PENDING' && <p className="text-xs text-muted-foreground">전문가가 검수를 시작했다면 신청을 취소할 수 없습니다.</p>}
     </div>

@@ -1,3 +1,4 @@
+import { formatKst } from '../../lib/kstDate';
 import { AssetCover } from '../../components/dashboard/DataView';
 import AntCoin from "../../components/common/AntCoin";
 import ProfileAvatar from '../../components/common/ProfileAvatar';
@@ -81,7 +82,7 @@ function CertifiedExpertDashboard() {
     project: item.targetTitle || item.projectName || '검수 대상 정보 없음',
     thumbnail: item.targetImageUrl || '',
     parameters: {},
-    requestDate: item.requestedAt ? new Date(item.requestedAt).toLocaleDateString() : '날짜 정보 없음',
+    requestDate: item.requestedAt ? formatKst(item.requestedAt) : '날짜 정보 없음',
     status: item.status === 'PENDING' ? 'pending' : item.status === 'IN_PROGRESS' ? 'reviewing' : 'completed',
     reviewResult: item.reviewResult === 'APPROVED' ? 'approved' : item.reviewResult === 'REJECTED' ? 'rejected' : undefined,
   }));

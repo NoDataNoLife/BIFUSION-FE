@@ -125,7 +125,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
           <Sparkles className="text-primary w-6 h-6" />
           {isAsset ? '새 파이프라인 레시피 생성' : '연구 쇼케이스(레시피) 등록'}
         </h3>
-        <button onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
+        <button disabled={isSubmitting} onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors">
           <X size={20} className="text-muted-foreground" />
         </button>
       </div>

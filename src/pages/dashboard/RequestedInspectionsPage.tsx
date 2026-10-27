@@ -1,5 +1,6 @@
+import api from '../../lib/axios';
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ClipboardCheck, Search, X } from 'lucide-react';
 import { AssetCover, DataState, Pagination } from '../../components/dashboard/DataView';
 import { useApiQuery } from '../../hooks/useApiQuery';
@@ -14,6 +15,7 @@ const targets: Record<InspectionTarget, string> = { RECIPE: '레시피', UPLOADE
 const statuses: Record<RequestedInspectionStatus, string> = { PENDING: '검수 대기', IN_PROGRESS: '검수 중', APPROVED: '승인', REJECTED: '반려' };
 function Details({ id, close, refresh }: { id: number; close: () => void; refresh: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const navigate = useNavigate();
   const query = useApiQuery<RequestedInspection>(`${root}/${id}`);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
@@ -29,6 +31,7 @@ function Details({ id, close, refresh }: { id: number; close: () => void; refres
       <section className="rounded-xl bg-muted/40 p-4"><h3 className="mb-2 font-bold">요청 메모</h3><p className="whitespace-pre-wrap break-words text-sm">{item.reason || '등록된 메모가 없습니다.'}</p></section>
       <section className="rounded-xl bg-muted/40 p-4"><h3 className="mb-2 font-bold">{item.status === 'REJECTED' ? '반려 사유' : '검수 의견'}</h3><p className="whitespace-pre-wrap break-words text-sm">{item.result?.comment ?? (item.status === 'APPROVED' ? '승인되었습니다. 별도 의견은 등록되지 않았습니다.' : item.status === 'REJECTED' ? '별도 반려 사유가 등록되지 않았습니다.' : '검수가 완료되면 결과를 확인할 수 있습니다.')}</p></section>
       {!item.target.deleted && item.target.type !== 'AUGMENTED_DATA' && <Link className="inline-block text-primary underline" to={`/dashboard/community?${item.target.type === 'RECIPE' ? 'recipeId' : 'datasetId'}=${item.target.id}`}>검수 대상 보기</Link>}
+      {!item.target.deleted && item.target.type === 'AUGMENTED_DATA' && item.target.jobId != null && <button className="text-primary underline" onClick={async () => { try { const response = await api.get(`/jobs/${item.target.jobId}`); const job = response.data?.data; if (!job?.projectId) throw new Error('대상 프로젝트를 확인할 수 없습니다.'); navigate(`/dashboard/projects/${job.projectId}/jobs/${item.target.jobId}/result`); } catch (err) { setError(requestMessage(err)); } }}>증강 결과 보기</button>}
       {item.status === 'PENDING' && <button disabled={busy} className="block rounded-xl border border-border px-4 py-3 text-red-500 disabled:opacity-50" onClick={async () => {
         if (lock.current || !confirm('검수 신청을 취소하고 앤트를 환불받을까요?')) return;
         lock.current = true; setBusy(true); setError(null);

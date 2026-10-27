@@ -1,3 +1,4 @@
+import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -35,7 +36,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
 
   const { user } = useAuthStore();
-  const { currentProject, fetchProjectDetail, updateProjectInfo, inviteMember, removeMember, updateMemberRole } = useProjectStore();
+  const { currentProject, fetchProjectDetail, fetchMyProjects, updateProjectInfo, updateProjectBanner, inviteMember, removeMember, updateMemberRole } = useProjectStore();
 
   const [selectedTab, setSelectedTab] = useState<StatusTab>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<JobTypeFilter>("all");
@@ -52,7 +53,9 @@ export default function ProjectDetailPage() {
   
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [coverImage, setCoverImage] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null | undefined>();
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [inviting, setInviting] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const [newMemberEmail, setNewMemberEmail] = useState("");
@@ -64,7 +67,6 @@ export default function ProjectDetailPage() {
     if (currentProject) {
       setEditTitle(currentProject.title || "");
       setEditDescription(currentProject.description || "");
-      setCoverImage(currentProject.bannerImageUrl || "");
     }
   }, [currentProject]);
 
@@ -129,18 +131,25 @@ export default function ProjectDetailPage() {
 
 
   const handleSaveSettings = async () => {
-    if (!projectId) return;
-    const success = await updateProjectInfo(projectId, {
-      title: editTitle,
-      description: editDescription,
-      bannerImageUrl: coverImage.trim() || null,
-    });
-    if (success) {
-      setIsSettingsOpen(false);
-    } else {
-      alert("설정 저장에 실패했습니다.");
-    }
+    if (!projectId || saving) return;
+    setSaving(true); setSaveError('');
+    try {
+      if (!await updateProjectInfo(projectId, { title: editTitle, description: editDescription })) {
+        setSaveError(useProjectStore.getState().error || '설정 저장에 실패했습니다.'); return;
+      }
+      if (coverFile !== undefined && !await updateProjectBanner(projectId, coverFile)) {
+        setSaveError('기본 정보는 저장되었습니다. ' + (useProjectStore.getState().error || '배경 이미지 저장에 실패했습니다.')); return;
+      }
+      // Read back signed image URLs through the normal detail/list APIs.
+      const refreshed = await fetchProjectDetail(projectId);
+      await fetchMyProjects();
+      if (!refreshed) { setSaveError('설정은 저장되었습니다. 새로고침 후 이미지를 확인해 주세요.'); setCoverFile(undefined); return; }
+      setCoverFile(undefined); setIsSettingsOpen(false);
+    } finally { setSaving(false); }
   };
+  useEffect(() => {
+    if (!isSettingsOpen) { setCoverFile(undefined); setSaveError(''); }
+  }, [isSettingsOpen]);
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +172,7 @@ export default function ProjectDetailPage() {
     if (window.confirm("정말 이 멤버를 삭제하시겠습니까?")) {
       const success = await removeMember(projectId, userId);
       if (!success) {
-        alert("멤버 삭제에 실패했습니다.");
+        alert(useProjectStore.getState().error || "멤버 삭제에 실패했습니다.");
       }
     }
   };
@@ -174,7 +183,7 @@ export default function ProjectDetailPage() {
     if (success) {
       setOpenDropdownId(null);
     } else {
-      alert("권한 변경에 실패했습니다.");
+      alert(useProjectStore.getState().error || "권한 변경에 실패했습니다.");
     }
   };
 
@@ -569,7 +578,7 @@ export default function ProjectDetailPage() {
                 프로젝트 설정
               </h3>
               <button
-                onClick={() => setIsSettingsOpen(false)}
+                disabled={saving} onClick={() => setIsSettingsOpen(false)}
                 className="p-2 hover:bg-muted rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -609,22 +618,8 @@ export default function ProjectDetailPage() {
                 <h4 className="text-lg font-bold text-foreground mb-4">
                   배경 이미지
                 </h4>
-                <div className="space-y-4">
-                  <div className="relative h-48 rounded-lg overflow-hidden bg-muted">
-                    <AssetCover src={coverImage.trim()} title="배경 이미지 미리보기" />
-                  </div>
-                  <label className="block">
-                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                      <input
-                        type="text"
-                        value={coverImage}
-                        onChange={(e) => setCoverImage(e.target.value)}
-                        placeholder="배경 이미지 URL을 입력하세요"
-                        className="w-full bg-transparent text-center focus:outline-none text-sm text-muted-foreground"
-                      />
-                    </div>
-                  </label>
-                </div>
+                <ProjectCoverPicker currentUrl={currentProject?.bannerImageUrl} value={coverFile} onChange={setCoverFile} disabled={saving || !canInviteManager}/>
+                {!canInviteManager && <p className="mt-2 text-xs text-muted-foreground">배경 이미지는 프로젝트 관리자만 변경할 수 있습니다.</p>}
               </section>
 
               {/* Team Members Section */}
@@ -736,18 +731,20 @@ export default function ProjectDetailPage() {
                 </div>
               </section>
 
+              {saveError && <p role="alert" className="text-sm text-red-500">{saveError}</p>}
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
-                  onClick={() => setIsSettingsOpen(false)}
+                  disabled={saving} onClick={() => setIsSettingsOpen(false)}
                   className="px-6 py-2 border border-border text-foreground rounded-lg font-semibold hover:bg-muted transition-colors"
                 >
                   취소
                 </button>
                 <button
+                  disabled={saving}
                   onClick={handleSaveSettings}
                   className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors"
                 >
-                  저장
+                  {saving ? '저장 중…' : '저장'}
                 </button>
               </div>
             </div>

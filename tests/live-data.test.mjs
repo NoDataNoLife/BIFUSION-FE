@@ -26,6 +26,9 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
   export { default as api } from './src/lib/axios';
+  export { forkRecipe, createQuestion, deleteDatasetWithRefund, refreshCurrentPoints } from './src/lib/pointActions';
+  export { inspectionUnavailable } from './src/lib/inspectionErrors';
+  export { AntCostNotice, AntRequestError } from './src/components/common/AntActionNotice';
   export { recipeReviewPayload } from './src/lib/recipeReviewPayload';
   export { newRecipeDraft, draftFromRecipe, recipeRegistrationPayload } from './src/lib/recipeDraft';
   export { AxiosError } from 'axios';
@@ -255,9 +258,12 @@ test('project changes update matching cards without modifying another open proje
     managingProjects: [{ projectId: 1, title: 'Old', bannerImageUrl: 'old.png', members: [] }],
     participatingProjects: [{ projectId: 2, title: 'Other', bannerImageUrl: 'other.png', members: [] }],
   });
-  api.defaults.adapter = async config => response(config, {});
+  api.defaults.adapter = async config => {
+    assert.deepEqual(JSON.parse(config.data), { title: 'Updated', description: 'Saved' });
+    return response(config, {});
+  };
   assert.equal(await projects.getState().updateProjectInfo('1', { title: 'Updated', description: 'Saved', bannerImageUrl: 'new.png' }), true);
-  assert.equal(projects.getState().managingProjects[0].bannerImageUrl, 'new.png');
+  assert.equal(projects.getState().managingProjects[0].bannerImageUrl, 'old.png');
   assert.equal(projects.getState().currentProject.title, 'Other');
   assert.equal(projects.getState().participatingProjects[0].bannerImageUrl, 'other.png');
   api.defaults.adapter = async config => ({ ...response(config, null), data: { success: false } });
@@ -489,4 +495,123 @@ test('retry requests have independent idempotency keys and retain unresolved req
   await assert.rejects(app.submitJobRetry(1, '34'));
   assert.equal(calls[0].url, '/jobs/34/retry');
   assert.equal(calls[0].headers.get('Idempotency-Key'), calls[1].headers.get('Idempotency-Key'));
+});
+
+test('project cover uses multipart PATCH and updates detail and list with the server URL', async () => {
+  const store = app.useProjectStore;
+  store.setState({ currentProject: { projectId: 7, title: 'project', bannerImageUrl: 'old', members: [] }, managingProjects: [{ projectId: 7, bannerImageUrl: 'old' }], participatingProjects: [] });
+  api.defaults.adapter = async config => {
+    assert.equal(config.method, 'patch');
+    assert.equal(config.url, '/projects/7/banner');
+    assert.ok(config.data instanceof FormData);
+    assert.equal(config.data.get('file').name, 'cover.png');
+    return response(config, { projectId: 7, bannerImageUrl: 'https://files.example/new.png' });
+  };
+  assert.equal(await store.getState().updateProjectBanner('7', new File(['image'], 'cover.png', { type: 'image/png' })), true);
+  assert.equal(store.getState().currentProject.bannerImageUrl, 'https://files.example/new.png');
+  assert.equal(store.getState().managingProjects[0].bannerImageUrl, 'https://files.example/new.png');
+});
+
+test('project cover removal sends no file and preserves the old cover on a failed request', async () => {
+  const store = app.useProjectStore;
+  api.defaults.adapter = async config => { throw failure(config); };
+  assert.equal(await store.getState().updateProjectBanner('7', null), false);
+  assert.equal(store.getState().currentProject.bannerImageUrl, 'https://files.example/new.png');
+  api.defaults.adapter = async config => {
+    assert.equal(config.data.has('file'), false);
+    return response(config, { projectId: 7, bannerImageUrl: null });
+  };
+  assert.equal(await store.getState().updateProjectBanner('7', null), true);
+  assert.equal(store.getState().currentProject.bannerImageUrl, null);
+});
+
+test('project creation sends invitations separately and reports cover failure without recreating the project', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => {
+    calls.push(config.url);
+    if (config.url === '/projects') {
+      assert.deepEqual(JSON.parse(config.data), { title: 'new', description: 'desc', isPublic: true });
+      return response(config, { projectId: 19 });
+    }
+    if (config.url === '/projects/19/banner') throw failure(config);
+    assert.equal(config.url, '/projects/19/invitations');
+    assert.deepEqual(JSON.parse(config.data), { email: 'member@example.com', role: 'MEMBER' });
+    return response(config, {});
+  };
+  assert.equal(await app.useProjectStore.getState().createProject({ name: 'new', description: 'desc', coverFile: new File(['image'], 'cover.png'), teamMembers: [{ email: 'member@example.com', role: 'MEMBER' }] }), true);
+  assert.deepEqual(calls, ['/projects', '/projects/19/banner', '/projects/19/invitations']);
+  assert.match(app.useProjectStore.getState().error, /프로젝트는 생성되었습니다/);
+});
+
+
+test('fork and question creation refresh the server balance without calculating points locally', async () => {
+  const auth = app.useAuthStore;
+  auth.setState({ user: { userId: 9, points: 500, nickname: 'user' }, isAuthenticated: true });
+  const calls = [];
+  api.defaults.adapter = async config => {
+    calls.push(config.url);
+    if (config.url === '/users/me') return response(config, { userId: 9, points: calls.length === 2 ? 470 : 370 });
+    return response(config, { id: 11 });
+  };
+  assert.equal((await app.forkRecipe(7)).balanceRefreshed, true);
+  assert.equal(auth.getState().user.points, 470);
+  assert.equal((await app.createQuestion({ title: 'question', content: 'body', tags: [] })).balanceRefreshed, true);
+  assert.equal(auth.getState().user.points, 370);
+  assert.deepEqual(calls, ['/community/recipes/7/fork', '/users/me', '/community/qna', '/users/me']);
+});
+
+test('a rejected paid action leaves balance unchanged and never requests a successful balance refresh', async () => {
+  app.useAuthStore.setState({ user: { userId: 9, points: 10 }, isAuthenticated: true });
+  const calls = [];
+  api.defaults.adapter = async config => {
+    calls.push(config.url);
+    throw new AxiosError('insufficient', 'ERR_BAD_REQUEST', config, null, { status: 400, data: { code: 'IS004' } });
+  };
+  await assert.rejects(app.forkRecipe(7));
+  assert.deepEqual(calls, ['/community/recipes/7/fork']);
+  assert.equal(app.useAuthStore.getState().user.points, 10);
+});
+
+test('successful dataset deletion stays successful when balance lookup fails and does not log out the user', async () => {
+  app.useAuthStore.setState({ user: { userId: 9, points: 400 }, isAuthenticated: true });
+  const calls = [];
+  api.defaults.adapter = async config => {
+    calls.push(config.url);
+    if (config.url === '/users/me') throw failure(config);
+    return response(config, {});
+  };
+  assert.equal((await app.deleteDatasetWithRefund(6)).balanceRefreshed, false);
+  assert.deepEqual(calls, ['/datasets/6', '/users/me']);
+  assert.equal(app.useAuthStore.getState().isAuthenticated, true);
+  assert.equal(app.useAuthStore.getState().user.points, 400);
+});
+
+test('balance refresh does not apply a response after the signed-in account changes', async () => {
+  app.useAuthStore.setState({ user: { userId: 9, points: 400 }, isAuthenticated: true });
+  api.defaults.adapter = async config => {
+    app.useAuthStore.setState({ user: { userId: 10, points: 1000 }, isAuthenticated: true });
+    return response(config, { userId: 9, points: 470 });
+  };
+  assert.equal(await app.refreshCurrentPoints(), false);
+  assert.equal(app.useAuthStore.getState().user.points, 1000);
+});
+
+test('paid action notices disclose cost and server IS004 provides a direct charge link', () => {
+  app.useAuthStore.setState({ user: { userId: 9, points: 10 }, isAuthenticated: true });
+  const wrap = child => app.renderToString(app.createElement(app.MemoryRouter, {}, child));
+  const cost = wrap(app.createElement(app.AntCostNotice, { cost: 100, label: '질문 등록', points: 10 }));
+  assert.match(cost, /100/);
+  assert.match(cost, /보유 앤트가 부족/);
+  assert.match(cost, /dashboard\/ants\/topup/);
+  const error = new AxiosError('insufficient', 'ERR_BAD_REQUEST', {}, null, { status: 400, data: { code: 'IS004' } });
+  const html = wrap(app.createElement(app.AntRequestError, { error }));
+  assert.match(html, /앤트 충전하기/);
+  assert.equal(wrap(app.createElement(app.AntRequestError, { error: null })), '');
+});
+
+test('missing inspection details return to the list but transient failures remain retryable', () => {
+  assert.equal(app.inspectionUnavailable(404), true);
+  assert.equal(app.inspectionUnavailable(400, 'IS009'), true);
+  assert.equal(app.inspectionUnavailable(503), false);
+  assert.equal(app.inspectionUnavailable(undefined), false);
 });

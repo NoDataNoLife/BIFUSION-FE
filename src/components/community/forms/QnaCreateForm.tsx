@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { AntCostNotice, AntRequestError } from '../../common/AntActionNotice';
+import { createQuestion } from '../../../lib/pointActions';
+import React, { useRef, useState } from 'react';
 import { useCommunityStore } from '../../../store/useCommunityStore';
-import api from '../../../lib/axios';
 
 export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
+  const points = useAuthStore(state => state.user?.points);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const lock = useRef(false);
+  const [error, setError] = useState<unknown>(null);
+  const [completed, setCompleted] = useState(false);
+  const [notice, setNotice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { fetchQnaList } = useCommunityStore();
 
@@ -26,23 +33,20 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
+    if (lock.current || completed || !title.trim() || !content.trim()) return;
+    lock.current = true; setError(null);
 
     setIsSubmitting(true);
     try {
-      await api.post('/community/qna', {
-        title,
-        content,
-        tags
-      });
-      alert('질문이 등록되었습니다!');
-      fetchQnaList();
-      onClose();
+      const { balanceRefreshed } = await createQuestion({ title: title.trim(), content: content.trim(), tags });
+      setCompleted(true);
+      void fetchQnaList();
+      if (balanceRefreshed) onClose();
+      else setNotice('질문이 등록되었습니다. 잔액을 갱신하지 못해 새로고침이 필요합니다. 다시 등록할 필요는 없습니다.');
     } catch (error) {
-      alert('질문 등록에 실패했습니다. 다시 시도해주세요.');
-      console.error(error);
+      setError(error);
     } finally {
-      setIsSubmitting(false);
+      lock.current = false; setIsSubmitting(false);
     }
   };
 
@@ -51,6 +55,9 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
       <h3 className="text-2xl font-black text-foreground mb-2">전문가 Q&A 질문하기</h3>
       <p className="text-muted-foreground mb-8 font-medium">해결되지 않는 연구 문제를 구체적으로 작성해 주세요.</p>
       
+      <AntCostNotice points={points} cost={100} label="질문 등록"/>
+      <div className="my-4"><AntRequestError error={error} fallback="질문을 등록하지 못했습니다."/></div>
+      {notice && <p role="status" className="mb-4 text-sm text-primary">{notice}</p>}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-bold text-foreground mb-2">질문 제목</label>
@@ -104,11 +111,11 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
             disabled={isSubmitting}
             className="px-6 py-3 rounded-xl font-bold text-muted-foreground bg-muted hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
-            취소
+            {completed ? '닫기' : '취소'}
           </button>
           <button 
             type="submit"
-            disabled={isSubmitting || !title.trim() || !content.trim()}
+            disabled={completed || isSubmitting || !title.trim() || !content.trim()}
             className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             {isSubmitting ? '등록 중...' : '질문 등록'}

@@ -52,12 +52,13 @@ interface ProjectState {
   fetchProjectDetail: (projectId: string) => Promise<boolean>;
   createProject: (data: any) => Promise<boolean>;
   updateProjectInfo: (projectId: string, data: any) => Promise<boolean>;
+  updateProjectBanner: (projectId: string, file: File | null) => Promise<boolean>;
   inviteMember: (projectId: string, email: string, role?: "MEMBER" | "MANAGER") => Promise<boolean>;
   removeMember: (projectId: string, userId: number) => Promise<boolean>;
   updateMemberRole: (projectId: string, userId: number, role: string) => Promise<boolean>;
 }
 
-export const useProjectStore = create<ProjectState>((set) => ({
+export const useProjectStore = create<ProjectState>((set, get) => ({
   managingProjects: [],
   participatingProjects: [],
   currentProject: null,
@@ -95,16 +96,27 @@ export const useProjectStore = create<ProjectState>((set) => ({
         title: projectData.name,
         description: projectData.description,
         isPublic: true,
-        ...(projectData.coverImageUrl && { bannerImageUrl: projectData.coverImageUrl }),
-        ...(projectData.teamMembers && projectData.teamMembers.length > 0 && projectData.teamMembers[0].email && {
-          email: projectData.teamMembers[0].email,
-          role: projectData.teamMembers[0].role.toUpperCase()
-        })
+
       };
 
       const response = await api.post('/projects', payload);
       if (response.data.success) {
-        set({ isLoading: false });
+        const projectId = response.data.data?.projectId;
+        const warnings: string[] = [];
+        if (!projectId) {
+          set({ error: '프로젝트는 생성되었지만 번호를 확인하지 못했습니다. 목록에서 확인해 주세요.', isLoading: false });
+          return true;
+        }
+        if (projectData.coverFile) {
+          const ok = await get().updateProjectBanner(String(projectId), projectData.coverFile);
+          if (!ok) warnings.push('배경 이미지 저장 실패: ' + get().error);
+        }
+        for (const member of projectData.teamMembers || []) {
+          if (!member.email?.trim()) continue;
+          const ok = await get().inviteMember(String(projectId), member.email.trim(), member.role);
+          if (!ok) warnings.push('초대 실패 (' + member.email + '): ' + get().error);
+        }
+        set({ isLoading: false, error: warnings.length ? '프로젝트는 생성되었습니다. ' + warnings.join(' / ') + ' 프로젝트 설정에서 다시 시도해 주세요.' : null });
         return true;
       } else {
         set({ error: 'Failed to create project', isLoading: false });
@@ -142,8 +154,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     try {
       const payload = {
         title: data.title,
-        description: data.description,
-        bannerImageUrl: data.bannerImageUrl
+        description: data.description
       };
       const response = await api.put(`/projects/${projectId}`, payload);
       if (response.data.success) {
@@ -164,6 +175,24 @@ export const useProjectStore = create<ProjectState>((set) => ({
       set({ error: errorMessage, isLoading: false });
       return false;
     }
+  },
+
+  updateProjectBanner: async (projectId, file) => {
+    set({ isLoading: true, error: null });
+    try {
+      const form = new FormData();
+      if (file) form.append('file', file);
+      const response = await api.patch(`/projects/${projectId}/banner`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      if (!response.data.success) throw new Error(response.data.message || '배경 이미지 저장에 실패했습니다.');
+      const bannerImageUrl = response.data.data?.bannerImageUrl ?? null;
+      set(state => ({
+        currentProject: state.currentProject?.projectId === Number(projectId) ? { ...state.currentProject, bannerImageUrl } : state.currentProject,
+        managingProjects: state.managingProjects.map(p => p.projectId === Number(projectId) ? { ...p, bannerImageUrl } : p),
+        participatingProjects: state.participatingProjects.map(p => p.projectId === Number(projectId) ? { ...p, bannerImageUrl } : p),
+        isLoading: false,
+      }));
+      return true;
+    } catch (error) { set({ error: requestMessage(error, '배경 이미지 저장에 실패했습니다.'), isLoading: false }); return false; }
   },
 
   inviteMember: async (projectId: string, email: string, role = "MEMBER") => {

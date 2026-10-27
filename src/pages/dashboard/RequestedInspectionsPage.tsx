@@ -1,3 +1,4 @@
+import { inspectionUnavailable } from '../../lib/inspectionErrors';
 import api from '../../lib/axios';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ import type { InspectionTarget, RequestedInspection, RequestedInspectionPage, Re
 const root = '/inspections/me/requests';
 const targets: Record<InspectionTarget, string> = { RECIPE: '레시피', UPLOADED_DATA: '원본 데이터셋', AUGMENTED_DATA: '증강 데이터셋' };
 const statuses: Record<RequestedInspectionStatus, string> = { PENDING: '검수 대기', IN_PROGRESS: '검수 중', APPROVED: '승인', REJECTED: '반려' };
-function Details({ id, close, refresh }: { id: number; close: () => void; refresh: () => void }) {
+function Details({ id, close, refresh, unavailable }: { id: number; close: () => void; refresh: () => void; unavailable: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const navigate = useNavigate();
   const query = useApiQuery<RequestedInspection>(`${root}/${id}`);
@@ -21,6 +22,12 @@ function Details({ id, close, refresh }: { id: number; close: () => void; refres
   const lock = useRef(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { const dialog = ref.current; dialog?.showModal(); return () => dialog?.close(); }, []);
+  const returned = useRef(false);
+  useEffect(() => {
+    if (!query.loading && inspectionUnavailable(query.errorStatus, query.errorCode) && !returned.current) {
+      returned.current = true; unavailable();
+    }
+  }, [query.loading, query.errorStatus, query.errorCode, unavailable]);
   const item = query.data;
   return <dialog ref={ref} onCancel={close} onClick={e => { if (e.target === e.currentTarget) close(); }} aria-labelledby="inspection-title" className="m-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-xl overflow-y-auto rounded-3xl border border-border bg-card p-6 text-foreground shadow-xl backdrop:bg-black/50">
     <div className="mb-6 flex items-center justify-between"><h2 id="inspection-title" className="text-xl font-bold">검수 요청 #{id}</h2><button disabled={busy} aria-label="검수 상세 닫기" onClick={close}><X/></button></div>
@@ -49,6 +56,7 @@ export default function RequestedInspectionsPage() {
   const [keyword, setKeyword] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [notice, setNotice] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
   const query = useApiQuery<RequestedInspectionPage>(root, { status: status === 'ALL' ? undefined : status, targetType: target === 'ALL' ? undefined : target, keyword: search || undefined, page, size: 10 });
   const counts = useApiQuery<Record<RequestedInspectionStatus, number>>(`${root}/counts`);
@@ -56,11 +64,12 @@ export default function RequestedInspectionsPage() {
   return <div className="mx-auto max-w-7xl space-y-7 p-4 sm:p-8">
     <Link to="/dashboard/assets" className="inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft size={16}/>내 자산으로</Link>
     <header className="flex flex-wrap justify-between gap-4"><div><p className="mb-2 text-xs font-bold tracking-widest text-primary">MY INSPECTIONS</p><h1 className="text-3xl font-black">내가 요청한 검수</h1><p className="mt-3 text-sm text-muted-foreground">요청한 레시피와 데이터셋의 최신 검수 상태를 확인하세요.</p></div><button onClick={refresh} className="rounded-xl border border-border px-4 py-2 text-sm">새로고침</button></header>
+    {notice && <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm">{notice}</p>}
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{Object.entries(statuses).map(([key,label]) => <div key={key} className="rounded-2xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-3 text-2xl font-black">{counts.loading || counts.error ? '—' : counts.data?.[key as RequestedInspectionStatus] ?? '—'}<span className="ml-1 text-xs font-normal">건</span></p></div>)}</div>
     {counts.error && <p role="alert" className="text-sm text-red-500">요약 건수를 불러오지 못했습니다. <button onClick={counts.reload} className="underline">다시 시도</button></p>}
     <form onSubmit={e => { e.preventDefault(); setPage(0); setSearch(keyword.trim()); }} className="flex flex-wrap gap-3"><label className="relative min-w-48 flex-1"><Search size={18} className="absolute left-4 top-3.5 text-muted-foreground"/><input aria-label="검수 대상 이름 검색" placeholder="검수 대상 이름 검색" value={keyword} onChange={e => setKeyword(e.target.value)} className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm"/></label><button className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white">검색</button><select aria-label="검수 대상 유형" value={target} onChange={e => { setPage(0); setTarget(e.target.value as typeof target); }} className="rounded-xl border border-border bg-card px-4 py-3 text-sm"><option value="ALL">모든 대상</option>{Object.entries(targets).map(([key,label]) => <option key={key} value={key}>{label}</option>)}</select></form>
     <div className="flex flex-wrap gap-2">{(['ALL', 'PENDING', 'IN_PROGRESS', 'APPROVED', 'REJECTED'] as const).map(key => <button key={key} aria-pressed={status === key} onClick={() => { setPage(0); setStatus(key); }} className={`rounded-full px-4 py-2 text-sm font-bold ${status === key ? 'bg-primary text-white' : 'border border-border bg-card text-muted-foreground'}`}>{key === 'ALL' ? '전체' : statuses[key]}</button>)}</div>
-    {query.loading || query.error || !query.data?.content.length ? <DataState loading={query.loading} error={query.error} title="조건에 맞는 검수 요청이 없습니다" description="취소한 요청은 표시되지 않습니다. 검색 조건을 바꾸거나 자산에서 검수를 신청해 주세요." onRetry={query.reload}/> : <><div className="grid gap-4 md:grid-cols-2">{query.data.content.map(item => <article key={item.inspectionRequestId} className="space-y-4 rounded-3xl border border-border bg-card p-6"><p className="text-sm font-bold text-primary">{targets[item.target.type]} · {statuses[item.status]}</p><div className="flex items-center gap-4"><div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl"><AssetCover src={item.target.imageUrl} title={item.target.name} dataset={item.target.type !== 'RECIPE'}/></div><h2 className="break-words font-bold">{item.target.name}{item.target.deleted && <span className="ml-2 text-xs text-muted-foreground">삭제됨</span>}</h2></div><p className="text-xs text-muted-foreground">{formatKst(item.requestedAt)} · {item.expert?.nickname ?? '배정 대기'}</p><button onClick={() => setSelected(item.inspectionRequestId)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-bold"><ClipboardCheck size={16}/>{item.result ? '검수 결과 보기' : '요청 상세 보기'}<ArrowRight size={16}/></button></article>)}</div><Pagination page={query.data.page} totalPages={query.data.totalPages} totalElements={query.data.totalElements} onChange={setPage}/></>}
-    {selected != null && <Details key={selected} id={selected} close={() => setSelected(null)} refresh={refresh}/>}
+    {query.loading || query.error || !query.data?.content.length ? <DataState loading={query.loading} error={query.error} title="조건에 맞는 검수 요청이 없습니다" description="취소한 요청은 표시되지 않습니다. 검색 조건을 바꾸거나 자산에서 검수를 신청해 주세요." onRetry={query.reload}/> : <><div className="grid gap-4 md:grid-cols-2">{query.data.content.map(item => <article key={item.inspectionRequestId} className="space-y-4 rounded-3xl border border-border bg-card p-6"><p className="text-sm font-bold text-primary">{targets[item.target.type]} · {statuses[item.status]}</p><div className="flex items-center gap-4"><div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl"><AssetCover src={item.target.imageUrl} title={item.target.name} dataset={item.target.type !== 'RECIPE'}/></div><h2 className="break-words font-bold">{item.target.name}{item.target.deleted && <span className="ml-2 text-xs text-muted-foreground">삭제됨</span>}</h2></div><p className="text-xs text-muted-foreground">{formatKst(item.requestedAt)} · {item.expert?.nickname ?? '배정 대기'}</p><button onClick={() => { setNotice(''); setSelected(item.inspectionRequestId); }} className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-bold"><ClipboardCheck size={16}/>{item.result ? '검수 결과 보기' : '요청 상세 보기'}<ArrowRight size={16}/></button></article>)}</div><Pagination page={query.data.page} totalPages={query.data.totalPages} totalElements={query.data.totalElements} onChange={setPage}/></>}
+    {selected != null && <Details key={selected} id={selected} close={() => setSelected(null)} refresh={refresh} unavailable={() => { setSelected(null); setNotice('요청이 취소되었거나 더 이상 조회할 수 없습니다. 목록을 새로고침했습니다.'); refresh(); }}/>}
   </div>;
 }

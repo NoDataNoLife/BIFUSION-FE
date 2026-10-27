@@ -60,6 +60,7 @@ interface NotificationState {
   fetchNotifications: (params?: NotificationParams) => Promise<void>;
   fetchPopupNotifications: () => Promise<void>;
   refreshUnreadCount: () => Promise<void>;
+  refreshLoadedNotifications: () => Promise<void>;
   markAsRead: (id: number) => Promise<boolean>;
   markAllAsRead: () => Promise<boolean>;
   softDeleteNotification: (id: number) => Promise<boolean>;
@@ -107,6 +108,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
     notifications: [], popupNotifications: [], unreadCount: 0, historyUnreadCount: 0,
     totalElements: 0, totalPages: 0, currentPage: 0,
     isLoading: false, popupLoading: false, error: null, popupError: null,
+    refreshLoadedNotifications: async () => {
+      await Promise.all([
+        historyLoaded ? get().fetchNotifications(lastParams) : Promise.resolve(),
+        popupLoaded ? get().fetchPopupNotifications() : Promise.resolve(),
+        get().refreshUnreadCount(),
+      ]);
+    },
     refreshUnreadCount: async () => {
       const query = ++unreadQuery;
       // Preserve the last known badge on transient errors. List queries show errors separately.

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../lib/axios';
+import { requestMessage } from '../lib/liveData';
 import { invitationRolesEnabled } from '../lib/backendFeatures';
 
 export interface ProjectMember {
@@ -81,7 +82,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }
     } catch (error: unknown) {
       console.error('Failed to fetch projects:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = requestMessage(error, 'An error occurred');
       set({ error: errorMessage, isLoading: false });
       return false;
     }
@@ -111,7 +112,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }
     } catch (error: unknown) {
       console.error('Failed to create project:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = requestMessage(error, 'An error occurred');
       set({ error: errorMessage, isLoading: false });
       return false;
     }
@@ -130,7 +131,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }
     } catch (error: unknown) {
       console.error('Failed to fetch project detail:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = requestMessage(error, 'An error occurred');
       set({ error: errorMessage, isLoading: false });
       return false;
     }
@@ -159,7 +160,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       return false;
     } catch (error: unknown) {
       console.error('Failed to update project detail:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = requestMessage(error, 'An error occurred');
       set({ error: errorMessage, isLoading: false });
       return false;
     }
@@ -179,7 +180,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       set({ error: '초대를 보내지 못했습니다.', isLoading: false });
       return false;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '초대를 보내지 못했습니다.';
+      const errorMessage = requestMessage(error, '초대를 보내지 못했습니다.');
       set({ error: errorMessage, isLoading: false });
       return false;
     }
@@ -204,7 +205,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }
       return false;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = requestMessage(error, 'An error occurred');
       set({ error: errorMessage, isLoading: false });
       return false;
     }
@@ -231,7 +232,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }
       return false;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = requestMessage(error, 'An error occurred');
       set({ error: errorMessage, isLoading: false });
       return false;
     }

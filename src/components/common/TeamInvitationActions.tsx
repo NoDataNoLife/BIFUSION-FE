@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, X } from 'lucide-react';
-import api from '../../lib/axios';
+import { respondToInvitation } from '../../lib/teamInvitation';
 import { requestMessage } from '../../lib/liveData';
 import { useNotificationStore, type NotificationItem } from '../../store/useNotificationStore';
 import { useProjectStore } from '../../store/useProjectStore';
@@ -11,15 +11,16 @@ export default function TeamInvitationActions({ invitation }: { invitation?: Not
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lock = useRef(false);
+  useEffect(() => { setStatus(null); setError(null); }, [invitation?.invitationId, invitation?.status]);
   const current = status ?? invitation?.status;
   const respond = async (action: 'ACCEPT' | 'REJECT') => {
     if (lock.current || !invitation || current !== 'PENDING') return;
     lock.current = true; setBusy(true); setError(null);
     try {
-      await api.patch(`/projects/${invitation.projectId}/invitations/${invitation.invitationId}`, { action });
+      await respondToInvitation(invitation, action);
       setStatus(action === 'ACCEPT' ? 'ACCEPTED' : 'REJECTED');
       const store = useNotificationStore.getState();
-      await Promise.all([store.fetchPopupNotifications(), store.fetchNotifications(), useProjectStore.getState().fetchMyProjects()]);
+      await Promise.all([store.refreshLoadedNotifications(), useProjectStore.getState().fetchMyProjects()]);
     } catch (err) { setError(requestMessage(err, '초대에 응답하지 못했습니다. 알림을 새로고침해 주세요.')); }
     finally { lock.current = false; setBusy(false); }
   };

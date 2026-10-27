@@ -1,7 +1,9 @@
 import { isAxiosError } from 'axios';
+import { apiErrorCode } from './apiErrorCode';
 
 export function requestMessage(error: unknown, fallback = '정보를 불러오지 못했습니다. 다시 시도해 주세요.'): string {
   if (isAxiosError(error)) {
+    if (apiErrorCode(error) === 'IS004') return '보유 앤트가 부족합니다. 앤트 충전 페이지에서 충전한 뒤 다시 시도해 주세요.';
     const message = error.response?.data?.message;
     if (typeof message === 'string' && message.trim()) return message;
     if (error.response?.status === 403) return '접근 권한이 없습니다.';

@@ -18,6 +18,13 @@ const directory = await mkdtemp(resolve('node_modules/.tmp/live-tests-'));
 after(() => rm(directory, { recursive: true, force: true }));
 const outfile = resolve(directory, 'live.cjs');
 await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
+  export { respondToInvitation } from './src/lib/teamInvitation';
+  export { jobDelay } from './src/lib/jobDelay';
+  export { kstDate } from './src/lib/kstDate';
+  export { estimateJobCost } from './src/lib/jobEstimate';
+  export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
+  export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
+  export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
   export { default as api } from './src/lib/axios';
   export { recipeReviewPayload } from './src/lib/recipeReviewPayload';
   export { newRecipeDraft, draftFromRecipe, recipeRegistrationPayload } from './src/lib/recipeDraft';
@@ -308,13 +315,14 @@ test('soft delete hides the popup item while preserving the full history item', 
 });
 
 
-test('member invitations send an explicit role and manager invitations wait for backend rollout', async () => {
+test('invitations send MEMBER by default and the selected MANAGER role', async () => {
   const calls = [];
   api.defaults.adapter = async config => { calls.push(config); return response(config, {}); };
   assert.equal(await app.useProjectStore.getState().inviteMember('12', 'member@example.com'), true);
   assert.deepEqual(JSON.parse(calls[0].data), { email: 'member@example.com', role: 'MEMBER' });
-  assert.equal(await app.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), false);
-  assert.equal(calls.length, 1);
+  assert.equal(await app.useProjectStore.getState().inviteMember('12', 'manager@example.com', 'MANAGER'), true);
+  assert.equal(calls.length, 2);
+  assert.deepEqual(JSON.parse(calls[1].data), { email: 'manager@example.com', role: 'MANAGER' });
 });
 
 
@@ -338,7 +346,14 @@ test('hidden unread history does not create a popup notification badge', async (
 test('manager role rollout enables explicit MANAGER requests without changing MEMBER defaults', async () => {
   const enabledFile = resolve(directory, 'enabled.cjs');
   await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
-    export { default as api } from './src/lib/axios';
+    export { respondToInvitation } from './src/lib/teamInvitation';
+  export { jobDelay } from './src/lib/jobDelay';
+  export { kstDate } from './src/lib/kstDate';
+  export { estimateJobCost } from './src/lib/jobEstimate';
+  export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
+  export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
+  export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { default as api } from './src/lib/axios';
     export { useProjectStore } from './src/store/useProjectStore';
     export { invitationRolesEnabled, commentOnlyReviewsEnabled } from './src/lib/backendFeatures';
   ` }, outfile: enabledFile, bundle: true, platform: 'node', packages: 'external', format: 'cjs', define: { 'import.meta.env': JSON.stringify({ VITE_API_URL: '', VITE_INVITATION_ROLES_ENABLED: 'true', VITE_COMMENT_ONLY_REVIEWS_ENABLED: 'true' }) } });
@@ -391,4 +406,87 @@ test('new recipe registration rejects invalid numeric input and honors explicit 
   for (const invalid of [{ steps: '' }, { steps: '1.2' }, { batchSize: '0' }, { seed: '2147483648' }, { cfgScale: 'NaN' }]) {
     assert.throws(() => app.recipeRegistrationPayload({ ...draft, ...invalid }, false));
   }
+});
+
+
+test('invitation response uses both nested IDs and rejects processed or invalid invitations', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => { calls.push(config); return response(config, {}); };
+  const invitation = { projectId: 5, invitationId: 34, status: 'PENDING', role: 'MEMBER' };
+  await app.respondToInvitation(invitation, 'ACCEPT');
+  assert.equal(calls[0].url, '/projects/5/invitations/34');
+  assert.deepEqual(JSON.parse(calls[0].data), { action: 'ACCEPT' });
+  await app.respondToInvitation(invitation, 'REJECT');
+  assert.deepEqual(JSON.parse(calls[1].data), { action: 'REJECT' });
+  for (const status of ['ACCEPTED','REJECTED','EXPIRED']) await assert.rejects(app.respondToInvitation({ ...invitation, status }, 'ACCEPT'));
+  await assert.rejects(app.respondToInvitation({ ...invitation, invitationId: 0 }, 'ACCEPT'));
+  assert.equal(calls.length, 2);
+});
+
+test('pending invitation buttons, accepted link and legacy invitation guidance reflect server state', () => {
+  const html = invitation => app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.TeamInvitationActions, { invitation })));
+  const pending = html({ projectId: 5, invitationId: 34, status: 'PENDING', role: 'MANAGER' });
+  assert.match(pending, /수락/); assert.match(pending, /거절/); assert.doesNotMatch(pending, / disabled=""/);
+  const accepted = html({ projectId: 5, invitationId: 34, status: 'ACCEPTED', role: 'MEMBER' });
+  assert.match(accepted, /href="\/dashboard\/projects\/5"/); assert.doesNotMatch(accepted, />거절</);
+  assert.match(html(null), /재발송/);
+});
+
+test('notification history reads the server page field', async () => {
+  api.defaults.adapter = async config => response(config, { content: [], page: 3, totalPages: 5, totalElements: 41 });
+  await notifications.getState().fetchNotifications({ page: 3 });
+  assert.equal(notifications.getState().currentPage, 3);
+});
+
+test('recipe and original dataset inspections keep server target IDs and validate reward bounds', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => { calls.push(config); return response(config, {}); };
+  for (const targetType of ['RECIPE','UPLOADED_DATA']) {
+    await app.requestInspection({ targetType, targetId: 12, canRequest: true, minRewardPoints: 500, maxRewardPoints: 3000 }, '메모', 501);
+    assert.deepEqual(JSON.parse(calls.at(-1).data), { targetType, targetId: 12, reason: '메모', rewardPoints: 501 });
+    await assert.rejects(app.requestInspection({ targetType, targetId: 12, canRequest: true, minRewardPoints: 500, maxRewardPoints: 3000 }, '메모', 499));
+  }
+  assert.equal(calls.length, 2);
+});
+
+test('delay warnings use KST timestamps and stop for terminal jobs', () => {
+  const now = Date.parse('2026-10-27T03:01:00Z');
+  assert.equal(app.kstDate('2026-10-27T12:00:00').getTime(), Date.parse('2026-10-27T03:00:00Z'));
+  assert.equal(app.jobDelay({ status: 'PENDING', startedAt: '2026-10-27T12:00:01' }, now), null);
+  assert.match(app.jobDelay({ status: 'PENDING', startedAt: '2026-10-27T12:00:00' }, now), /대기/);
+  assert.match(app.jobDelay({ status: 'RUNNING', mlUnreachableSince: '2026-10-27T12:00:00' }, now), /연결/);
+  assert.equal(app.jobDelay({ status: 'FAILED', mlUnreachableSince: '2026-10-27T12:00:00' }, now), null);
+  assert.equal(app.jobDelay({ status: 'PENDING', startedAt: null }, now), null);
+});
+
+test('cost estimates preserve the execution payload and reject missing or malformed costs', async () => {
+  let request;
+  api.defaults.adapter = async config => { request = config; return response(config, { type: 'INFERENCE', cost: 6, currentPoints: 5, affordable: false }); };
+  const payload = { type: 'INFERENCE', model_id: 7, fileIds: [40,41,42,43] };
+  assert.equal((await app.estimateJobCost(payload)).affordable, false);
+  assert.equal(request.url, '/jobs/cost-estimate'); assert.deepEqual(JSON.parse(request.data), payload);
+  api.defaults.adapter = async config => response(config, { cost: null, affordable: true });
+  await assert.rejects(app.estimateJobCost(payload));
+});
+
+test('known rejected executions use a fresh key while ambiguous 503 responses retain the original key', async () => {
+  for (const [index, code] of ['ML001', 'ML006', undefined].entries()) {
+    const keys = [];
+    api.defaults.adapter = async config => {
+      keys.push(config.headers.get('Idempotency-Key'));
+      throw new AxiosError('failed', 'ERR_BAD_RESPONSE', config, null, { status: 503, data: { code }, config });
+    };
+    const submit = () => app.submitJobRequest(1, `estimate-${index}`, { type: 'AUGMENTATION' });
+    await assert.rejects(submit()); await assert.rejects(submit());
+    if (code) assert.notEqual(keys[0], keys[1]); else assert.equal(keys[0], keys[1]);
+  }
+});
+
+test('retry requests have independent idempotency keys and retain unresolved requests', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => { calls.push(config); throw new AxiosError('offline', 'ERR_NETWORK', config); };
+  await assert.rejects(app.submitJobRetry(1, '34'));
+  await assert.rejects(app.submitJobRetry(1, '34'));
+  assert.equal(calls[0].url, '/jobs/34/retry');
+  assert.equal(calls[0].headers.get('Idempotency-Key'), calls[1].headers.get('Idempotency-Key'));
 });

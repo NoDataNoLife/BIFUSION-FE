@@ -253,7 +253,7 @@ export default function CommunityPage() {
             ) : datasetList.map(dataset => (
               <div key={dataset.datasetId} onClick={() => setSelectedId(dataset.datasetId.toString())} role="button" tabIndex={0} aria-label={`${dataset.title} 상세 보기`} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); setSelectedId(dataset.datasetId.toString()); } }} className="bg-card rounded-3xl border border-border p-8 hover:shadow-xl hover:border-primary/40 transition-all cursor-pointer group">
                 <div className="flex flex-col md:flex-row gap-8">
-                  <div className="w-20 h-20 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-3 transition-transform">
+                  <div className="w-20 h-20 overflow-hidden [&>div]:min-h-0 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-3 transition-transform">
                     <AssetCover src={dataset.bannerImageUrl} title={dataset.title} dataset/>
                   </div>
                   <div className="flex-1 space-y-3">

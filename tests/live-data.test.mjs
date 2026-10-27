@@ -255,9 +255,12 @@ test('project changes update matching cards without modifying another open proje
     managingProjects: [{ projectId: 1, title: 'Old', bannerImageUrl: 'old.png', members: [] }],
     participatingProjects: [{ projectId: 2, title: 'Other', bannerImageUrl: 'other.png', members: [] }],
   });
-  api.defaults.adapter = async config => response(config, {});
+  api.defaults.adapter = async config => {
+    assert.deepEqual(JSON.parse(config.data), { title: 'Updated', description: 'Saved' });
+    return response(config, {});
+  };
   assert.equal(await projects.getState().updateProjectInfo('1', { title: 'Updated', description: 'Saved', bannerImageUrl: 'new.png' }), true);
-  assert.equal(projects.getState().managingProjects[0].bannerImageUrl, 'new.png');
+  assert.equal(projects.getState().managingProjects[0].bannerImageUrl, 'old.png');
   assert.equal(projects.getState().currentProject.title, 'Other');
   assert.equal(projects.getState().participatingProjects[0].bannerImageUrl, 'other.png');
   api.defaults.adapter = async config => ({ ...response(config, null), data: { success: false } });
@@ -489,4 +492,50 @@ test('retry requests have independent idempotency keys and retain unresolved req
   await assert.rejects(app.submitJobRetry(1, '34'));
   assert.equal(calls[0].url, '/jobs/34/retry');
   assert.equal(calls[0].headers.get('Idempotency-Key'), calls[1].headers.get('Idempotency-Key'));
+});
+
+test('project cover uses multipart PATCH and updates detail and list with the server URL', async () => {
+  const store = app.useProjectStore;
+  store.setState({ currentProject: { projectId: 7, title: 'project', bannerImageUrl: 'old', members: [] }, managingProjects: [{ projectId: 7, bannerImageUrl: 'old' }], participatingProjects: [] });
+  api.defaults.adapter = async config => {
+    assert.equal(config.method, 'patch');
+    assert.equal(config.url, '/projects/7/banner');
+    assert.ok(config.data instanceof FormData);
+    assert.equal(config.data.get('file').name, 'cover.png');
+    return response(config, { projectId: 7, bannerImageUrl: 'https://files.example/new.png' });
+  };
+  assert.equal(await store.getState().updateProjectBanner('7', new File(['image'], 'cover.png', { type: 'image/png' })), true);
+  assert.equal(store.getState().currentProject.bannerImageUrl, 'https://files.example/new.png');
+  assert.equal(store.getState().managingProjects[0].bannerImageUrl, 'https://files.example/new.png');
+});
+
+test('project cover removal sends no file and preserves the old cover on a failed request', async () => {
+  const store = app.useProjectStore;
+  api.defaults.adapter = async config => { throw failure(config); };
+  assert.equal(await store.getState().updateProjectBanner('7', null), false);
+  assert.equal(store.getState().currentProject.bannerImageUrl, 'https://files.example/new.png');
+  api.defaults.adapter = async config => {
+    assert.equal(config.data.has('file'), false);
+    return response(config, { projectId: 7, bannerImageUrl: null });
+  };
+  assert.equal(await store.getState().updateProjectBanner('7', null), true);
+  assert.equal(store.getState().currentProject.bannerImageUrl, null);
+});
+
+test('project creation sends invitations separately and reports cover failure without recreating the project', async () => {
+  const calls = [];
+  api.defaults.adapter = async config => {
+    calls.push(config.url);
+    if (config.url === '/projects') {
+      assert.deepEqual(JSON.parse(config.data), { title: 'new', description: 'desc', isPublic: true });
+      return response(config, { projectId: 19 });
+    }
+    if (config.url === '/projects/19/banner') throw failure(config);
+    assert.equal(config.url, '/projects/19/invitations');
+    assert.deepEqual(JSON.parse(config.data), { email: 'member@example.com', role: 'MEMBER' });
+    return response(config, {});
+  };
+  assert.equal(await app.useProjectStore.getState().createProject({ name: 'new', description: 'desc', coverFile: new File(['image'], 'cover.png'), teamMembers: [{ email: 'member@example.com', role: 'MEMBER' }] }), true);
+  assert.deepEqual(calls, ['/projects', '/projects/19/banner', '/projects/19/invitations']);
+  assert.match(app.useProjectStore.getState().error, /프로젝트는 생성되었습니다/);
 });

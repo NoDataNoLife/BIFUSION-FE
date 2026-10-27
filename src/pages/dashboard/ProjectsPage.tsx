@@ -1,3 +1,4 @@
+import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -55,12 +56,14 @@ export default function ProjectListPage() {
     }));
     setProjects(mappedProjects);
   }, [managingProjects, participatingProjects, user]);
+  const [coverFile, setCoverFile] = useState<File | null | undefined>();
+  const [createNotice, setCreateNotice] = useState('');
+  const creatingRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({
     name: "",
     description: "",
-    coverImageUrl: "",
     teamMembers: [{ email: "", role: "MEMBER" }],
   });
 
@@ -91,20 +94,25 @@ export default function ProjectListPage() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isLoading || creatingRef.current) return;
+    creatingRef.current = true;
+    setCreateNotice('');
     
-    const success = await createProject(newProject);
+    const success = await createProject({ ...newProject, coverFile });
+    const warning = useProjectStore.getState().error;
+    creatingRef.current = false;
     if (success) {
       await fetchMyProjects();
+      setCreateNotice(warning || '프로젝트를 생성했습니다.');
+      setCoverFile(undefined);
       setIsModalOpen(false);
       setNewProject({
         name: "",
         description: "",
-        coverImageUrl: "",
         teamMembers: [{ email: "", role: "MEMBER" }],
       });
     } else {
-      alert("프로젝트 생성에 실패했습니다.");
+      setCreateNotice(warning || "프로젝트 생성에 실패했습니다.");
     }
   };
 
@@ -142,6 +150,7 @@ export default function ProjectListPage() {
         </div>
       </div>
 
+      {createNotice && <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm text-foreground">{createNotice}</p>}
       {/* Managed Projects Section */}
       <section>
         <div className="flex items-center justify-between mb-6">
@@ -267,11 +276,14 @@ export default function ProjectListPage() {
       {/* Create Project Modal */}
       {isModalOpen && (
         <CreateProjectModal
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => { if (!creatingRef.current) { setIsModalOpen(false); setCoverFile(undefined); setCreateNotice(''); } }}
           onSubmit={handleCreateProject}
           newProject={newProject}
           setNewProject={setNewProject}
-          isLoading={isLoading}
+          isLoading={isLoading || creatingRef.current}
+          notice={createNotice}
+          coverFile={coverFile}
+          setCoverFile={setCoverFile}
         />
       )}
     </div>
@@ -361,7 +373,10 @@ function CreateProjectModal({
   onSubmit,
   newProject,
   setNewProject,
-  isLoading
+  isLoading,
+  coverFile,
+  setCoverFile,
+  notice
 }: any) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -385,6 +400,7 @@ function CreateProjectModal({
 
         <form onSubmit={onSubmit} className="p-8 space-y-8 overflow-y-auto">
           <div className="space-y-6">
+            {notice && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-500">{notice}</p>}
             <div>
               <label className="block text-sm font-bold text-foreground mb-2 underline decoration-primary/30 decoration-4">
                 프로젝트 명칭
@@ -418,22 +434,13 @@ function CreateProjectModal({
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-foreground mb-2 underline decoration-primary/30 decoration-4">Cover Image (배너 이미지 URL)</label>
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-muted transition-colors cursor-pointer">
-                <input
-                  type="text"
-                  value={newProject.coverImageUrl}
-                  onChange={(e) => setNewProject({ ...newProject, coverImageUrl: e.target.value })}
-                  placeholder="배너 이미지 URL을 입력하세요 (또는 클릭/드래그앤드롭 - 추후 지원 예정)"
-                  className="w-full bg-transparent text-center focus:outline-none text-sm text-muted-foreground"
-                />
-              </div>
+              <ProjectCoverPicker value={coverFile} onChange={setCoverFile} disabled={isLoading}/>
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-bold text-foreground underline decoration-primary/30 decoration-4">Team Members</label>
-                <button type="button" className="text-primary text-sm font-bold hover:text-primary/80 transition-colors">+ Add Member</button>
+                <span className="text-xs text-muted-foreground">추가 멤버는 생성 후 설정에서 초대할 수 있습니다.</span>
               </div>
               <div className="flex gap-4">
                 <input

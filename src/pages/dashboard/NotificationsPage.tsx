@@ -242,7 +242,7 @@ export default function NotificationsPage() {
                   {item.content}
                 </p>
 
-                {item.type === 'PROJECT_INVITATION' && <TeamInvitationActions />}
+                {item.type === 'PROJECT_INVITATION' && <TeamInvitationActions invitation={item.invitation} />}
                 {item.type !== 'PROJECT_INVITATION' && item.targetId != null && (
                   <span className="inline-flex items-center gap-1 text-xs font-black text-primary group-hover:underline">
                     바로가기 <ArrowRight size={13} />

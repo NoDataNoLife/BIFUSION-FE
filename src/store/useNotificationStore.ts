@@ -33,6 +33,7 @@ export interface NotificationItem {
   content: string;
   targetType?: string;
   targetId?: number;
+  invitation?: { invitationId: number; projectId: number; status: string; role: "MEMBER" | "MANAGER" } | null;
   isRead: boolean;
   createdAt: string;
 }
@@ -125,7 +126,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => {
         const data = response.data?.data;
         if (!Array.isArray(data?.content)) throw new Error('알림 목록 응답을 확인할 수 없습니다.');
         set({ notifications: data.content, totalElements: data.totalElements ?? 0,
-          totalPages: data.totalPages ?? 0, currentPage: data.pageNumber ?? 0, historyUnreadCount: historyUnread.data?.data?.totalElements ?? 0, isLoading: false });
+          totalPages: data.totalPages ?? 0, currentPage: data.page ?? data.pageNumber ?? 0, historyUnreadCount: historyUnread.data?.data?.totalElements ?? 0, isLoading: false });
       } catch (error) {
         if (query === historyQuery) set({ notifications: [], totalElements: 0, totalPages: 0, isLoading: false, error: requestMessage(error) });
       }

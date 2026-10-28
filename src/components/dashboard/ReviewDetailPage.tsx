@@ -1,3 +1,4 @@
+import { LimitedTextarea } from '../common/LimitedTextField';
 import ProfileAvatar from '../common/ProfileAvatar';
 import { formatKst } from '../../lib/kstDate';
 import ExpertTargetDetails from './ExpertTargetDetails';
@@ -388,7 +389,7 @@ export default function ReviewDetailPage({
             </div>
           ) : (
             <div className="space-y-4">
-              <textarea
+              <LimitedTextarea maxLength={2000}
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value)}
                 placeholder="합성 데이터 품질, 임상적 유의성, 노이즈 패턴 등에 대한 종합적인 평가를 작성하세요..."
@@ -484,7 +485,7 @@ export default function ReviewDetailPage({
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                         이미지별 검수 의견 작성
                       </p>
-                      <textarea
+                      <LimitedTextarea maxLength={2000}
                         value={imageComment}
                         onChange={(e) => setImageComment(e.target.value)}
                         placeholder="이 이미지에 대한 피드백을 작성하세요..."

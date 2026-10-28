@@ -1,3 +1,4 @@
+import { LimitedInput, LimitedTextarea } from '../common/LimitedTextField';
 import ProfileAvatar from '../common/ProfileAvatar';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Briefcase, Clock, CheckCircle, Send, Calendar, Trash2, Tag } from 'lucide-react';
@@ -299,7 +300,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-sm font-black text-muted-foreground uppercase tracking-widest ml-2">성함</label>
-                  <input
+                  <LimitedInput maxLength={255}
                     type="text"
                     value={applicationName}
                     onChange={(e) => setApplicationName(e.target.value)}
@@ -310,7 +311,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
                 </div>
                 <div className="space-y-3">
                   <label className="text-sm font-black text-muted-foreground uppercase tracking-widest ml-2">이메일 주소</label>
-                  <input
+                  <LimitedInput maxLength={255}
                     type="email"
                     value={applicationEmail}
                     onChange={(e) => setApplicationEmail(e.target.value)}
@@ -323,7 +324,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
 
               <div className="space-y-3">
                 <label className="text-sm font-black text-muted-foreground uppercase tracking-widest ml-2">지원 동기 및 포부</label>
-                <textarea
+                <LimitedTextarea maxLength={2000}
                   value={applicationMessage}
                   onChange={(e) => setApplicationMessage(e.target.value)}
                   placeholder="이 프로젝트에 참여하고 싶은 이유와 기여하고 싶은 부분을 자유롭게 적어주세요..."
@@ -334,7 +335,7 @@ export default function RecruitmentDetail({ recruitmentId, onBack, onDelete }: R
 
               <div className="space-y-3">
                 <label className="text-sm font-black text-muted-foreground uppercase tracking-widest ml-2">이력서 URL <span className="text-muted-foreground normal-case tracking-normal">(선택)</span></label>
-                <input
+                <LimitedInput maxLength={255}
                   type="url"
                   value={resumeUrl}
                   onChange={(e) => setResumeUrl(e.target.value)}

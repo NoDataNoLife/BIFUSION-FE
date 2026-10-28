@@ -1,3 +1,4 @@
+import { LimitedTextarea } from '../common/LimitedTextField';
 import { AntCostNotice, AntRequestError } from '../common/AntActionNotice';
 import { forkRecipe, refreshPointsAfter } from '../../lib/pointActions';
 import RecipeOrigin from '../community/RecipeOrigin';
@@ -78,7 +79,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
               refresh();
             });
           }}>
-            <textarea
+            <LimitedTextarea maxLength={2000}
               autoFocus
               aria-label="댓글 수정 내용"
               value={editContent}
@@ -133,7 +134,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
               refresh();
             });
           }}>
-            <textarea
+            <LimitedTextarea maxLength={2000}
               autoFocus
               aria-label={`${review.author}님에게 답글`}
               placeholder="답글을 작성해 주세요"
@@ -252,7 +253,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
                 <div>
                   <p className="mb-2 text-sm font-bold">댓글 남기기</p>
                 </div>
-                <textarea
+                <LimitedTextarea maxLength={2000}
                   disabled={busy}
                   placeholder={user ? '사용 경험이나 의견을 남겨 주세요' : '로그인 후 댓글을 남길 수 있습니다'}
                   aria-label="댓글 내용"

@@ -1,3 +1,5 @@
+import { requestMessage } from '../../../lib/liveData';
+import { LimitedInput, LimitedTextarea } from '../../common/LimitedTextField';
 import React, { useState } from 'react';
 import { useCommunityStore } from '../../../store/useCommunityStore';
 import api from '../../../lib/axios';
@@ -65,7 +67,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
       fetchRecruitmentList();
       onClose();
     } catch (error) {
-      alert('공고 등록에 실패했습니다. 다시 시도해주세요.');
+      alert(requestMessage(error, '공고 등록에 실패했습니다. 다시 시도해주세요.'));
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -81,7 +83,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">포지션 제목</label>
-            <input
+            <LimitedInput maxLength={100}
               type="text"
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
@@ -92,7 +94,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
           </div>
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">소속 / 기관</label>
-            <input
+            <LimitedInput maxLength={255}
               type="text"
               value={organization}
               onChange={(e) => setOrganization(e.target.value)}
@@ -105,7 +107,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
 
         <div>
           <label className="block text-sm font-bold text-foreground mb-2">포지션 상세 설명</label>
-          <textarea
+          <LimitedTextarea maxLength={2000}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium h-32 resize-none"
@@ -147,7 +149,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
                   <button type="button" onClick={() => handleRemoveFromList(item, requirements, setRequirements)} className="hover:text-gray-900">&times;</button>
                 </span>
               ))}
-              <input type="text" value={reqInput} onChange={(e) => setReqInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, reqInput, setReqInput, requirements, setRequirements)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={requirements.length === 0 ? "예: PyTorch 능숙자" : ""} />
+              <LimitedInput maxLength={255} type="text" value={reqInput} onChange={(e) => setReqInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, reqInput, setReqInput, requirements, setRequirements)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={requirements.length === 0 ? "예: PyTorch 능숙자" : ""} />
             </div>
           </div>
 
@@ -160,7 +162,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
                   <button type="button" onClick={() => handleRemoveFromList(item, responsibilities, setResponsibilities)} className="hover:text-gray-900">&times;</button>
                 </span>
               ))}
-              <input type="text" value={respInput} onChange={(e) => setRespInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, respInput, setRespInput, responsibilities, setResponsibilities)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={responsibilities.length === 0 ? "예: 데이터 전처리" : ""} />
+              <LimitedInput maxLength={255} type="text" value={respInput} onChange={(e) => setRespInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, respInput, setRespInput, responsibilities, setResponsibilities)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={responsibilities.length === 0 ? "예: 데이터 전처리" : ""} />
             </div>
           </div>
 
@@ -173,7 +175,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
                   <button type="button" onClick={() => handleRemoveFromList(item, benefits, setBenefits)} className="hover:text-gray-900">&times;</button>
                 </span>
               ))}
-              <input type="text" value={benInput} onChange={(e) => setBenInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, benInput, setBenInput, benefits, setBenefits)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={benefits.length === 0 ? "예: 논문 공저자 등재" : ""} />
+              <LimitedInput maxLength={255} type="text" value={benInput} onChange={(e) => setBenInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, benInput, setBenInput, benefits, setBenefits)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={benefits.length === 0 ? "예: 논문 공저자 등재" : ""} />
             </div>
           </div>
 
@@ -186,7 +188,7 @@ export default function RecruitmentCreateForm({ onClose }: { onClose: () => void
                   <button type="button" onClick={() => handleRemoveFromList(item, tags, setTags)} className="hover:text-primary/70">&times;</button>
                 </span>
               ))}
-              <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, tagInput, setTagInput, tags, setTags)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: 의료AI" : ""} />
+              <LimitedInput maxLength={50} type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => handleAddToList(e, tagInput, setTagInput, tags, setTags)} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: 의료AI" : ""} />
             </div>
           </div>
         </div>

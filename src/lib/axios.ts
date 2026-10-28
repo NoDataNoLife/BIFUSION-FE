@@ -1,3 +1,4 @@
+import { validateTextRequest } from './inputLimits';
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -25,6 +26,7 @@ const api = axios.create({
 // 요청 인터셉터 (Zustand 상태를 보낼 필요가 있다면 사용)
 api.interceptors.request.use(
   (config) => {
+    validateTextRequest(config.method, config.url, config.data);
     return config;
   },
   (error) => Promise.reject(error)

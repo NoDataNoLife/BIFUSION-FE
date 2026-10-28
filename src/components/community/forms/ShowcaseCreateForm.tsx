@@ -1,3 +1,4 @@
+import { LimitedInput, LimitedTextarea } from '../../common/LimitedTextField';
 import React, { useState, useEffect, useRef } from 'react';
 import { isCancel } from 'axios';
 import { requestMessage } from '../../../lib/liveData';
@@ -157,7 +158,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
               <label className="block text-sm font-bold text-foreground mb-1.5">
                 레시피 제목 <span className="text-red-500">*</span>
               </label>
-              <input
+              <LimitedInput maxLength={100}
                 type="text"
                 value={title}
                 onChange={(e) => updateDraft('title', e.target.value)}
@@ -170,7 +171,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
               <label className="block text-sm font-bold text-foreground mb-1.5">
                 한 줄 요약 설명 <span className="text-red-500">*</span>
               </label>
-              <input
+              <LimitedInput maxLength={2000}
                 type="text"
                 value={description}
                 onChange={(e) => updateDraft('description', e.target.value)}
@@ -183,7 +184,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
               <label className="block text-sm font-bold text-foreground mb-1.5">
                 상세 본문 / 연구 배경 (선택)
               </label>
-              <textarea
+              <LimitedTextarea maxLength={2000}
                 value={overview}
                 onChange={(e) => updateDraft('overview', e.target.value)}
                 placeholder="데이터셋 및 모델에 대한 상세한 설명, 사용 방법, 검증 결과 등을 자유롭게 작성하세요."
@@ -205,7 +206,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
               <label className="block text-xs font-bold text-foreground mb-1.5 flex items-center gap-1">
                 <Cpu size={14} className="text-muted-foreground" /> 생성 모델명 *
               </label>
-              <input
+              <LimitedInput maxLength={100}
                 type="text"
                 value={modelName}
                 onChange={(e) => updateDraft('modelName', e.target.value)}
@@ -296,7 +297,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">핵심 특징 태그</label>
             <div className="flex gap-2 mb-2">
-              <input
+              <LimitedInput maxLength={200}
                 type="text"
                 value={featureInput}
                 onChange={(e) => setFeatureInput(e.target.value)}
@@ -335,7 +336,7 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">추천 용도 / 활용처</label>
             <div className="flex gap-2 mb-2">
-              <input
+              <LimitedInput maxLength={200}
                 type="text"
                 value={recommendationInput}
                 onChange={(e) => setRecommendationInput(e.target.value)}

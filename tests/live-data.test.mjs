@@ -25,6 +25,8 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { validateTextRequest } from './src/lib/inputLimits';
+  export { LimitedInput, LimitedTextarea } from './src/components/common/LimitedTextField';
   export { default as api } from './src/lib/axios';
   export { forkRecipe, createQuestion, deleteDatasetWithRefund, refreshCurrentPoints } from './src/lib/pointActions';
   export { inspectionUnavailable } from './src/lib/inspectionErrors';
@@ -360,6 +362,8 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { validateTextRequest } from './src/lib/inputLimits';
+  export { LimitedInput, LimitedTextarea } from './src/components/common/LimitedTextField';
   export { default as api } from './src/lib/axios';
     export { useProjectStore } from './src/store/useProjectStore';
     export { invitationRolesEnabled, commentOnlyReviewsEnabled } from './src/lib/backendFeatures';
@@ -689,4 +693,42 @@ test('new training and inference notifications retain job routing and category f
     assert.equal(target, `/dashboard/projects/2/${type === 'TRAINING' ? 'train' : 'inference'}/3/result`);
   }
   assert.equal(await app.notificationTarget({ type: 'RECIPE_REVIEW_REQUESTED', targetType: 'INSPECTION_REQUEST', targetId: 45 }), '/dashboard/expert');
+});
+
+test('text limits match endpoint exceptions and preserve imported data', () => {
+  const body = { title: '가'.repeat(101), description: '기존 내용' };
+  assert.throws(() => app.validateTextRequest('post', '/community/recipes', body), /100자/);
+  assert.equal(body.title.length, 101);
+  assert.equal(body.description, '기존 내용');
+  assert.doesNotThrow(() => app.validateTextRequest('post', '/datasets', { title: '가'.repeat(100), format: 'a'.repeat(20) }));
+  assert.throws(() => app.validateTextRequest('put', '/datasets/3/upload', { format: 'a'.repeat(21) }), /20자/);
+  assert.throws(() => app.validateTextRequest('put', '/profile/introduction', { bio: 'a'.repeat(2001) }), /2,000자/);
+  assert.throws(() => app.validateTextRequest('patch', '/inspections/3/approve', { expertComment: 'a'.repeat(2001) }), /2,000자/);
+  assert.doesNotThrow(() => app.validateTextRequest('get', '/datasets', { title: 'a'.repeat(500) }));
+  assert.doesNotThrow(() => app.validateTextRequest('post', '/jobs/cost-estimate', { type: 'TRAINING', epochs: 30 }));
+});
+
+test('tag and recipe feature limits validate individual entries and total feature count', () => {
+  assert.throws(() => app.validateTextRequest('post', '/community/qna', { tags: ['a'.repeat(51)] }), /50자/);
+  assert.doesNotThrow(() => app.validateTextRequest('post', '/community/recipes', { features: ['가'.repeat(200)] }));
+  assert.throws(() => app.validateTextRequest('post', '/community/recipes', { features: ['가'.repeat(201)] }), /200자/);
+  assert.throws(() => app.validateTextRequest('post', '/community/recipes', { recommendations: Array(21).fill('사례') }), /20개/);
+});
+
+test('length controls show accessible counts and retain over-limit existing values', () => {
+  const html = app.renderToString(app.createElement(app.LimitedTextarea, { value: '가'.repeat(101), maxLength: 100, onChange() {}, 'aria-label': '제목' }));
+  assert.match(html, /maxLength="100"|maxlength="100"/);
+  assert.match(html, /aria-invalid="true"/);
+  assert.match(html, /aria-describedby=/);
+  assert.match(html.replace(/<!--.*?-->/g, ''), /101 \/ 100자/);
+  assert.match(html, new RegExp('가'.repeat(101)));
+});
+
+test('over-limit saves are rejected before reaching the network adapter', async () => {
+  let calls = 0;
+  api.defaults.adapter = async config => { calls++; return response(config, {}); };
+  await assert.rejects(api.put('/profile/nickname', { nickname: 'a'.repeat(256) }), /255자/);
+  assert.equal(calls, 0);
+  await api.put('/profile/nickname', { nickname: 'a'.repeat(255) });
+  assert.equal(calls, 1);
 });

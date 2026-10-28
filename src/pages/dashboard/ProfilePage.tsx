@@ -1,3 +1,4 @@
+import { LimitedInput, LimitedTextarea } from '../../components/common/LimitedTextField';
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
@@ -553,7 +554,7 @@ export default function ProfilePage() {
             <div className="group relative flex flex-col items-center">
               {isEditingNickname && isOwnProfile ? (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200 mb-1">
-                  <input
+                  <LimitedInput maxLength={255}
                     type="text"
                     value={newNickname}
                     onChange={(e) => setNewNickname(e.target.value)}
@@ -637,7 +638,7 @@ export default function ProfilePage() {
             
             {isEditingBio && isOwnProfile ? (
               <div className="space-y-2 animate-in fade-in duration-200">
-                <textarea
+                <LimitedTextarea maxLength={2000}
                   value={newBio}
                   onChange={(e) => setNewBio(e.target.value)}
                   className="w-full text-sm text-muted-foreground leading-relaxed bg-muted border border-border rounded-xl p-3 outline-none focus:border-primary/30 min-h-25 resize-none"
@@ -693,11 +694,11 @@ export default function ProfilePage() {
 
         {/* Info List Section */}
         <div className="bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4">
-          <div className="flex items-center justify-between group h-6">
+          <div className="flex items-center justify-between group min-h-6">
             <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium flex-1">
               <MapPin size={18} className="text-primary shrink-0" />
               {isEditingOrg && isOwnProfile ? (
-                <input
+                <LimitedInput maxLength={255}
                   type="text"
                   value={newOrg}
                   onChange={(e) => setNewOrg(e.target.value)}
@@ -734,11 +735,11 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between group h-6">
+          <div className="flex items-center justify-between group min-h-6">
             <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium flex-1">
               <LinkIcon size={18} className="text-primary shrink-0" />
               {isEditingWebsite && isOwnProfile ? (
-                <input
+                <LimitedInput maxLength={255}
                   type="text"
                   value={newWebsite}
                   onChange={(e) => setNewWebsite(e.target.value)}

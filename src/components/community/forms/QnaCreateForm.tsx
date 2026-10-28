@@ -1,3 +1,4 @@
+import { LimitedInput, LimitedTextarea } from '../../common/LimitedTextField';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { AntCostNotice, AntRequestError } from '../../common/AntActionNotice';
 import { createQuestion } from '../../../lib/pointActions';
@@ -61,7 +62,7 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-bold text-foreground mb-2">질문 제목</label>
-          <input
+          <LimitedInput maxLength={100}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -73,7 +74,7 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
 
         <div>
           <label className="block text-sm font-bold text-foreground mb-2">질문 내용</label>
-          <textarea
+          <LimitedTextarea maxLength={2000}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium h-48 resize-none"
@@ -93,7 +94,7 @@ export default function QnaCreateForm({ onClose }: { onClose: () => void }) {
                 </button>
               </span>
             ))}
-            <input
+            <LimitedInput maxLength={50}
               type="text"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}

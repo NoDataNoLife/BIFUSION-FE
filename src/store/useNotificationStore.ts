@@ -3,6 +3,10 @@ import api from '../lib/axios';
 import { requestMessage } from '../lib/liveData';
 
 export type NotificationType =
+  | 'TRAINING_SUCCESS'
+  | 'TRAINING_FAILED'
+  | 'INFERENCE_SUCCESS'
+  | 'INFERENCE_FAILED'
   | 'AUGMENTATION_SUCCESS'
   | 'AUGMENTATION_FAILED'
   | 'PROJECT_INVITATION'
@@ -24,7 +28,7 @@ export type NotificationType =
   | 'RECRUITMENT_ACCEPTED'
   | 'RECRUITMENT_REJECTED';
 
-export type NotificationCategory = 'EXPERT_INSPECTION' | 'AUGMENTATION' | 'PROJECT' | 'COMMUNITY';
+export type NotificationCategory = 'EXPERT_INSPECTION' | 'TRAINING' | 'INFERENCE' | 'AUGMENTATION' | 'PROJECT' | 'COMMUNITY';
 
 export interface NotificationItem {
   notificationId: number;

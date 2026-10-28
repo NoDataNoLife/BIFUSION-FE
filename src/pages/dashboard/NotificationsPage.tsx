@@ -50,8 +50,12 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type: NotificationItem['type']) => {
     switch (type) {
+      case 'TRAINING_SUCCESS':
+      case 'INFERENCE_SUCCESS':
       case 'AUGMENTATION_SUCCESS':
         return <div className="p-3 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-2xl"><Sparkles size={20} /></div>;
+      case 'TRAINING_FAILED':
+      case 'INFERENCE_FAILED':
       case 'AUGMENTATION_FAILED':
         return <div className="p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl"><XCircle size={20} /></div>;
       case 'PROJECT_INVITATION':
@@ -164,6 +168,8 @@ export default function NotificationsPage() {
               { id: 'ALL', label: '전체' },
               { id: 'EXPERT_INSPECTION', label: '전문가/검수' },
               { id: 'AUGMENTATION', label: '데이터 증강' },
+              { id: 'TRAINING', label: '모델 학습' },
+              { id: 'INFERENCE', label: '이미지 추론' },
               { id: 'PROJECT', label: '팀/프로젝트' },
               { id: 'COMMUNITY', label: '커뮤니티' },
             ].map((cat) => (

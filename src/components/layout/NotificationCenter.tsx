@@ -43,8 +43,12 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
 
   const getNotificationIcon = (type: NotificationItem['type']) => {
     switch (type) {
+      case 'TRAINING_SUCCESS':
+      case 'INFERENCE_SUCCESS':
       case 'AUGMENTATION_SUCCESS':
         return <div className="p-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl shrink-0"><Sparkles className="w-5 h-5" /></div>;
+      case 'TRAINING_FAILED':
+      case 'INFERENCE_FAILED':
       case 'AUGMENTATION_FAILED':
         return <div className="p-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl shrink-0"><XCircle className="w-5 h-5" /></div>;
       case 'PROJECT_INVITATION':

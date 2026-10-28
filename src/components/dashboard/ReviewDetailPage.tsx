@@ -1,3 +1,5 @@
+import ProfileAvatar from '../common/ProfileAvatar';
+import { formatKst } from '../../lib/kstDate';
 import ExpertTargetDetails from './ExpertTargetDetails';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, XCircle, MessageSquare, X, Save } from 'lucide-react';
@@ -245,18 +247,17 @@ export default function ReviewDetailPage({
           <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
             <h3 className="text-lg font-bold text-foreground mb-6">요청자 정보</h3>
             <div className="flex items-center gap-4">
-              <img
-                src={request.requester.avatar}
-                alt={request.requester.name}
+              <ProfileAvatar src={inspectionDetail.requester?.profileImageUrl}
+                alt={inspectionDetail.requester?.name || request.requester.name}
                 className="w-14 h-14 rounded-2xl ring-4 ring-muted shadow-xs"
               />
               <div>
-                <p className="font-bold text-foreground text-lg">{request.requester.name}</p>
+                <p className="font-bold text-foreground text-lg">{inspectionDetail.requester?.name || request.requester.name}</p>
                 <p className="text-sm text-muted-foreground font-medium">
-                  {request.requester.email}
+                  {inspectionDetail.requester?.email || request.requester.email}
                 </p>
                 <p className="text-xs text-muted-foreground font-medium mt-1">
-                  요청일시: {request.requestDate}
+                  요청일시: {inspectionDetail.requester?.requestedAt ? formatKst(inspectionDetail.requester.requestedAt) : request.requestDate}
                 </p>
               </div>
             </div>

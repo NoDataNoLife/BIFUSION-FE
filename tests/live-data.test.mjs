@@ -41,6 +41,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { MemoryRouter } from 'react-router-dom';
   export { default as RecruitmentDetail } from './src/components/dashboard/RecruitmentDetail';
   export { default as QnaDetail } from './src/components/dashboard/QnaDetail';
+  export { default as ReviewDetailPage } from './src/components/dashboard/ReviewDetailPage';
   export { default as ExpertPage } from './src/pages/dashboard/ExpertPage';
   export { notificationTarget } from './src/lib/notificationTarget';
   export { formatBytes, requestMessage } from './src/lib/liveData';
@@ -614,4 +615,36 @@ test('missing inspection details return to the list but transient failures remai
   assert.equal(app.inspectionUnavailable(400, 'IS009'), true);
   assert.equal(app.inspectionUnavailable(503), false);
   assert.equal(app.inspectionUnavailable(undefined), false);
+});
+
+test('expert task cards use server avatars or the shared default, never generated characters', () => {
+  const initial = app.useExpertStore.getInitialState();
+  const previous = initial.groupedTasks;
+  const task = { reviewCode: 'REV-002', status: 'PENDING', requester: { nickname: '요청자', email: 'test@example.com' } };
+  try {
+    initial.groupedTasks = { PENDING: [task], IN_PROGRESS: [], COMPLETED: [] };
+    assert.match(renderExpert('APPROVED'), /src="\/defaultUserProfile.png"/);
+    task.requester.profileImageUrl = 'https://example.com/custom-profile.png';
+    const html = renderExpert('APPROVED');
+    assert.match(html, /src="https:\/\/example.com\/custom-profile.png"/);
+    assert.doesNotMatch(html, /dicebear/);
+  } finally { initial.groupedTasks = previous; }
+});
+
+test('inspection detail uses the detailed requester profile and nested request date', () => {
+  const initial = app.useExpertStore.getInitialState();
+  const previous = { inspectionDetail: initial.inspectionDetail, isLoadingDetail: initial.isLoadingDetail };
+  const detail = { inspectionId: 2, targetType: 'RECIPE', requester: { name: '실제 요청자', email: 'actual@example.com', profileImageUrl: 'https://example.com/actual.png', requestedAt: '2026-10-28T12:00:00' } };
+  const request = { id: 'REV-002', requester: { name: '목록 요청자', email: 'old@example.com', avatar: 'https://example.com/stale.png' }, parameters: {}, requestDate: '날짜 정보 없음' };
+  const render = () => app.renderToString(app.createElement(app.ReviewDetailPage, { request, onBack() {}, onApprove() {}, onReject() {} }));
+  try {
+    Object.assign(initial, { inspectionDetail: detail, isLoadingDetail: false });
+    const html = render();
+    assert.match(html, /src="https:\/\/example.com\/actual.png"/);
+    assert.match(html, /실제 요청자/);
+    assert.match(html, /actual@example.com/);
+    assert.doesNotMatch(html, /stale.png|날짜 정보 없음/);
+    detail.requester.profileImageUrl = null;
+    assert.match(render(), /src="\/defaultUserProfile.png"/);
+  } finally { Object.assign(initial, previous); }
 });

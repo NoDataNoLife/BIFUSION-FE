@@ -75,7 +75,7 @@ function CertifiedExpertDashboard() {
     id: item.reviewCode,
     requester: {
       name: item.requester?.nickname || '연구자',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.requester?.nickname || 'expert'}`,
+      avatar: item.requester?.profileImageUrl || '',
       email: item.requester?.email || '',
     },
     dataType: item.targetType === 'RECIPE' ? '레시피' : item.targetType === 'UPLOADED_DATA' ? '원본 데이터셋' : '증강 데이터셋',

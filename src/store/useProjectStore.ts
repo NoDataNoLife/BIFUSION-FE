@@ -1,3 +1,4 @@
+import { apiErrorCode } from '../lib/apiErrorCode';
 import { create } from 'zustand';
 import api from '../lib/axios';
 import { requestMessage } from '../lib/liveData';
@@ -50,6 +51,7 @@ interface ProjectState {
   error: string | null;
   fetchMyProjects: () => Promise<boolean>;
   fetchProjectDetail: (projectId: string) => Promise<boolean>;
+  deleteProject: (projectId: string) => Promise<boolean>;
   createProject: (data: any) => Promise<boolean>;
   updateProjectInfo: (projectId: string, data: any) => Promise<boolean>;
   updateProjectBanner: (projectId: string, file: File | null) => Promise<boolean>;
@@ -85,6 +87,29 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       console.error('Failed to fetch projects:', error);
       const errorMessage = requestMessage(error, 'An error occurred');
       set({ error: errorMessage, isLoading: false });
+      return false;
+    }
+  },
+
+  deleteProject: async (projectId) => {
+    set({ error: null });
+    try {
+      const response = await api.delete(`/projects/${projectId}`);
+      if (response.data?.success === false) throw new Error(response.data.message || '프로젝트를 삭제하지 못했습니다.');
+      set(state => ({
+        managingProjects: state.managingProjects.filter(project => project.projectId !== Number(projectId)),
+        participatingProjects: state.participatingProjects.filter(project => project.projectId !== Number(projectId)),
+        currentProject: state.currentProject?.projectId === Number(projectId) ? null : state.currentProject,
+      }));
+      return true;
+    } catch (error) {
+      const messages: Record<string, string> = {
+        P011: '진행 중인 작업이 있습니다. 작업 종료 또는 취소 후 다시 삭제해 주세요.',
+        IS012: '전문가가 검수 중인 증강 데이터가 있습니다. 검수 종료 후 다시 삭제해 주세요.',
+        P002: '프로젝트 관리자만 삭제할 수 있습니다.',
+        P001: '프로젝트가 존재하지 않습니다. 목록을 새로고침해 주세요.',
+      };
+      set({ error: messages[apiErrorCode(error) ?? ''] || requestMessage(error, '프로젝트를 삭제하지 못했습니다.') });
       return false;
     }
   },

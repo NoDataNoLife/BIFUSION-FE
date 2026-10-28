@@ -1,3 +1,4 @@
+import { refreshCurrentPoints } from '../../lib/pointActions';
 import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -36,7 +37,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
 
   const { user } = useAuthStore();
-  const { currentProject, fetchProjectDetail, fetchMyProjects, updateProjectInfo, updateProjectBanner, inviteMember, removeMember, updateMemberRole } = useProjectStore();
+  const { currentProject, fetchProjectDetail, fetchMyProjects, updateProjectInfo, updateProjectBanner, deleteProject, inviteMember, removeMember, updateMemberRole } = useProjectStore();
 
   const [selectedTab, setSelectedTab] = useState<StatusTab>("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<JobTypeFilter>("all");
@@ -596,7 +597,7 @@ export default function ProjectDetailPage() {
                     <label className="block text-sm font-semibold text-foreground mb-1">프로젝트 제목</label>
                     <input
                       type="text"
-                      value={editTitle}
+                      maxLength={100} value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
@@ -604,7 +605,7 @@ export default function ProjectDetailPage() {
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1">프로젝트 설명</label>
                     <textarea
-                      value={editDescription}
+                      maxLength={2000} value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       rows={3}
                       className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
@@ -731,6 +732,20 @@ export default function ProjectDetailPage() {
                 </div>
               </section>
 
+              {canInviteManager && <section className="border-t border-border pt-6 space-y-3">
+                <h4 className="font-bold text-red-600">프로젝트 삭제</h4>
+                <p className="text-sm text-muted-foreground">프로젝트와 배너·작업 파일·증강 결과·학습 모델이 삭제됩니다. 데이터셋 첨부 파일은 유지되며, 시작 전 증강 검수 신청은 취소·환불됩니다. 삭제는 되돌릴 수 없습니다.</p>
+                <button type="button" disabled={saving || inviting} className="rounded-lg bg-red-600 px-4 py-2 font-bold text-white disabled:opacity-50" onClick={async () => {
+                  if (!projectId || saving || !window.confirm(`“${currentProject?.title}” 프로젝트를 삭제하시겠습니까? 삭제는 되돌릴 수 없습니다.`)) return;
+                  setSaving(true); setSaveError('');
+                  try {
+                    if (!await deleteProject(projectId)) { setSaveError(useProjectStore.getState().error || '프로젝트 삭제 실패'); return; }
+                    navigate('/dashboard/projects', { replace: true });
+                    void fetchMyProjects();
+                    void refreshCurrentPoints();
+                  } finally { setSaving(false); }
+                }}>프로젝트 삭제</button>
+              </section>}
               {saveError && <p role="alert" className="text-sm text-red-500">{saveError}</p>}
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button

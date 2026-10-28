@@ -41,6 +41,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { MemoryRouter } from 'react-router-dom';
   export { default as RecruitmentDetail } from './src/components/dashboard/RecruitmentDetail';
   export { default as QnaDetail } from './src/components/dashboard/QnaDetail';
+  export { default as ReviewDetailPage } from './src/components/dashboard/ReviewDetailPage';
   export { default as ExpertPage } from './src/pages/dashboard/ExpertPage';
   export { notificationTarget } from './src/lib/notificationTarget';
   export { formatBytes, requestMessage } from './src/lib/liveData';
@@ -614,4 +615,78 @@ test('missing inspection details return to the list but transient failures remai
   assert.equal(app.inspectionUnavailable(400, 'IS009'), true);
   assert.equal(app.inspectionUnavailable(503), false);
   assert.equal(app.inspectionUnavailable(undefined), false);
+});
+
+test('expert task cards use server avatars or the shared default, never generated characters', () => {
+  const initial = app.useExpertStore.getInitialState();
+  const previous = initial.groupedTasks;
+  const task = { reviewCode: 'REV-002', status: 'PENDING', requester: { nickname: '요청자', email: 'test@example.com' } };
+  try {
+    initial.groupedTasks = { PENDING: [task], IN_PROGRESS: [], COMPLETED: [] };
+    assert.match(renderExpert('APPROVED'), /src="\/defaultUserProfile.png"/);
+    task.requester.profileImageUrl = 'https://example.com/custom-profile.png';
+    const html = renderExpert('APPROVED');
+    assert.match(html, /src="https:\/\/example.com\/custom-profile.png"/);
+    assert.doesNotMatch(html, /dicebear/);
+  } finally { initial.groupedTasks = previous; }
+});
+
+test('inspection detail uses the detailed requester profile and nested request date', () => {
+  const initial = app.useExpertStore.getInitialState();
+  const previous = { inspectionDetail: initial.inspectionDetail, isLoadingDetail: initial.isLoadingDetail };
+  const detail = { inspectionId: 2, targetType: 'RECIPE', requester: { name: '실제 요청자', email: 'actual@example.com', profileImageUrl: 'https://example.com/actual.png', requestedAt: '2026-10-28T12:00:00' } };
+  const request = { id: 'REV-002', requester: { name: '목록 요청자', email: 'old@example.com', avatar: 'https://example.com/stale.png' }, parameters: {}, requestDate: '날짜 정보 없음' };
+  const render = () => app.renderToString(app.createElement(app.ReviewDetailPage, { request, onBack() {}, onApprove() {}, onReject() {} }));
+  try {
+    Object.assign(initial, { inspectionDetail: detail, isLoadingDetail: false });
+    const html = render();
+    assert.match(html, /src="https:\/\/example.com\/actual.png"/);
+    assert.match(html, /실제 요청자/);
+    assert.match(html, /actual@example.com/);
+    assert.doesNotMatch(html, /stale.png|날짜 정보 없음/);
+    detail.requester.profileImageUrl = null;
+    assert.match(render(), /src="\/defaultUserProfile.png"/);
+  } finally { Object.assign(initial, previous); }
+});
+test('project deletion removes only the deleted project and preserves unrelated detail', async () => {
+  const store = app.useProjectStore;
+  store.setState({ managingProjects: [{ projectId: 1 }, { projectId: 2 }], participatingProjects: [{ projectId: 1 }], currentProject: { projectId: 2 } });
+  api.defaults.adapter = async config => {
+    assert.equal(config.method, 'delete');
+    assert.equal(config.url, '/projects/1');
+    return response(config, null);
+  };
+  assert.equal(await store.getState().deleteProject('1'), true);
+  assert.deepEqual(store.getState().managingProjects, [{ projectId: 2 }]);
+  assert.deepEqual(store.getState().participatingProjects, []);
+  assert.equal(store.getState().currentProject.projectId, 2);
+  assert.equal(await store.getState().deleteProject('1'), true);
+});
+
+test('project deletion rejection preserves data and explains active jobs, inspection or permissions', async () => {
+  const store = app.useProjectStore;
+  for (const [code, status, message] of [['P011', 409, /진행 중인 작업/], ['IS012', 409, /검수 중/], ['P002', 403, /관리자/], ['P001', 404, /존재하지/]]) {
+    store.setState({ managingProjects: [{ projectId: 1 }], currentProject: { projectId: 1 } });
+    api.defaults.adapter = async config => { throw new app.AxiosError('rejected', 'ERR_BAD_RESPONSE', config, null, { ...response(config, null), status, data: { code } }); };
+    assert.equal(await store.getState().deleteProject('1'), false);
+    assert.equal(store.getState().managingProjects.length, 1);
+    assert.equal(store.getState().currentProject.projectId, 1);
+    assert.match(store.getState().error, message);
+  }
+});
+
+test('new training and inference notifications retain job routing and category filters', async () => {
+  for (const type of ['TRAINING', 'INFERENCE']) {
+    api.defaults.adapter = async config => {
+      if (config.url === '/notifications') {
+        assert.equal(config.params.category, type);
+        return response(config, { content: [], page: 0, totalPages: 0, totalElements: 0 });
+      }
+      return response(config, { projectId: 2, jobId: 3, type, status: 'SUCCESS' });
+    };
+    await app.useNotificationStore.getState().fetchNotifications({ category: type });
+    const target = await app.notificationTarget({ type: `${type}_SUCCESS`, targetType: 'JOB', targetId: 3 });
+    assert.equal(target, `/dashboard/projects/2/${type === 'TRAINING' ? 'train' : 'inference'}/3/result`);
+  }
+  assert.equal(await app.notificationTarget({ type: 'RECIPE_REVIEW_REQUESTED', targetType: 'INSPECTION_REQUEST', targetId: 45 }), '/dashboard/expert');
 });

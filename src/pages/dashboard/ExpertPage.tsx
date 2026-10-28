@@ -1,3 +1,5 @@
+import { apiErrorCode } from '../../lib/apiErrorCode';
+import { requestMessage } from '../../lib/liveData';
 import { formatKst } from '../../lib/kstDate';
 import { AssetCover } from '../../components/dashboard/DataView';
 import AntCoin from "../../components/common/AntCoin";
@@ -75,7 +77,7 @@ function CertifiedExpertDashboard() {
     id: item.reviewCode,
     requester: {
       name: item.requester?.nickname || '연구자',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.requester?.nickname || 'expert'}`,
+      avatar: item.requester?.profileImageUrl || '',
       email: item.requester?.email || '',
     },
     dataType: item.targetType === 'RECIPE' ? '레시피' : item.targetType === 'UPLOADED_DATA' ? '원본 데이터셋' : '증강 데이터셋',
@@ -87,15 +89,29 @@ function CertifiedExpertDashboard() {
     reviewResult: item.reviewResult === 'APPROVED' ? 'approved' : item.reviewResult === 'REJECTED' ? 'rejected' : undefined,
   }));
 
+  const [startError, setStartError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
   const handleStartReview = async (reviewCode: string) => {
+    if (starting) return;
+    setStartError(null);
     const numericId = Number(reviewCode.replace(/\D/g, ''));
     if (numericId) {
       try {
+        setStarting(true);
         await startInspectionTask(numericId);
         await fetchMyTasks();
       } catch (e) {
-        console.error('Failed to start inspection on server:', e);
+        const code = apiErrorCode(e);
+        const messages: Record<string, string> = {
+          IS015: '다른 전문가가 먼저 검수를 시작했습니다. 목록을 갱신했습니다.',
+          IS014: '본인이 신청한 검수는 맡을 수 없습니다.',
+          IS009: '취소되었거나 존재하지 않는 검수 신청입니다. 목록을 갱신했습니다.',
+        };
+        setStartError(messages[code ?? ''] || requestMessage(e, '검수를 시작하지 못했습니다.'));
+        if (code === 'IS015' || code === 'IS009' || code === 'IS014') await fetchMyTasks();
         return;
+      } finally {
+        setStarting(false);
       }
     }
     setSelectedTab('reviewing');
@@ -212,6 +228,8 @@ function CertifiedExpertDashboard() {
           </div>
         </div>
 
+        <p className="px-8 pt-4 text-sm text-muted-foreground">검수 대기는 전문가 공용 목록입니다. 먼저 검수를 시작한 전문가가 담당합니다.</p>
+        {startError && <p role="alert" className="px-8 pt-3 text-sm text-red-500">{startError}</p>}
         {/* List Content */}
         <div className="p-8">
           {isLoading ? (
@@ -244,7 +262,7 @@ function CertifiedExpertDashboard() {
                   <p className="text-xs text-primary font-bold mb-6">{request.dataType} · 요청일: {request.requestDate}</p>
 
                   {request.status === 'pending' ? (
-                    <button onClick={() => handleStartReview(request.id)} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-primary transition-all flex items-center justify-center gap-2 group/btn cursor-pointer">
+                    <button disabled={starting} onClick={() => handleStartReview(request.id)} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm hover:bg-primary transition-all flex items-center justify-center gap-2 group/btn cursor-pointer">
                       <Eye size={18} className="group-hover/btn:scale-110 transition-transform" /> 검수 시작하기
                     </button>
                   ) : request.status === 'reviewing' ? (

@@ -20,9 +20,11 @@ export interface InspectionDetailResponse {
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED';
   requester: {
     userId: number;
-    nickname: string;
+    nickname?: string;
+    name?: string;
     email: string;
-    profileImageUrl?: string;
+    profileImageUrl?: string | null;
+    requestedAt?: string | null;
   };
   rewardPoints: number;
   requestedAt: string;
@@ -45,8 +47,10 @@ export interface ExpertTaskSummaryItem {
   reviewResult?: 'APPROVED' | 'REJECTED' | null;
   requester: {
     userId: number;
-    nickname: string;
+    nickname?: string;
+    name?: string;
     email: string;
+    profileImageUrl?: string | null;
   };
   projectName: string | null;
   targetType?: "RECIPE" | "UPLOADED_DATA" | "AUGMENTED_DATA";

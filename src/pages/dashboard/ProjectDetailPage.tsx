@@ -1,3 +1,4 @@
+import NewJobModal from '../../components/dashboard/NewJobModal';
 import { refreshCurrentPoints } from '../../lib/pointActions';
 import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
 import React, { useState, useEffect } from "react";
@@ -50,6 +51,7 @@ export default function ProjectDetailPage() {
     if (projectId) void fetchProjectDetail(projectId);
   }, [projectId, fetchProjectDetail]);
 
+  const [isNewJobOpen, setIsNewJobOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const [editTitle, setEditTitle] = useState("");
@@ -314,7 +316,7 @@ export default function ProjectDetailPage() {
                 설정
               </button>
               <button
-                onClick={() => navigate(`/dashboard/projects/${projectId}/jobs/new/setup`)}
+                onClick={() => setIsNewJobOpen(true)}
                 className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
               >
                 <Play className="w-4 h-4 fill-current" />새 작업 시작
@@ -570,6 +572,7 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
+      {isNewJobOpen && projectId && <NewJobModal projectId={projectId} onClose={() => setIsNewJobOpen(false)} />}
       {/* Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

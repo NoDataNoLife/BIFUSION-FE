@@ -122,10 +122,10 @@ export default function ProjectListPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">
-            나의 개미굴🐜
+            내 프로젝트
           </h1>
           <p className="text-muted-foreground mt-1 font-medium">
-            총 {projects.length}개의 개미굴
+            총 {projects.length}개의 프로젝트
           </p>
         </div>
 
@@ -157,7 +157,7 @@ export default function ProjectListPage() {
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-primary" />
             <h3 className="text-xl font-bold text-foreground">
-              관리중인 개미굴
+              관리 중인 프로젝트
             </h3>
             <span className="px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">
               {
@@ -206,7 +206,7 @@ export default function ProjectListPage() {
           {projects.filter((p) => p.role === "manager").length === 0 && (
             <EmptyState
               icon={<FolderKanban />}
-              title="관리중인 개미굴이 없습니다"
+              title="관리 중인 프로젝트이 없습니다"
             />
           )}
         </div>
@@ -218,7 +218,7 @@ export default function ProjectListPage() {
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-blue-500" />
             <h3 className="text-xl font-bold text-foreground">
-              참여중인 개미굴
+              참여 중인 프로젝트
             </h3>
             <span className="px-2.5 py-0.5 bg-blue-50 text-blue-500 text-xs font-bold rounded-full">
               {
@@ -267,7 +267,7 @@ export default function ProjectListPage() {
           {projects.filter((p) => p.role === "member").length === 0 && (
             <EmptyState
               icon={<Users />}
-              title="참여중인 개미굴이 없습니다"
+              title="참여 중인 프로젝트이 없습니다"
             />
           )}
         </div>

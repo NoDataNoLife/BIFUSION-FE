@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -15,7 +16,18 @@ import { AssetCover, DataState } from '../../components/dashboard/DataView';
 
 function ProjectCard({ project }: { project: Project }) {
   const navigate = useNavigate();
-  const { data, error, loading } = useApiQuery<{ statusCounts: Record<string, number> }>(`/projects/${project.projectId}/jobs`, { size: 1 });
+  const { data, error, loading, reload } = useApiQuery<{ statusCounts: Record<string, number> }>(`/projects/${project.projectId}/jobs`, { size: 1 });
+  useEffect(() => {
+    const refresh = () => { if (!document.hidden) reload(); };
+    const timer = window.setInterval(refresh, 30000);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [reload]);
   return <DashboardCard className="overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all group rounded-3xl border border-border">
     <button onClick={() => navigate(`/dashboard/projects/${project.projectId}`)} aria-label={`${project.title} 열기`} className="block w-full relative h-44 overflow-hidden"><AssetCover src={project.bannerImageUrl} title={project.title} className="group-hover:scale-105 transition-transform duration-500" /></button>
     <div className="p-6"><h3 className="font-black text-foreground mb-4 line-clamp-1 text-lg">{project.title}</h3>

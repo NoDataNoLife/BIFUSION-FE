@@ -1,3 +1,4 @@
+import { AssetCover } from '../../components/dashboard/DataView';
 import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +46,7 @@ export default function ProjectListPage() {
       id: p.projectId.toString(),
       title: p.title,
       description: p.description,
-      coverImage: p.bannerImageUrl || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
+      coverImage: p.bannerImageUrl || '',
       teamMembers: p.members?.map(m => ({
         name: m.nickname || "사용자",
         avatar: m.profileImageUrl || (m.userId === user?.userId ? user?.profileImage || user?.profileImageUrl : null) || '/defaultUserProfile.png'
@@ -206,7 +207,7 @@ export default function ProjectListPage() {
           {projects.filter((p) => p.role === "manager").length === 0 && (
             <EmptyState
               icon={<FolderKanban />}
-              title="관리 중인 프로젝트이 없습니다"
+              title="관리 중인 프로젝트가 없습니다"
             />
           )}
         </div>
@@ -267,7 +268,7 @@ export default function ProjectListPage() {
           {projects.filter((p) => p.role === "member").length === 0 && (
             <EmptyState
               icon={<Users />}
-              title="참여 중인 프로젝트이 없습니다"
+              title="참여 중인 프로젝트가 없습니다"
             />
           )}
         </div>
@@ -328,9 +329,9 @@ function ProjectCard({
       </div>
 
       <div className="h-48 overflow-hidden bg-muted">
-        <img
+        <AssetCover
           src={project.coverImage}
-          alt={project.title}
+          title={project.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
       </div>

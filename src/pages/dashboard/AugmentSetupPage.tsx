@@ -1,3 +1,9 @@
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import api from '../../lib/axios';
+import { readAugmentationSettings, augmentationJobParameters } from '../../lib/augmentationRecipe';
+import { augmentationRecipesEnabled } from '../../lib/backendFeatures';
+import { requestMessage } from '../../lib/liveData';
 import { useJobEstimate } from '../../hooks/useJobEstimate';
 import JobCostNotice from '../../components/jobs/JobCostNotice';
 import { useState, useRef } from 'react';
@@ -25,6 +31,12 @@ export default function AugmentSetupPage() {
   const navigate = useNavigate();
   const { createJob, isLoading } = useJobStore();
 
+  const [query] = useSearchParams();
+  const recipeId = query.get('recipeId');
+  const [recipeReady, setRecipeReady] = useState(false);
+  const [recipeLoading, setRecipeLoading] = useState(false);
+  const [recipeError, setRecipeError] = useState<string | null>(null);
+  const [recipeTitle, setRecipeTitle] = useState('');
   const [imagesPerClass, setImagesPerClass] = useState('10');
   const [samplingSteps, setSamplingSteps] = useState('50');
   const [strength, setStrength] = useState('0.3');
@@ -32,6 +44,25 @@ export default function AugmentSetupPage() {
   const [seed, setSeed] = useState('42');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fixedSeed, setFixedSeed] = useState(false);
+
+  useEffect(() => {
+    setRecipeReady(false); setRecipeError(null); setRecipeTitle('');
+    if (!recipeId) return;
+    if (!augmentationRecipesEnabled || !/^\d+$/.test(recipeId) || Number(recipeId) <= 0) { setRecipeError('레시피 연동을 사용할 수 없습니다.'); return; }
+    const controller = new AbortController(); setRecipeLoading(true);
+    api.get(`/community/recipes/${recipeId}`, { signal: controller.signal }).then(response => {
+      if (controller.signal.aborted) return;
+      const data = response.data?.data;
+      if (response.data?.success === false || data?.isDeleted || data?.recipeId !== Number(recipeId)) throw new Error('레시피를 확인할 수 없습니다.');
+      const settings = readAugmentationSettings(data.augmentationSettings);
+      const parameters = augmentationJobParameters(settings);
+      setImagesPerClass(String(parameters.num_samples_per_class)); setStrength(String(parameters.strength));
+      setFinetuneSteps(String(parameters.finetune_steps)); setSamplingSteps(String(parameters.steps)); setSeed(String(parameters.seed)); setFixedSeed(true);
+      setRecipeTitle(data.title); setRecipeReady(true);
+    }).catch(error => { if (!controller.signal.aborted) setRecipeError(requestMessage(error)); })
+      .finally(() => { if (!controller.signal.aborted) setRecipeLoading(false); });
+    return () => controller.abort();
+  }, [recipeId]);
 
   const [normalFiles, setNormalFiles] = useState<File[]>([]);
   const [anomalyFiles, setAnomalyFiles] = useState<File[]>([]);
@@ -66,7 +97,7 @@ export default function AugmentSetupPage() {
 
   const totalBytes = [...normalFiles, ...anomalyFiles].reduce((acc, f) => acc + f.size, 0);
 
-  const isValid = !!projectId
+  const isValid = (!recipeId || recipeReady) && !recipeLoading && !!projectId
     && normalFiles.length >= 5 && normalFiles.length <= 10
     && anomalyFiles.length >= 5 && anomalyFiles.length <= 10
     && totalBytes <= 20 * 1024 * 1024
@@ -187,6 +218,7 @@ export default function AugmentSetupPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
+        {recipeId && <div className="rounded-xl border border-border p-4">{recipeLoading ? <p role="status">레시피 설정을 불러오는 중…</p> : recipeError ? <p role="alert" className="text-red-500">{recipeError} <button onClick={() => navigate(`/dashboard/projects/${projectId}/jobs/new/setup`)} className="underline">레시피 없이 직접 설정</button></p> : <p role="status">불러온 레시피: {recipeTitle}. 입력 이미지를 선택해 주세요.</p>}</div>}
         <JobCostNotice estimate={estimate}/>
         {submitError && (
           <p role="alert" className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-500 text-sm font-medium">

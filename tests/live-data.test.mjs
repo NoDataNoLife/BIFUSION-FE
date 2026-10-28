@@ -25,6 +25,9 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
+  export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
   export { validateTextRequest } from './src/lib/inputLimits';
   export { LimitedInput, LimitedTextarea } from './src/components/common/LimitedTextField';
   export { default as api } from './src/lib/axios';
@@ -362,6 +365,9 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
+  export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
   export { validateTextRequest } from './src/lib/inputLimits';
   export { LimitedInput, LimitedTextarea } from './src/components/common/LimitedTextField';
   export { default as api } from './src/lib/axios';
@@ -731,4 +737,56 @@ test('over-limit saves are rejected before reaching the network adapter', async 
   assert.equal(calls, 0);
   await api.put('/profile/nickname', { nickname: 'a'.repeat(255) });
   assert.equal(calls, 1);
+});
+
+
+test('augmentation recipe settings round trip without losing actual seed or strength zero', () => {
+  const settings = { numSamplesPerClass: 10, strength: 0, finetuneSteps: 400, steps: 50, seed: 0 };
+  const copied = app.settingsFromDraft(app.draftFromSettings(settings));
+  assert.deepEqual(copied, settings);
+  assert.deepEqual(app.augmentationJobParameters(copied), { num_samples_per_class: 10, strength: 0, finetune_steps: 400, steps: 50, seed: 0 });
+  assert.deepEqual(settings, { numSamplesPerClass: 10, strength: 0, finetuneSteps: 400, steps: 50, seed: 0 });
+});
+
+test('legacy and incomplete augmentation recipes cannot silently become runnable settings', () => {
+  for (const value of [null, undefined, {}, { model: 'legacy', steps: 50, seed: 42 }, { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50 }]) {
+    assert.throws(() => app.readAugmentationSettings(value));
+  }
+  const base = { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 };
+  for (const invalid of [{ numSamplesPerClass: 101 }, { strength: NaN }, { finetuneSteps: 0 }, { steps: 201 }, { seed: -1 }, { seed: 4294967296 }, { steps: '50' }]) assert.throws(() => app.readAugmentationSettings({ ...base, ...invalid }));
+  assert.throws(() => app.settingsFromDraft({ ...app.draftFromSettings(base), strength: '' }));
+});
+
+test('job-backed recipe saves use sourceJobId exclusively while manual copies retain settings', () => {
+  const settings = { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 };
+  const meta = { title: ' 시험 ', description: ' 설명 ', overview: '' };
+  const manual = app.augmentationRecipePayload(meta, settings, true);
+  assert.deepEqual(manual.augmentationSettings, settings);
+  assert.equal(manual.title, '시험');
+  assert.equal(manual.isPublic, true);
+  assert.equal('sourceJobId' in manual, false);
+  assert.equal('modelName' in manual, false);
+  assert.equal('forkedFromId' in manual, false);
+  const fromJob = app.augmentationRecipePayload(meta, settings, false, 44);
+  assert.equal(fromJob.sourceJobId, 44);
+  assert.equal(fromJob.isPublic, false);
+  assert.equal('augmentationSettings' in fromJob, false);
+  assert.throws(() => app.augmentationRecipePayload(meta, settings, false, NaN));
+});
+
+test('new recipe settings render Korean labels and never invent a legacy configuration', () => {
+  const render = value => app.renderToString(app.createElement(app.RecipeAugmentationSettings, { recipeId: 3, value }));
+  const html = render({ numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 });
+  assert.match(html, /클래스별 생성 장수/);
+  assert.match(html, /파인튜닝 스텝/);
+  assert.doesNotMatch(html, /CFG|Euler/);
+  assert.match(render(null), /설정 기록이 없습니다/);
+});
+
+test('job-backed recipe form cannot save before a real snapshot is loaded', () => {
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, onClose() {} }));
+  assert.match(html, /비공개로 저장/);
+  assert.match(html, /파인튜닝 스텝/);
+  assert.match(html, /disabled=""[^>]*>내 레시피로 저장/);
+  assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
 });

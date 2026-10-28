@@ -1,3 +1,4 @@
+import RecipeAugmentationSettings from '../community/RecipeAugmentationSettings';
 import { LimitedTextarea } from '../common/LimitedTextField';
 import { AntCostNotice, AntRequestError } from '../common/AntActionNotice';
 import { forkRecipe, refreshPointsAfter } from '../../lib/pointActions';
@@ -200,7 +201,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
             </div>
             <aside className="p-8 bg-primary/5 rounded-4xl border border-primary/10 self-start"><h3 className="text-lg font-black text-primary mb-6">추천 활용 사례</h3>{data.overview?.recommendations?.length ? <ul className="space-y-4">{data.overview.recommendations.map((value,i) => <li key={i} className="flex gap-3 text-sm font-medium text-muted-foreground"><span className="w-1.5 h-1.5 mt-2 bg-primary rounded-full shrink-0"/>{value}</li>)}</ul> : <p className="text-sm text-muted-foreground">등록된 활용 사례가 없습니다.</p>}</aside>
           </div>{data.inspectionTarget ? <InspectionPanel target={data.inspectionTarget} title={data.title} reload={detail.reload}/> : <ExpertVerificationCard status={status} onViewResults={() => setVerification('result')} />}</div>}
-          {tab === 'settings' && (data.settings ? <dl className="grid md:grid-cols-2 gap-6">{Object.entries(data.settings).map(([key,value]) => <div key={key} className="flex flex-wrap justify-between items-center gap-3 p-6 bg-muted rounded-2xl border border-border"><dt className="text-sm font-black text-muted-foreground uppercase">{key}</dt><dd className="font-mono font-bold text-primary bg-card px-4 py-1.5 rounded-lg border border-border">{value ?? '—'}</dd></div>)}</dl> : <DataState title="등록된 설정 정보가 없습니다"/>) }
+          {tab === 'settings' && (data.augmentationSettings ? <RecipeAugmentationSettings value={data.augmentationSettings} recipeId={data.recipeId}/> : data.settings ? <dl className="grid md:grid-cols-2 gap-6">{Object.entries(data.settings).map(([key,value]) => <div key={key} className="flex flex-wrap justify-between items-center gap-3 p-6 bg-muted rounded-2xl border border-border"><dt className="text-sm font-black text-muted-foreground uppercase">{key}</dt><dd className="font-mono font-bold text-primary bg-card px-4 py-1.5 rounded-lg border border-border">{value ?? '—'}</dd></div>)}</dl> : <DataState title="등록된 설정 정보가 없습니다"/>) }
           {tab === 'reviews' && (
             <section className="space-y-6">
               {reviews.loading ? (

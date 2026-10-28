@@ -1,3 +1,5 @@
+import { augmentationRecipesEnabled } from '../../../lib/backendFeatures';
+import AugmentationRecipeForm from './AugmentationRecipeForm';
 import { LimitedInput, LimitedTextarea } from '../../common/LimitedTextField';
 import React, { useState, useEffect, useRef } from 'react';
 import { isCancel } from 'axios';
@@ -18,7 +20,7 @@ interface ShowcaseCreateFormProps {
   onCreated?: () => void;
 }
 
-export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', initialSourceId, onCreated }: ShowcaseCreateFormProps) {
+function LegacyShowcaseCreateForm({ onClose, context = 'COMMUNITY', initialSourceId, onCreated }: ShowcaseCreateFormProps) {
   const isAsset = context === 'ASSET';
   const { fetchRecipeList } = useCommunityStore();
 
@@ -401,4 +403,10 @@ export default function ShowcaseCreateForm({ onClose, context = 'COMMUNITY', ini
       </form>
     </div>
   );
+}
+
+export default function ShowcaseCreateForm(props: ShowcaseCreateFormProps) {
+  const [legacy, setLegacy] = useState(false);
+  if (!augmentationRecipesEnabled) return <LegacyShowcaseCreateForm {...props}/>;
+  return <><div className="flex gap-3 border-b border-border p-4"><button type="button" aria-pressed={!legacy} onClick={() => setLegacy(false)} disabled={!legacy}>증강 설정 레시피</button><button type="button" aria-pressed={legacy} onClick={() => setLegacy(true)} disabled={legacy}>기존 형식 레시피</button></div>{legacy ? <LegacyShowcaseCreateForm {...props}/> : <AugmentationRecipeForm {...props}/>}</>;
 }

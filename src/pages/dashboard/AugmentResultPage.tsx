@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { augmentationRecipesEnabled } from '../../lib/backendFeatures';
+import AugmentationRecipeForm from '../../components/community/forms/AugmentationRecipeForm';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -27,6 +29,9 @@ export default function AugmentResultPage() {
   const [job, setJob] = useState<JobDetail | null>(
     currentJob?.jobId === jobId ? currentJob : null
   );
+  const [savingRecipe, setSavingRecipe] = useState(false);
+  const recipeDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => { if (savingRecipe) recipeDialog.current?.showModal(); }, [savingRecipe]);
   const [loading, setLoading] = useState(!job);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,6 +124,7 @@ export default function AugmentResultPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
+      {savingRecipe && <dialog ref={recipeDialog} aria-label="내 레시피로 저장" onCancel={event => event.preventDefault()} className="m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-3xl overflow-y-auto rounded-3xl border border-border bg-card p-0 text-foreground backdrop:bg-black/60"><AugmentationRecipeForm context="ASSET" sourceJobId={Number(jobId)} onClose={() => setSavingRecipe(false)} onCreated={() => { setSavingRecipe(false); navigate('/dashboard/assets'); }}/></dialog>}
       {/* Header Section */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-8 py-6">
@@ -144,7 +150,8 @@ export default function AugmentResultPage() {
               </h1>
             </div>
 
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ml-auto flex flex-wrap items-center gap-3">
+              {augmentationRecipesEnabled && <button onClick={() => setSavingRecipe(true)} className="rounded-2xl border border-border bg-card px-5 py-3 text-sm font-bold">내 레시피로 저장</button>}
               <button 
                 onClick={handleDownload}
                 className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-2xl font-bold text-sm text-foreground hover:bg-muted transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"

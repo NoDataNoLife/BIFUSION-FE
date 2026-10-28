@@ -1,7 +1,8 @@
+import NewJobModal from '../../components/dashboard/NewJobModal';
 import { refreshCurrentPoints } from '../../lib/pointActions';
 import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Settings,
@@ -50,6 +51,7 @@ export default function ProjectDetailPage() {
     if (projectId) void fetchProjectDetail(projectId);
   }, [projectId, fetchProjectDetail]);
 
+  const [isNewJobOpen, setIsNewJobOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const [editTitle, setEditTitle] = useState("");
@@ -291,13 +293,14 @@ export default function ProjectDetailPage() {
             <div className="ml-auto flex items-center gap-3">
               <div className="flex -space-x-2 mr-4">
                 {currentProject?.members?.map((member) => (
+                  <Link key={member.userId} to={`/dashboard/profile/${member.userId}`} aria-label={`${member.nickname || "사용자"} 공개 프로필 보기`} className="relative rounded-full focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-primary hover:z-10">
                   <ProfileAvatar
-                    key={member.userId}
                     src={member.profileImageUrl || (member.userId === user?.userId ? user?.profileImage || user?.profileImageUrl : null)}
                     alt={member.nickname || "사용자"}
                     className="w-8 h-8 rounded-full border-2 border-border ring-1 ring-border shadow-sm"
                     title={member.nickname || "사용자"}
                   />
+                  </Link>
                 ))}
                 <button
                   onClick={() => setIsSettingsOpen(true)}
@@ -314,7 +317,7 @@ export default function ProjectDetailPage() {
                 설정
               </button>
               <button
-                onClick={() => navigate(`/dashboard/projects/${projectId}/jobs/new/setup`)}
+                onClick={() => setIsNewJobOpen(true)}
                 className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
               >
                 <Play className="w-4 h-4 fill-current" />새 작업 시작
@@ -520,16 +523,10 @@ export default function ProjectDetailPage() {
                           {getStatusBadge(job.status, job.currentStep)}
                         </td>
                         <td className="px-6 py-5">
-                          <div className="flex items-center gap-2">
-                            <ProfileAvatar
-                              src={creatorImage}
-                              alt={userName}
-                              className="w-6 h-6 rounded-full bg-muted ring-1 ring-border shadow-sm"
-                            />
-                            <span className="text-sm font-bold text-foreground">
-                              {userName}
-                            </span>
-                          </div>
+                          {job.createdBy?.userId ? <Link to={`/dashboard/profile/${job.createdBy.userId}`} onClick={event => event.stopPropagation()} aria-label={`${userName} 공개 프로필 보기`} className="inline-flex items-center gap-2 rounded-lg hover:underline focus-visible:outline-2 focus-visible:outline-primary">
+                            <ProfileAvatar src={creatorImage} alt="" className="w-6 h-6 rounded-full bg-muted ring-1 ring-border shadow-sm" />
+                            <span className="text-sm font-bold text-foreground">{userName}</span>
+                          </Link> : <span className="text-sm text-muted-foreground">{userName}</span>}
                         </td>
                         <td className="px-6 py-5 text-sm font-medium text-muted-foreground tabular-nums">
                           {formattedDate}
@@ -570,6 +567,7 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
+      {isNewJobOpen && projectId && <NewJobModal projectId={projectId} onClose={() => setIsNewJobOpen(false)} />}
       {/* Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -663,7 +661,7 @@ export default function ProjectDetailPage() {
                       key={member.userId}
                       className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <Link to={`/dashboard/profile/${member.userId}`} aria-label={`${member.nickname || "사용자"} 공개 프로필 보기`} className="flex items-center gap-3 rounded-lg hover:underline focus-visible:outline-2 focus-visible:outline-primary">
                         <ProfileAvatar
                           src={member.profileImageUrl || (member.userId === user?.userId ? user?.profileImage || user?.profileImageUrl : null)}
                           alt={member.nickname || "사용자"}
@@ -677,7 +675,7 @@ export default function ProjectDetailPage() {
                             {member.email || "이메일 없음"}
                           </p>
                         </div>
-                      </div>
+                      </Link>
                       <div className="flex items-center gap-3 relative">
                         {/* 권한 변경 Dropdown Container */}
                         <div className="relative">

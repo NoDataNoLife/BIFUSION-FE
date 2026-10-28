@@ -25,6 +25,9 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { parseExecutionSnapshot } from './src/lib/jobExecutionSnapshot';
+  export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
+  export { useJobStore } from './src/store/useJobStore';
   export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
   export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
   export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
@@ -365,6 +368,9 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { parseExecutionSnapshot } from './src/lib/jobExecutionSnapshot';
+  export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
+  export { useJobStore } from './src/store/useJobStore';
   export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
   export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
   export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
@@ -789,4 +795,60 @@ test('job-backed recipe form cannot save before a real snapshot is loaded', () =
   assert.match(html, /파인튜닝 스텝/);
   assert.match(html, /disabled=""[^>]*>내 레시피로 저장/);
   assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
+});
+
+
+test('job snapshot parser preserves zeros, distinguishes missing records, and ignores unexpected fields', () => {
+  const raw = { type: 'TRAINING', parameters: { kShot: 5, epochs: 30, qQuery: 5, episodesPerEpoch: 10, seed: 0, secret: 'not-for-display' }, inputs: { augmentationJobId: 44 } };
+  const snapshot = app.parseExecutionSnapshot(raw, 'TRAINING');
+  assert.equal(snapshot.parameters.seed, 0);
+  assert.equal(snapshot.parameters.epochs, 30);
+  assert.equal(snapshot.inputs.augmentationJobId, 44);
+  assert.equal('secret' in snapshot.parameters, false);
+  assert.equal(app.parseExecutionSnapshot(raw, 'INFERENCE'), null);
+  assert.equal(app.parseExecutionSnapshot(null, 'TRAINING'), null);
+  assert.equal(app.parseExecutionSnapshot({ type: 'TRAINING', parameters: null, inputs: null }, 'TRAINING').parameters, null);
+});
+
+test('snapshot files keep server order and deleted image URLs are never displayed', () => {
+  const snapshot = app.parseExecutionSnapshot({ type: 'INFERENCE', parameters: null, inputs: { modelId: 7, files: [
+    { fileId: 3, fileName: 'first.png', imageUrl: 'https://example.com/first.png' },
+    { fileId: 4, fileName: 'deleted.png', imageUrl: 'https://example.com/removed.png', deleted: true },
+    { fileId: 5, imageUrl: 'javascript:alert(1)' },
+  ] } }, 'INFERENCE');
+  assert.deepEqual(snapshot.inputs.files.map(file => file.fileId), [3, 4, 5]);
+  assert.equal(snapshot.inputs.files[1].imageUrl, null);
+  assert.equal(snapshot.inputs.files[2].imageUrl, null);
+  const html = app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.JobExecutionInputs, { job: { jobId: '9', type: 'INFERENCE', executionSnapshot: snapshot } })));
+  assert.match(html, /first.png/);
+  assert.match(html, /삭제됨/);
+  assert.doesNotMatch(html, /removed.png|javascript:/);
+});
+
+test('training input card links augmentation job IDs and keeps model IDs separate', () => {
+  const snapshot = app.parseExecutionSnapshot({ type: 'TRAINING', parameters: { kShot: 5, epochs: 30 }, inputs: { augmentationJobId: 44 } }, 'TRAINING');
+  const html = app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.JobExecutionInputs, { job: { jobId: '9', projectId: 2, type: 'TRAINING', executionSnapshot: snapshot } })));
+  assert.match(html, /projects\/2\/jobs\/44\/result/);
+  assert.match(html, /Epoch/);
+  assert.match(html, /기록 없음/);
+});
+
+test('legacy results show only verified values without inventing current defaults', () => {
+  const html = app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.JobExecutionInputs, { job: { jobId: '9', type: 'TRAINING', seed: 42, executionSeed: null, result: { kShot: 3 } } })));
+  assert.match(html, /확인 가능한 항목만/);
+  assert.match(html, /K-shot/);
+  assert.doesNotMatch(html, />42<|>30</);
+});
+
+test('job store retains normalized server snapshots without using request seed as actual execution history', async () => {
+  const snapshot = { type: 'TRAINING', parameters: { kShot: 5, epochs: 30, seed: 0 }, inputs: { augmentationJobId: 44 } };
+  api.defaults.adapter = async config => response(config, { jobId: 9, type: 'TRAINING', status: 'SUCCESS', projectId: 2, seedNumber: 0, executionSnapshot: snapshot });
+  const job = await app.useJobStore.getState().fetchJobStatus('9');
+  assert.equal(job.executionSeed, 0);
+  assert.equal(job.executionSnapshot.parameters.seed, 0);
+  assert.equal(job.executionSnapshot.inputs.augmentationJobId, 44);
+  api.defaults.adapter = async config => response(config, { jobId: 9, type: 'TRAINING', status: 'SUCCESS', projectId: 2 });
+  const old = await app.useJobStore.getState().fetchJobStatus('9');
+  assert.equal(old.executionSnapshot, null);
+  assert.equal(old.executionSeed, null);
 });

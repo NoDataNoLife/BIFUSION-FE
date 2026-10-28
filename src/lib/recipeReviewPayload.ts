@@ -7,3 +7,8 @@ export function recipeReviewPayload(content: string, commentOnly: boolean, ratin
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new Error('평점을 선택해 주세요.');
   return { content: text, rating };
 }
+
+/** Preserve stored scores until the backend accepts comment-only updates. */
+export function recipeReviewEditPayload(content: string, commentOnly: boolean, review: { parentReviewId: number | null; rating?: number | null }) {
+  return recipeReviewPayload(content, commentOnly || review.parentReviewId != null, review.rating ?? 5);
+}

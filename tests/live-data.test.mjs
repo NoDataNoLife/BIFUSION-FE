@@ -29,7 +29,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { forkRecipe, createQuestion, deleteDatasetWithRefund, refreshCurrentPoints } from './src/lib/pointActions';
   export { inspectionUnavailable } from './src/lib/inspectionErrors';
   export { AntCostNotice, AntRequestError } from './src/components/common/AntActionNotice';
-  export { recipeReviewPayload } from './src/lib/recipeReviewPayload';
+  export { recipeReviewPayload, recipeReviewEditPayload } from './src/lib/recipeReviewPayload';
   export { newRecipeDraft, draftFromRecipe, recipeRegistrationPayload } from './src/lib/recipeDraft';
   export { AxiosError } from 'axios';
   export { useNotificationStore } from './src/store/useNotificationStore';
@@ -614,4 +614,14 @@ test('missing inspection details return to the list but transient failures remai
   assert.equal(app.inspectionUnavailable(400, 'IS009'), true);
   assert.equal(app.inspectionUnavailable(503), false);
   assert.equal(app.inspectionUnavailable(undefined), false);
+});
+
+test('comment edits preserve legacy scores and omit scores for replies or migrated backend', () => {
+  for (const rating of [1, 2, 3, 4, 5]) {
+    assert.deepEqual(app.recipeReviewEditPayload(' 수정 ', false, { parentReviewId: null, rating }), { content: '수정', rating });
+  }
+  assert.deepEqual(app.recipeReviewEditPayload('수정', true, { parentReviewId: null, rating: 2 }), { content: '수정' });
+  assert.deepEqual(app.recipeReviewEditPayload('답글 수정', false, { parentReviewId: 12, rating: null }), { content: '답글 수정' });
+  assert.deepEqual(app.recipeReviewEditPayload('수정', false, { parentReviewId: null, rating: null }), { content: '수정', rating: 5 });
+  assert.throws(() => app.recipeReviewEditPayload(' ', false, { parentReviewId: null, rating: 2 }));
 });

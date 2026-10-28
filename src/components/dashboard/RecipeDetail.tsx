@@ -9,7 +9,7 @@ import { ArrowLeft, GitFork, Share2, Trash2, Award, Check } from 'lucide-react';
 import { AssetCover, DataState } from './DataView';
 import api from '../../lib/axios';
 import { commentOnlyReviewsEnabled } from '../../lib/backendFeatures';
-import { recipeReviewPayload } from '../../lib/recipeReviewPayload';
+import { recipeReviewPayload, recipeReviewEditPayload } from '../../lib/recipeReviewPayload';
 import { useApiQuery } from '../../hooks/useApiQuery';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCommunityStore, type RecipeDetailResponse } from '../../store/useCommunityStore';
@@ -73,7 +73,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
             event.preventDefault();
             if (!editContent.trim()) return;
             void run(async () => {
-              await api.put(`/community/recipes/${recipe.id}/reviews/${review.reviewId}`, recipeReviewPayload(editContent, commentOnlyReviewsEnabled || isReply, isReply ? 0 : 5));
+              await api.put(`/community/recipes/${recipe.id}/reviews/${review.reviewId}`, recipeReviewEditPayload(editContent, commentOnlyReviewsEnabled, review));
               setEditingId(null);
               refresh();
             });

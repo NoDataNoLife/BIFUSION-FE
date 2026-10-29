@@ -165,7 +165,6 @@ export default function TrainResultPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
-        <JobExecutionInputs key={job.jobId} job={job}/>
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -216,6 +215,7 @@ export default function TrainResultPage() {
           </div>
         </div>
 
+        <JobExecutionInputs key={job.jobId} job={job}/>
       </div>
     </div>
   );

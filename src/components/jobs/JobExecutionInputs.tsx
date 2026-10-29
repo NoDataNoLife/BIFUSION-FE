@@ -1,3 +1,4 @@
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import type { JobDetail } from '../../store/useJobStore';
@@ -24,16 +25,22 @@ export default function JobExecutionInputs({ job }: { job: JobDetail }) {
   const inputs = snapshot?.inputs;
   const knownSeed = job.executionSeed;
   const knownKShot = job.type === 'TRAINING' && typeof job.result?.kShot === 'number' && Number.isFinite(job.result.kShot) ? job.result.kShot : null;
-  return <section aria-label="사용한 설정 및 입력 정보" className="space-y-5 rounded-3xl border border-border bg-card p-6 sm:p-8">
-    <h2 className="text-xl font-bold">사용한 설정 및 입력 정보</h2>
-    <p className="text-sm text-muted-foreground">서버에서 조회한 실제 실행 기록입니다. 현재 기본값으로 보정하지 않습니다.</p>
-    {!snapshot && <p className="text-sm text-muted-foreground">전체 실행 설정·입력 참조 기록이 아직 제공되지 않았습니다. 확인 가능한 항목만 표시합니다.</p>}
+  return <details className="group overflow-hidden rounded-4xl border border-border bg-card shadow-sm">
+    <summary className="flex cursor-pointer list-none items-center gap-4 p-6 sm:p-8 [&::-webkit-details-marker]:hidden hover:bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary"><SlidersHorizontal size={21} aria-hidden="true"/></span>
+      <span className="min-w-0 flex-1"><span className="block text-lg font-black text-foreground">사용한 설정 및 입력 정보</span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">이 작업에 사용한 파라미터와 입력 정보를 확인하세요.</span></span>
+      <span className="hidden text-xs font-bold text-muted-foreground sm:block"><span className="group-open:hidden">펼치기</span><span className="hidden group-open:inline">접기</span></span>
+      <ChevronDown size={20} aria-hidden="true" className="shrink-0 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none"/>
+    </summary>
+    <div className="space-y-6 border-t border-border px-6 py-6 sm:px-8">
+    {!snapshot && <p className="rounded-xl bg-muted/40 px-4 py-3 text-xs leading-relaxed text-muted-foreground">이 작업은 일부 실행 기록만 남아 있습니다. 확인 가능한 항목만 표시합니다.</p>}
     {job.type !== 'INFERENCE' && <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{executionFields[job.type].map(([key, label]) => {
       const value = parameters?.[key] ?? (key === 'seed' ? knownSeed : key === 'kShot' ? knownKShot : null);
-      return <div key={key} className="rounded-xl bg-muted/50 p-4"><dt className="text-sm text-muted-foreground">{label}</dt><dd className="mt-2 font-semibold">{value ?? '기록 없음'}</dd></div>;
+      return <div key={key} className="rounded-2xl border border-border/60 bg-muted/30 p-4"><dt className="text-sm text-muted-foreground">{label}</dt><dd className="mt-2 text-base font-bold text-foreground">{value ?? '기록 없음'}</dd></div>;
     })}</dl>}
     {job.type === 'TRAINING' && <div><p className="text-sm text-muted-foreground">학습에 사용한 증강 작업</p>{inputs?.augmentationJobId && job.projectId ? <Link className="text-primary underline" to={`/dashboard/projects/${job.projectId}/jobs/${inputs.augmentationJobId}/result`}>JOB-{inputs.augmentationJobId}</Link> : <p>기록 없음</p>}</div>}
     {job.type === 'INFERENCE' && <div><p className="text-sm text-muted-foreground">추론에 사용한 모델 ID</p><p className="font-semibold">{inputs?.modelId ?? '기록 없음'}</p></div>}
     {(job.type === 'INFERENCE' || job.type === 'AUGMENTATION') && <div className="space-y-3"><h3 className="font-bold">입력 이미지</h3>{inputs?.files == null ? <p className="text-sm text-muted-foreground">입력 이미지 기록이 제공되지 않았습니다.</p> : inputs.files.length ? <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{inputs.files.map((file, index) => <InputFile key={`${job.jobId}-${file.fileId}-${index}`} file={file} index={index}/>)}</ul> : <p className="text-sm text-muted-foreground">기록된 입력 이미지가 없습니다.</p>}</div>}
-  </section>;
+    </div>
+  </details>;
 }

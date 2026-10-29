@@ -174,7 +174,6 @@ export default function AugmentResultPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-8 space-y-8">
-        <JobExecutionInputs key={job.jobId} job={job}/>
 
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -268,6 +267,7 @@ export default function AugmentResultPage() {
             )}
           </div>
         </div>
+        <JobExecutionInputs key={job.jobId} job={job}/>
       </div>
     </div>
   );

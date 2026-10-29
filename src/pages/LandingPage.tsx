@@ -856,7 +856,7 @@ export default function LandingPage() {
             </div>
 
             <h2 className="mt-6 font-hbios text-[36px] leading-tight text-[#101828] dark:text-foreground md:text-[48px] md:leading-[56px]">
-              기여할수록 쌓이는 가치, Ants
+              기여할수록 쌓이는 가치, Ant
             </h2>
 
             <p className="mx-auto mt-4 max-w-[680px] font-hbios text-[17px] leading-[28px] text-[#4A5565] dark:text-muted-foreground md:text-[20px]">
@@ -894,7 +894,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold tracking-wide text-[#7A8B70] dark:text-[#A8C79B]">
-                    EARN ANTS
+                    EARN ANT
                   </p>
                   <h3 className="mt-1 font-hbios text-[24px] text-[#101828] dark:text-foreground">
                     앤트를 충전하세요
@@ -926,7 +926,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold tracking-wide text-[#B27D29] dark:text-[#FFC76A]">
-                    SPEND ANTS
+                    SPEND ANT
                   </p>
                   <h3 className="mt-1 font-hbios text-[24px] text-[#101828] dark:text-foreground">
                     앤트로 작업하세요
@@ -945,7 +945,7 @@ export default function LandingPage() {
           <div className="mt-6 rounded-2xl bg-[#E58D00] dark:bg-[#B86F00] px-6 py-7 text-center md:px-10">
             <p className="font-hbios text-[22px] leading-relaxed text-white md:text-[28px]">
               Earn through contribution.
-              <span className="text-[#FFFBF4]"> Build through Ants.</span>
+              <span className="text-[#FFFBF4]"> Build through Ant.</span>
             </p>
             <p className="mt-0 text-sm leading-6 text-white/75 md:text-base">
               기여로 앤트를 얻고, 앤트로 더 많은 가능성을 실험하세요.

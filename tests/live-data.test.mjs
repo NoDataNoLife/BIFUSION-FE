@@ -29,6 +29,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
   export { useJobStore } from './src/store/useJobStore';
   export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as ShowcaseCreateForm } from './src/components/community/forms/ShowcaseCreateForm';
   export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
   export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
   export { validateTextRequest } from './src/lib/inputLimits';
@@ -372,6 +373,7 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
   export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
   export { useJobStore } from './src/store/useJobStore';
   export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as ShowcaseCreateForm } from './src/components/community/forms/ShowcaseCreateForm';
   export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
   export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
   export { validateTextRequest } from './src/lib/inputLimits';
@@ -790,8 +792,8 @@ test('new recipe settings render Korean labels and never invent a legacy configu
 });
 
 test('job-backed recipe form cannot save before a real snapshot is loaded', () => {
-  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, onClose() {} }));
-  assert.match(html, /비공개로 저장/);
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, integrationReady: true, onClose() {} }));
+  assert.match(html, /저장 시 비공개로 등록/);
   assert.match(html, /파인튜닝 스텝/);
   assert.match(html, /disabled=""[^>]*>내 레시피로 저장/);
   assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
@@ -851,4 +853,31 @@ test('job store retains normalized server snapshots without using request seed a
   const old = await app.useJobStore.getState().fetchJobStatus('9');
   assert.equal(old.executionSnapshot, null);
   assert.equal(old.executionSeed, null);
+});
+
+
+test('new recipe screen is the default while API-backed saving and imports remain disabled', () => {
+  const html = app.renderToString(app.createElement(app.ShowcaseCreateForm, { context: 'ASSET', onClose() {} }));
+  assert.match(html, /클래스별 생성 장수/);
+  assert.match(html, /증강 강도/);
+  assert.match(html, /파인튜닝 스텝/);
+  assert.match(html, /기존 형식 레시피/);
+  assert.match(html, /서버에 저장되지 않으며/);
+  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
+  assert.match(html, /disabled=""[^>]*>포크한 레시피 불러오기/);
+  assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
+});
+
+test('job recipe preview identifies the source but does not claim a snapshot was loaded', () => {
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, integrationReady: false, onClose() {} })).replace(/<!--.*?-->/g, '');
+  assert.match(html, /원본 작업: JOB-44/);
+  assert.match(html, /API 연결 후 불러옵니다/);
+  assert.doesNotMatch(html, /불러온 설정:|다시 불러오기/);
+  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
+});
+
+test('recipe settings preview blocks reuse until API integration is enabled', () => {
+  const html = app.renderToString(app.createElement(app.RecipeAugmentationSettings, { recipeId: 3, value: { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 } }));
+  assert.match(html, /disabled=""[^>]*>레시피 재사용 연동 준비 중/);
+  assert.doesNotMatch(html, /recipeId=3/);
 });

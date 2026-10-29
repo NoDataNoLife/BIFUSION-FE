@@ -1,5 +1,5 @@
 import JobExecutionInputs from '../../components/jobs/JobExecutionInputs';
-import { augmentationRecipesEnabled } from '../../lib/backendFeatures';
+import { augmentationRecipeScreenEnabled } from '../../lib/backendFeatures';
 import AugmentationRecipeForm from '../../components/community/forms/AugmentationRecipeForm';
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -152,7 +152,7 @@ export default function AugmentResultPage() {
             </div>
 
             <div className="ml-auto flex flex-wrap items-center gap-3">
-              {augmentationRecipesEnabled && <button onClick={() => setSavingRecipe(true)} className="rounded-2xl border border-border bg-card px-5 py-3 text-sm font-bold">내 레시피로 저장</button>}
+              {augmentationRecipeScreenEnabled && <button onClick={() => setSavingRecipe(true)} className="rounded-2xl border border-border bg-card px-5 py-3 text-sm font-bold">내 레시피로 저장</button>}
               <button 
                 onClick={handleDownload}
                 className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-2xl font-bold text-sm text-foreground hover:bg-muted transition-all shadow-sm active:scale-95 cursor-pointer disabled:opacity-50"

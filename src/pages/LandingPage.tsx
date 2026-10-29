@@ -1,6 +1,7 @@
 import HeroCover from "../components/landing/HeroCover";
 import FeatureCards from "../components/landing/FeatureCards";
 import { useEffect, useRef } from "react";
+import { Wallet } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 
@@ -914,31 +915,22 @@ export default function LandingPage() {
             <div className="rounded-2xl border border-border bg-card p-7 md:p-8">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F0F5E9] text-[#547448] dark:bg-[#547448]/20 dark:text-[#A8C79B]">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    className="h-6 w-6"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
+                  <Wallet className="h-6 w-6" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold tracking-wide text-[#7A8B70] dark:text-[#A8C79B]">
                     EARN ANTS
                   </p>
                   <h3 className="mt-1 font-hbios text-[24px] text-[#101828] dark:text-foreground">
-                    앤트를 획득하세요
+                    앤트를 충전하세요
                   </h3>
                 </div>
               </div>
 
               <p className="mt-5 text-[15px] leading-7 text-[#4A5565] dark:text-muted-foreground">
-                필요한 앤트를 충전하거나, 프로젝트 공유와 전문가 Q&amp;A 등
+                필요한 만큼 앤트를 충전하고,
                 <br />
-                서비스 기여 활동을 통해 앤트를 획득할 수 있습니다.
+                AI 데이터 증강과 프로젝트 기능을 이용해 보세요.
               </p>
             </div>
 

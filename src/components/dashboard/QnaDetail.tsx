@@ -1,3 +1,4 @@
+import { LimitedTextarea } from '../common/LimitedTextField';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, MessageCircle, Award, Send, Edit2, Trash2 } from 'lucide-react';
 import ProfileAvatar from '../common/ProfileAvatar';
@@ -153,7 +154,7 @@ export default function QnaDetail({ qnaId, onBack, onDelete }: QnaDetailProps) {
               <h3 className="text-xl font-black text-white flex items-center gap-3">
                 <Edit2 className="text-primary" size={20} /> 답변 남기기
               </h3>
-              <textarea
+              <LimitedTextarea maxLength={2000}
                 disabled={user?.expertStatus !== 'APPROVED'} value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder={user?.expertStatus === 'APPROVED' ? '답변을 입력해 주세요.' : '인증된 전문가만 답변을 작성할 수 있습니다.'}

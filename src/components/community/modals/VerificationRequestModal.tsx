@@ -1,3 +1,4 @@
+import { LimitedTextarea } from '../../common/LimitedTextField';
 import { AntRequestError } from '../../common/AntActionNotice';
 import { Link } from 'react-router-dom';
 import AntCoin from "../../common/AntCoin";
@@ -75,7 +76,7 @@ export default function VerificationRequestModal({ onClose, onSubmit, assetTitle
               <p className="text-xs text-muted-foreground mb-2">
                 전문가가 무엇을 중점적으로 검토해야 하는지 적어주세요.
               </p>
-              <textarea
+              <LimitedTextarea maxLength={2000}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="예) 증강 파이프라인 적용 후 노이즈 비율이 적절한지, 또는 의료 데이터로서 손실이 없는지 검토 부탁드립니다."

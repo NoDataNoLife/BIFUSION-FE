@@ -1,3 +1,4 @@
+import { parseExecutionSnapshot, type JobExecutionSnapshot } from '../lib/jobExecutionSnapshot';
 import { create } from 'zustand';
 import api from '../lib/axios';
 import { useAuthStore } from './useAuthStore';
@@ -9,6 +10,8 @@ export type JobType = 'AUGMENTATION' | 'TRAINING' | 'INFERENCE';
 export type JobStatus = 'PENDING' | 'STARTED' | 'RUNNING' | 'SUCCESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export interface JobDetail {
+  executionSnapshot?: JobExecutionSnapshot | null;
+  executionSeed?: string | number | null;
   jobId: string;
   projectId?: string | number;
   type: JobType;
@@ -69,6 +72,8 @@ function parseJob(
   if (expectedId && String(id) !== expectedId) throw new Error('요청한 작업과 다른 응답을 받았습니다.');
 
   return {
+    executionSnapshot: parseExecutionSnapshot(data.executionSnapshot, types.includes(data.type as JobType) ? data.type as JobType : fallback.type),
+    executionSeed: (typeof data.seedNumber === 'number' && Number.isFinite(data.seedNumber)) || (typeof data.seedNumber === 'string' && data.seedNumber.trim() !== '') ? data.seedNumber as string | number : null,
     jobId: String(id),
     projectId: data.projectId as string | number | undefined ?? fallback.projectId,
     type: types.includes(data.type as JobType) ? data.type as JobType : fallback.type,

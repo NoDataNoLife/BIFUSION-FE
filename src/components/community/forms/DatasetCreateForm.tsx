@@ -1,3 +1,4 @@
+import { LimitedInput, LimitedTextarea } from '../../common/LimitedTextField';
 import React, { useState } from 'react';
 import { useCommunityStore } from '../../../store/useCommunityStore';
 import { useAssetStore } from '../../../store/useAssetStore';
@@ -177,7 +178,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">데이터셋 제목 <span className="text-red-500">*</span></label>
-            <input
+            <LimitedInput maxLength={100}
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -188,7 +189,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
           </div>
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">카테고리</label>
-            <input
+            <LimitedInput maxLength={50}
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
@@ -200,7 +201,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
 
         <div>
           <label className="block text-sm font-bold text-foreground mb-2">데이터셋 설명 <span className="text-red-500">*</span></label>
-          <textarea
+          <LimitedTextarea maxLength={2000}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium h-32 resize-none"
@@ -212,26 +213,26 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">라이선스</label>
-            <input type="text" value={license} onChange={(e) => setLicense(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: CC BY 4.0" />
+            <LimitedInput maxLength={50} type="text" value={license} onChange={(e) => setLicense(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: CC BY 4.0" />
           </div>
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">포맷</label>
-            <input type="text" value={format} onChange={(e) => setFormat(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: JPEG, CSV" />
+            <LimitedInput maxLength={20} type="text" value={format} onChange={(e) => setFormat(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: JPEG, CSV" />
           </div>
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">이미지 종류</label>
-            <input type="text" value={imageType} onChange={(e) => setImageType(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: X-Ray, MRI" />
+            <LimitedInput maxLength={50} type="text" value={imageType} onChange={(e) => setImageType(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: X-Ray, MRI" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">해상도 / 규격</label>
-            <input type="text" value={resolution} onChange={(e) => setResolution(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: 1024x1024" />
+            <LimitedInput maxLength={50} type="text" value={resolution} onChange={(e) => setResolution(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: 1024x1024" />
           </div>
           <div>
             <label className="block text-sm font-bold text-foreground mb-2">클래스 정보</label>
-            <input type="text" value={classes} onChange={(e) => setClasses(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: Normal(200), Pneumonia(400)" />
+            <LimitedInput maxLength={2000} type="text" value={classes} onChange={(e) => setClasses(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium" placeholder="예: Normal(200), Pneumonia(400)" />
           </div>
         </div>
 
@@ -240,7 +241,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
             <span>사용 예시 / 파이썬 코드 (선택)</span>
             <span className="text-xs text-muted-foreground font-normal bg-muted px-2 py-1 rounded-md">Markdown 지원</span>
           </label>
-          <textarea 
+          <LimitedTextarea maxLength={2000}
             value={usageExample} 
             onChange={(e) => setUsageExample(e.target.value)} 
             className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm bg-muted h-32" 
@@ -257,7 +258,7 @@ export default function DatasetCreateForm({ onClose, context = 'COMMUNITY', init
                 <button type="button" onClick={() => handleRemoveTag(item)} className="hover:text-primary/70">&times;</button>
               </span>
             ))}
-            <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleAddTag} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: X-Ray" : ""} />
+            <LimitedInput maxLength={50} type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleAddTag} className="flex-1 min-w-30 outline-none font-medium text-sm bg-transparent" placeholder={tags.length === 0 ? "예: X-Ray" : ""} />
           </div>
         </div>
 

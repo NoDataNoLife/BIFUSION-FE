@@ -1,3 +1,4 @@
+import { LimitedInput } from '../components/common/LimitedTextField';
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Building2, Phone, ArrowRight, Loader2 } from "lucide-react";
@@ -75,7 +76,7 @@ export default function OnboardingPage() {
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                   <User size={18} />
                 </div>
-                <input
+                <LimitedInput maxLength={255}
                   type="text"
                   required
                   value={formData.nickname}
@@ -95,7 +96,7 @@ export default function OnboardingPage() {
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                   <Building2 size={18} />
                 </div>
-                <input
+                <LimitedInput maxLength={255}
                   type="text"
                   value={formData.organization}
                   onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
@@ -114,7 +115,7 @@ export default function OnboardingPage() {
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                   <Phone size={18} />
                 </div>
-                <input
+                <LimitedInput maxLength={20}
                   type="text"
                   value={formData.contact}
                   onChange={(e) => setFormData({ ...formData, contact: e.target.value })}

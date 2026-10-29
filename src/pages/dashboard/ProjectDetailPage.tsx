@@ -1,3 +1,4 @@
+import { LimitedInput, LimitedTextarea } from '../../components/common/LimitedTextField';
 import NewJobModal from '../../components/dashboard/NewJobModal';
 import { refreshCurrentPoints } from '../../lib/pointActions';
 import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
@@ -593,17 +594,15 @@ export default function ProjectDetailPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1">프로젝트 제목</label>
-                    <input
-                      type="text"
-                      maxLength={100} value={editTitle}
+                    <LimitedInput maxLength={100}
+                      type="text" value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-1">프로젝트 설명</label>
-                    <textarea
-                      maxLength={2000} value={editDescription}
+                    <LimitedTextarea maxLength={2000} value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       rows={3}
                       className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
@@ -629,7 +628,7 @@ export default function ProjectDetailPage() {
 
                 <form onSubmit={handleAddMember} className="mb-4">
                   <div className="flex flex-wrap gap-2">
-                    <input
+                    <LimitedInput maxLength={255}
                       type="email"
                       value={newMemberEmail}
                       required

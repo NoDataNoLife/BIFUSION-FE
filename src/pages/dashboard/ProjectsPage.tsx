@@ -1,3 +1,4 @@
+import { LimitedInput, LimitedTextarea } from '../../components/common/LimitedTextField';
 import { AssetCover } from '../../components/dashboard/DataView';
 import ProjectCoverPicker from '../../components/common/ProjectCoverPicker';
 import React, { useState, useRef } from "react";
@@ -406,7 +407,7 @@ function CreateProjectModal({
               <label className="block text-sm font-bold text-foreground mb-2 underline decoration-primary/30 decoration-4">
                 프로젝트 명칭
               </label>
-              <input
+              <LimitedInput maxLength={100}
                 type="text"
                 value={newProject.name}
                 onChange={(e) =>
@@ -422,7 +423,7 @@ function CreateProjectModal({
               <label className="block text-sm font-bold text-foreground mb-2 underline decoration-primary/30 decoration-4">
                 연구 설명
               </label>
-              <textarea
+              <LimitedTextarea maxLength={2000}
                 value={newProject.description}
                 onChange={(e) =>
                   setNewProject({ ...newProject, description: e.target.value })
@@ -444,7 +445,7 @@ function CreateProjectModal({
                 <span className="text-xs text-muted-foreground">추가 멤버는 생성 후 설정에서 초대할 수 있습니다.</span>
               </div>
               <div className="flex gap-4">
-                <input
+                <LimitedInput maxLength={255}
                   type="email"
                   value={newProject.teamMembers[0].email}
                   onChange={(e) => {

@@ -1,3 +1,4 @@
+import JobExecutionInputs from '../../components/jobs/JobExecutionInputs';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -172,6 +173,7 @@ export default function InferenceResultPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-8 space-y-8">
+        <JobExecutionInputs key={job.jobId} job={job}/>
 
         {/* Metrics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

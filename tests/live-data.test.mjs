@@ -25,6 +25,15 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { parseExecutionSnapshot } from './src/lib/jobExecutionSnapshot';
+  export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
+  export { useJobStore } from './src/store/useJobStore';
+  export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as ShowcaseCreateForm } from './src/components/community/forms/ShowcaseCreateForm';
+  export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
+  export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
+  export { validateTextRequest } from './src/lib/inputLimits';
+  export { LimitedInput, LimitedTextarea } from './src/components/common/LimitedTextField';
   export { default as api } from './src/lib/axios';
   export { forkRecipe, createQuestion, deleteDatasetWithRefund, refreshCurrentPoints } from './src/lib/pointActions';
   export { inspectionUnavailable } from './src/lib/inspectionErrors';
@@ -360,6 +369,15 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
   export { submitJobRequest, submitJobRetry } from './src/lib/jobSubmission';
   export { default as TeamInvitationActions } from './src/components/common/TeamInvitationActions';
   export { default as JobCostNotice } from './src/components/jobs/JobCostNotice';
+  export { parseExecutionSnapshot } from './src/lib/jobExecutionSnapshot';
+  export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
+  export { useJobStore } from './src/store/useJobStore';
+  export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as ShowcaseCreateForm } from './src/components/community/forms/ShowcaseCreateForm';
+  export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
+  export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
+  export { validateTextRequest } from './src/lib/inputLimits';
+  export { LimitedInput, LimitedTextarea } from './src/components/common/LimitedTextField';
   export { default as api } from './src/lib/axios';
     export { useProjectStore } from './src/store/useProjectStore';
     export { invitationRolesEnabled, commentOnlyReviewsEnabled } from './src/lib/backendFeatures';
@@ -689,4 +707,177 @@ test('new training and inference notifications retain job routing and category f
     assert.equal(target, `/dashboard/projects/2/${type === 'TRAINING' ? 'train' : 'inference'}/3/result`);
   }
   assert.equal(await app.notificationTarget({ type: 'RECIPE_REVIEW_REQUESTED', targetType: 'INSPECTION_REQUEST', targetId: 45 }), '/dashboard/expert');
+});
+
+test('text limits match endpoint exceptions and preserve imported data', () => {
+  const body = { title: '가'.repeat(101), description: '기존 내용' };
+  assert.throws(() => app.validateTextRequest('post', '/community/recipes', body), /100자/);
+  assert.equal(body.title.length, 101);
+  assert.equal(body.description, '기존 내용');
+  assert.doesNotThrow(() => app.validateTextRequest('post', '/datasets', { title: '가'.repeat(100), format: 'a'.repeat(20) }));
+  assert.throws(() => app.validateTextRequest('put', '/datasets/3/upload', { format: 'a'.repeat(21) }), /20자/);
+  assert.throws(() => app.validateTextRequest('put', '/profile/introduction', { bio: 'a'.repeat(2001) }), /2,000자/);
+  assert.throws(() => app.validateTextRequest('patch', '/inspections/3/approve', { expertComment: 'a'.repeat(2001) }), /2,000자/);
+  assert.doesNotThrow(() => app.validateTextRequest('get', '/datasets', { title: 'a'.repeat(500) }));
+  assert.doesNotThrow(() => app.validateTextRequest('post', '/jobs/cost-estimate', { type: 'TRAINING', epochs: 30 }));
+});
+
+test('tag and recipe feature limits validate individual entries and total feature count', () => {
+  assert.throws(() => app.validateTextRequest('post', '/community/qna', { tags: ['a'.repeat(51)] }), /50자/);
+  assert.doesNotThrow(() => app.validateTextRequest('post', '/community/recipes', { features: ['가'.repeat(200)] }));
+  assert.throws(() => app.validateTextRequest('post', '/community/recipes', { features: ['가'.repeat(201)] }), /200자/);
+  assert.throws(() => app.validateTextRequest('post', '/community/recipes', { recommendations: Array(21).fill('사례') }), /20개/);
+});
+
+test('length controls show accessible counts and retain over-limit existing values', () => {
+  const html = app.renderToString(app.createElement(app.LimitedTextarea, { value: '가'.repeat(101), maxLength: 100, onChange() {}, 'aria-label': '제목' }));
+  assert.match(html, /maxLength="100"|maxlength="100"/);
+  assert.match(html, /aria-invalid="true"/);
+  assert.match(html, /aria-describedby=/);
+  assert.match(html.replace(/<!--.*?-->/g, ''), /101 \/ 100자/);
+  assert.match(html, new RegExp('가'.repeat(101)));
+});
+
+test('over-limit saves are rejected before reaching the network adapter', async () => {
+  let calls = 0;
+  api.defaults.adapter = async config => { calls++; return response(config, {}); };
+  await assert.rejects(api.put('/profile/nickname', { nickname: 'a'.repeat(256) }), /255자/);
+  assert.equal(calls, 0);
+  await api.put('/profile/nickname', { nickname: 'a'.repeat(255) });
+  assert.equal(calls, 1);
+});
+
+
+test('augmentation recipe settings round trip without losing actual seed or strength zero', () => {
+  const settings = { numSamplesPerClass: 10, strength: 0, finetuneSteps: 400, steps: 50, seed: 0 };
+  const copied = app.settingsFromDraft(app.draftFromSettings(settings));
+  assert.deepEqual(copied, settings);
+  assert.deepEqual(app.augmentationJobParameters(copied), { num_samples_per_class: 10, strength: 0, finetune_steps: 400, steps: 50, seed: 0 });
+  assert.deepEqual(settings, { numSamplesPerClass: 10, strength: 0, finetuneSteps: 400, steps: 50, seed: 0 });
+});
+
+test('legacy and incomplete augmentation recipes cannot silently become runnable settings', () => {
+  for (const value of [null, undefined, {}, { model: 'legacy', steps: 50, seed: 42 }, { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50 }]) {
+    assert.throws(() => app.readAugmentationSettings(value));
+  }
+  const base = { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 };
+  for (const invalid of [{ numSamplesPerClass: 101 }, { strength: NaN }, { finetuneSteps: 0 }, { steps: 201 }, { seed: -1 }, { seed: 4294967296 }, { steps: '50' }]) assert.throws(() => app.readAugmentationSettings({ ...base, ...invalid }));
+  assert.throws(() => app.settingsFromDraft({ ...app.draftFromSettings(base), strength: '' }));
+});
+
+test('job-backed recipe saves use sourceJobId exclusively while manual copies retain settings', () => {
+  const settings = { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 };
+  const meta = { title: ' 시험 ', description: ' 설명 ', overview: '' };
+  const manual = app.augmentationRecipePayload(meta, settings, true);
+  assert.deepEqual(manual.augmentationSettings, settings);
+  assert.equal(manual.title, '시험');
+  assert.equal(manual.isPublic, true);
+  assert.equal('sourceJobId' in manual, false);
+  assert.equal('modelName' in manual, false);
+  assert.equal('forkedFromId' in manual, false);
+  const fromJob = app.augmentationRecipePayload(meta, settings, false, 44);
+  assert.equal(fromJob.sourceJobId, 44);
+  assert.equal(fromJob.isPublic, false);
+  assert.equal('augmentationSettings' in fromJob, false);
+  assert.throws(() => app.augmentationRecipePayload(meta, settings, false, NaN));
+});
+
+test('new recipe settings render Korean labels and never invent a legacy configuration', () => {
+  const render = value => app.renderToString(app.createElement(app.RecipeAugmentationSettings, { recipeId: 3, value }));
+  const html = render({ numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 });
+  assert.match(html, /클래스별 생성 장수/);
+  assert.match(html, /파인튜닝 스텝/);
+  assert.doesNotMatch(html, /CFG|Euler/);
+  assert.match(render(null), /설정 기록이 없습니다/);
+});
+
+test('job-backed recipe form cannot save before a real snapshot is loaded', () => {
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, integrationReady: true, onClose() {} }));
+  assert.match(html, /저장 시 비공개로 등록/);
+  assert.match(html, /파인튜닝 스텝/);
+  assert.match(html, /disabled=""[^>]*>내 레시피로 저장/);
+  assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
+});
+
+
+test('job snapshot parser preserves zeros, distinguishes missing records, and ignores unexpected fields', () => {
+  const raw = { type: 'TRAINING', parameters: { kShot: 5, epochs: 30, qQuery: 5, episodesPerEpoch: 10, seed: 0, secret: 'not-for-display' }, inputs: { augmentationJobId: 44 } };
+  const snapshot = app.parseExecutionSnapshot(raw, 'TRAINING');
+  assert.equal(snapshot.parameters.seed, 0);
+  assert.equal(snapshot.parameters.epochs, 30);
+  assert.equal(snapshot.inputs.augmentationJobId, 44);
+  assert.equal('secret' in snapshot.parameters, false);
+  assert.equal(app.parseExecutionSnapshot(raw, 'INFERENCE'), null);
+  assert.equal(app.parseExecutionSnapshot(null, 'TRAINING'), null);
+  assert.equal(app.parseExecutionSnapshot({ type: 'TRAINING', parameters: null, inputs: null }, 'TRAINING').parameters, null);
+});
+
+test('snapshot files keep server order and deleted image URLs are never displayed', () => {
+  const snapshot = app.parseExecutionSnapshot({ type: 'INFERENCE', parameters: null, inputs: { modelId: 7, files: [
+    { fileId: 3, fileName: 'first.png', imageUrl: 'https://example.com/first.png' },
+    { fileId: 4, fileName: 'deleted.png', imageUrl: 'https://example.com/removed.png', deleted: true },
+    { fileId: 5, imageUrl: 'javascript:alert(1)' },
+  ] } }, 'INFERENCE');
+  assert.deepEqual(snapshot.inputs.files.map(file => file.fileId), [3, 4, 5]);
+  assert.equal(snapshot.inputs.files[1].imageUrl, null);
+  assert.equal(snapshot.inputs.files[2].imageUrl, null);
+  const html = app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.JobExecutionInputs, { job: { jobId: '9', type: 'INFERENCE', executionSnapshot: snapshot } })));
+  assert.match(html, /first.png/);
+  assert.match(html, /삭제됨/);
+  assert.doesNotMatch(html, /removed.png|javascript:/);
+});
+
+test('training input card links augmentation job IDs and keeps model IDs separate', () => {
+  const snapshot = app.parseExecutionSnapshot({ type: 'TRAINING', parameters: { kShot: 5, epochs: 30 }, inputs: { augmentationJobId: 44 } }, 'TRAINING');
+  const html = app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.JobExecutionInputs, { job: { jobId: '9', projectId: 2, type: 'TRAINING', executionSnapshot: snapshot } })));
+  assert.match(html, /projects\/2\/jobs\/44\/result/);
+  assert.match(html, /Epoch/);
+  assert.match(html, /기록 없음/);
+});
+
+test('legacy results show only verified values without inventing current defaults', () => {
+  const html = app.renderToString(app.createElement(app.MemoryRouter, {}, app.createElement(app.JobExecutionInputs, { job: { jobId: '9', type: 'TRAINING', seed: 42, executionSeed: null, result: { kShot: 3 } } })));
+  assert.match(html, /확인 가능한 항목만/);
+  assert.match(html, /K-shot/);
+  assert.doesNotMatch(html, />42<|>30</);
+});
+
+test('job store retains normalized server snapshots without using request seed as actual execution history', async () => {
+  const snapshot = { type: 'TRAINING', parameters: { kShot: 5, epochs: 30, seed: 0 }, inputs: { augmentationJobId: 44 } };
+  api.defaults.adapter = async config => response(config, { jobId: 9, type: 'TRAINING', status: 'SUCCESS', projectId: 2, seedNumber: 0, executionSnapshot: snapshot });
+  const job = await app.useJobStore.getState().fetchJobStatus('9');
+  assert.equal(job.executionSeed, 0);
+  assert.equal(job.executionSnapshot.parameters.seed, 0);
+  assert.equal(job.executionSnapshot.inputs.augmentationJobId, 44);
+  api.defaults.adapter = async config => response(config, { jobId: 9, type: 'TRAINING', status: 'SUCCESS', projectId: 2 });
+  const old = await app.useJobStore.getState().fetchJobStatus('9');
+  assert.equal(old.executionSnapshot, null);
+  assert.equal(old.executionSeed, null);
+});
+
+
+test('new recipe screen is the default while API-backed saving and imports remain disabled', () => {
+  const html = app.renderToString(app.createElement(app.ShowcaseCreateForm, { context: 'ASSET', onClose() {} }));
+  assert.match(html, /클래스별 생성 장수/);
+  assert.match(html, /증강 강도/);
+  assert.match(html, /파인튜닝 스텝/);
+  assert.match(html, /기존 형식 레시피/);
+  assert.match(html, /서버에 저장되지 않으며/);
+  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
+  assert.match(html, /disabled=""[^>]*>포크한 레시피 불러오기/);
+  assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
+});
+
+test('job recipe preview identifies the source but does not claim a snapshot was loaded', () => {
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, integrationReady: false, onClose() {} })).replace(/<!--.*?-->/g, '');
+  assert.match(html, /원본 작업: JOB-44/);
+  assert.match(html, /API 연결 후 불러옵니다/);
+  assert.doesNotMatch(html, /불러온 설정:|다시 불러오기/);
+  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
+});
+
+test('recipe settings preview blocks reuse until API integration is enabled', () => {
+  const html = app.renderToString(app.createElement(app.RecipeAugmentationSettings, { recipeId: 3, value: { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 } }));
+  assert.match(html, /disabled=""[^>]*>레시피 재사용 연동 준비 중/);
+  assert.doesNotMatch(html, /recipeId=3/);
 });

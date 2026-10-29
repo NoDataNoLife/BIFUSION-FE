@@ -40,6 +40,12 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
       if (controller.signal.aborted) return;
       const data = response.data?.data;
       if (response.data?.success === false || !data || (recipeId != null ? data.recipeId !== recipeId || data.isDeleted : Number(data.jobId) !== jobId || data.type !== 'AUGMENTATION' || data.status !== 'SUCCESS')) throw new Error('불러올 원본 정보를 확인할 수 없습니다.');
+      // TODO(FE integration): 작업 조회 응답 → 레시피 폼 자동 입력의 연결 지점.
+      // BE는 실제 ML 실행에 사용한 설정(확정 시드 포함)을 반환하고,
+      // FE가 아래 5개 입력칸에 매핑한다. BE가 폼 자동 입력을 구현할 필요는 없다.
+      // data.augmentationSettings는 제안 계약이다. #259의 작업 조회는 최상위 필드를
+      // 사용하므로 실제 응답에 맞게 FE 매핑을 수정해야 한다. BE에 이 중첩 구조를 강제하지 않는다.
+      // 결과 리포트도 동일한 실행 기록을 사용하며, 없는 과거 값은 기본값으로 보충하지 않는다.
       const next = draftFromSettings(data.augmentationSettings);
       setSettings(next); setReady(true); setPicker(false); setProjectPicker(false); setSourceJobId(recipeId != null ? undefined : jobId); setSource(recipeId != null ? data.title : `JOB-${jobId}`);
       if (recipeId != null) { setMeta({ title: data.title ?? '', description: data.description ?? '', overview: data.overview?.content ?? '' }); setExtras({ features: data.overview?.features ?? [], recommendations: data.overview?.recommendations ?? [] }); }
@@ -62,6 +68,10 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
     lock.current = true; setBusy(true);
     try {
       const uploaded = image ? await uploadTempFiles([image], undefined, cache.current) : [];
+      // TODO(FE/BE contract): #260의 등록 계약 확인 후 payload를 맞춘다.
+      // 작업에서 저장: sourceJobId로 서버가 권한 확인 후 설정을 복사하는 제안.
+      // 레시피에서 복사/직접 작성: augmentationSettings 전달. 두 원본은 동시에 보내지 않는다.
+      // 개인 저장 isPublic=false, 커뮤니티는 true인 새 사본 등록. 공개 전환 API는 필요하지 않다.
       const response = await api.post('/community/recipes', { ...payload, ...(uploaded[0] ? { thumbnailFileId: uploaded[0].fileId } : {}) });
       if (response.data?.success === false) throw new Error(response.data.message || '레시피를 저장하지 못했습니다.');
       void useCommunityStore.getState().fetchRecipeList();

@@ -17,7 +17,11 @@ const imageUrl = (value: unknown) => {
   if (typeof value !== 'string') return null;
   try { const url = new URL(value); return url.protocol === 'https:' || url.protocol === 'http:' ? value : null; } catch { return null; }
 };
-/** Provisional response adapter. Align this one boundary with the final BE schema. */
+/**
+ * FE 내부 표시 모델용 임시 어댑터. executionSnapshot은 확정 BE 응답 계약이 아니다.
+ * TODO(FE integration): #259의 최상위 실행 파라미터·입력 참조 응답을 이 모델에 매핑한다.
+ * BE에 중첩 executionSnapshot을 추가 요청할 필요는 없다. 누락된 과거 기록은 null 유지.
+ */
 export function parseExecutionSnapshot(value: unknown, type: ExecutionType): JobExecutionSnapshot | null {
   const data = object(value);
   if (!data || data.type !== type) return null;

@@ -19,11 +19,11 @@ import VerificationResultModal from '../community/modals/VerificationResultModal
 import ExpertVerificationCard, { type VerificationStatus } from '../community/ExpertVerificationCard';
 
 export interface Recipe { id: string; title?: string }
-interface Props { recipe: Recipe; onBack: () => void; isAuthor?: boolean; onDelete?: () => void | Promise<void>; onCreateFromRecipe?: () => void }
+interface Props { recipe: Recipe; onBack: () => void; isAuthor?: boolean; onDelete?: () => void | Promise<void>; onCreateFromRecipe?: () => void; onShareRecipe?: (legacy: boolean) => void }
 interface Review { reviewId: number; userId: number; author: string; content: string; rating?: number | null; profileImageUrl?: string | null; createdAt: string; parentReviewId: number | null; replies: Review[] }
 interface Reviews { content: Review[]; totalPages: number; totalElements: number }
 
-export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Props) {
+export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe, onShareRecipe }: Props) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const detail = useApiQuery<RecipeDetailResponse>(`/community/recipes/${recipe.id}`);
@@ -160,6 +160,7 @@ export default function RecipeDetail({ recipe, onBack, onCreateFromRecipe }: Pro
     <div className="bg-card border-b border-border sticky top-0 z-10"><div className="max-w-7xl mx-auto px-4 sm:px-8 py-5 flex flex-wrap items-center justify-between gap-4">
       <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary font-bold text-sm"><ArrowLeft size={18}/>목록으로 돌아가기</button>
       <div className="flex flex-wrap gap-3">
+        {own && onShareRecipe && <button disabled={busy || data.isDeleted} onClick={() => onShareRecipe(!data.augmentationSettings)} className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"><Share2 size={18}/>커뮤니티에 공유하기</button>}
         {onCreateFromRecipe && <button disabled={busy || data.isDeleted} onClick={onCreateFromRecipe} className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary disabled:opacity-50"><GitFork size={18}/>내 레시피로 만들기</button>}
         {!own && <button disabled={busy} onClick={() => void run(async () => { if (!confirm('30앤트를 사용해 이 레시피를 내 보관함에 저장할까요?')) return; const { balanceRefreshed } = await forkRecipe(recipe.id); setNotice(balanceRefreshed ? '내 보관함에 저장했습니다.' : '내 보관함에 저장했습니다. 잔액을 갱신하지 못해 새로고침이 필요합니다. 다시 저장할 필요는 없습니다.'); detail.reload(); })} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-primary font-bold text-sm disabled:opacity-50"><GitFork size={18}/>내 보관함에 저장</button>}
         {own && <button disabled={busy} onClick={() => { if (confirm('레시피를 삭제하시겠습니까?')) void run(async () => { await refreshPointsAfter(() => useCommunityStore.getState().deleteRecipe(Number(recipe.id))); onBack(); }); }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted text-red-500 font-bold text-sm"><Trash2 size={18}/>삭제</button>}

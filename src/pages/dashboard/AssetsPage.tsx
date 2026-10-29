@@ -18,20 +18,23 @@ export default function AssetsPage() {
   const [selected, setSelected] = useState<{ id: number; type: 'recipe' | 'dataset' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [shareLegacy, setShareLegacy] = useState<boolean | null>(null);
   const [createSourceId, setCreateSourceId] = useState<number | undefined>();
   const recipeTab = activeTab === 'recipes' || activeTab === 'uploaded-recipes';
   const types = { recipes: 'FORKED', 'uploaded-recipes': 'MINE', datasets: 'UPLOADED', augmented: 'AUGMENTED' };
   const { data, error, loading: isLoading, reload } = useApiQuery<Page>(recipeTab ? '/assets/recipes' : '/assets/datasets', { type: types[activeTab], page, size: 12 });
   const back = () => { setSelected(null); reload(); };
-  const openFromRecipe = (id: number) => { setCreateSourceId(id); setIsCreateModalOpen(true); };
+  const openFromRecipe = (id: number) => { setShareLegacy(null); setCreateSourceId(id); setIsCreateModalOpen(true); };
   const createModal = <CreateAssetModal
-    key={createSourceId ?? 'new'}
+    key={`${createSourceId ?? 'new'}-${shareLegacy}`}
+    context={shareLegacy == null ? 'ASSET' : 'COMMUNITY'}
+    initialLegacy={shareLegacy ?? undefined}
     isOpen={isCreateModalOpen}
     initialRecipeId={createSourceId}
-    onClose={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); reload(); }}
-    onCreated={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); setSelected(null); setActiveTab('uploaded-recipes'); setPage(0); reload(); }}
+    onClose={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); setShareLegacy(null); reload(); }}
+    onCreated={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); setShareLegacy(null); setSelected(null); setActiveTab('uploaded-recipes'); setPage(0); reload(); }}
   />;
-  if (selected?.type === 'recipe') return <><RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} onCreateFromRecipe={activeTab === 'recipes' ? () => openFromRecipe(selected.id) : undefined}/>{createModal}</>;
+  if (selected?.type === 'recipe') return <><RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} onShareRecipe={activeTab === 'uploaded-recipes' ? legacy => { setShareLegacy(legacy); setCreateSourceId(selected.id); setIsCreateModalOpen(true); } : undefined} onCreateFromRecipe={activeTab === 'recipes' ? () => openFromRecipe(selected.id) : undefined}/>{createModal}</>;
   if (selected?.type === 'dataset') return <DatasetDetailView key={selected.id} datasetId={selected.id} onBack={back} />;
   const displayRecipes = (recipeTab ? data?.content ?? [] : []).filter((r): r is MyRecipeListResponse => 'recipeId' in r).filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ id: r.recipeId, inspectionTarget: r.inspectionTarget, forkedFrom: r.forkedFrom, title: r.title, description: r.description, thumbnailUrl: r.bannerImageUrl, isExpertVerified: r.expertVerified, forkedCount: r.forkCount ?? '—', viewCount: r.viewCount ?? '—' }));
   const displayDatasets = (!recipeTab ? data?.content ?? [] : []).filter((d): d is MyDatasetListResponse => 'datasetId' in d).filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase())).map(d => ({ id: d.datasetId, inspectionTarget: d.inspectionTarget, name: d.name, thumbnail: d.bannerImageUrl, size: formatBytes(d.totalSize), fileCount: d.fileCount, uploadedAt: d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('ko-KR') : '날짜 미등록', format: d.fileFormats?.join(', ') || '형식 미등록' }));
@@ -57,7 +60,7 @@ export default function AssetsPage() {
             />
           </div>
           <button
-            onClick={() => { setCreateSourceId(undefined); setIsCreateModalOpen(true); }}
+            onClick={() => { setShareLegacy(null); setCreateSourceId(undefined); setIsCreateModalOpen(true); }}
             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm whitespace-nowrap cursor-pointer"
           >
             <Plus size={18} /> 새 자산 추가

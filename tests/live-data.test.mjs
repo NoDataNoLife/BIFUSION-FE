@@ -29,6 +29,7 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
   export { useJobStore } from './src/store/useJobStore';
   export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as ProjectAugmentationPicker } from './src/components/community/forms/ProjectAugmentationPicker';
   export { default as ShowcaseCreateForm } from './src/components/community/forms/ShowcaseCreateForm';
   export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
   export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
@@ -373,6 +374,7 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
   export { default as JobExecutionInputs } from './src/components/jobs/JobExecutionInputs';
   export { useJobStore } from './src/store/useJobStore';
   export { readAugmentationSettings, draftFromSettings, settingsFromDraft, augmentationJobParameters, augmentationRecipePayload } from './src/lib/augmentationRecipe';
+  export { default as ProjectAugmentationPicker } from './src/components/community/forms/ProjectAugmentationPicker';
   export { default as ShowcaseCreateForm } from './src/components/community/forms/ShowcaseCreateForm';
   export { default as AugmentationRecipeForm } from './src/components/community/forms/AugmentationRecipeForm';
   export { default as RecipeAugmentationSettings } from './src/components/community/RecipeAugmentationSettings';
@@ -864,7 +866,8 @@ test('new recipe screen is the default while API-backed saving and imports remai
   assert.match(html, /기존 형식 레시피/);
   assert.match(html, /서버에 저장되지 않으며/);
   assert.match(html, /disabled=""[^>]*>연동 준비 중/);
-  assert.match(html, /disabled=""[^>]*>포크한 레시피 불러오기/);
+  assert.match(html, /내 레시피 불러오기/);
+  assert.match(html, /포크한 레시피 불러오기/);
   assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
 });
 
@@ -880,4 +883,32 @@ test('recipe settings preview blocks reuse until API integration is enabled', ()
   const html = app.renderToString(app.createElement(app.RecipeAugmentationSettings, { recipeId: 3, value: { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 } }));
   assert.match(html, /disabled=""[^>]*>레시피 재사용 연동 준비 중/);
   assert.doesNotMatch(html, /recipeId=3/);
+});
+
+test('recipe creation exposes project import independently of pending fork and save integration', () => {
+  const html = app.renderToString(app.createElement(app.ShowcaseCreateForm, { context: 'COMMUNITY', onClose() {} }));
+  assert.match(html, /프로젝트 증강 작업에서 불러오기/);
+  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
+  assert.doesNotMatch(html, /disabled=""[^>]*>프로젝트 증강 작업에서 불러오기/);
+});
+
+test('project import preview explains that real settings remain unavailable', () => {
+  const html = app.renderToString(app.createElement(app.ProjectAugmentationPicker, { enabled: false, busy: false, onSelect() {}, onClose() {} }));
+  assert.match(html, /프로젝트의 증강 작업 선택/);
+  assert.match(html, /실제 설정 불러오기와 저장은 API 연동 후/);
+  assert.match(html, /입력 이미지와 결과 파일은 복사하지 않습니다/);
+});
+
+test('community recipe sharing describes a public copy while personal saving stays private', () => {
+  const render = context => app.renderToString(app.createElement(app.AugmentationRecipeForm, { context, integrationReady: true, onClose() {} }));
+  assert.match(render('COMMUNITY'), /공개 사본 등록/);
+  assert.match(render('COMMUNITY'), /원본은 변경되지 않습니다/);
+  assert.match(render('ASSET'), /비공개로 등록됩니다/);
+  assert.doesNotMatch(render('ASSET'), /공개 사본 등록/);
+});
+
+test('saving from a result keeps the source fixed and does not offer unrelated imports', () => {
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { sourceJobId: 44, context: 'ASSET', integrationReady: false, onClose() {} }));
+  assert.doesNotMatch(html, /프로젝트 증강 작업에서 불러오기|내 레시피 불러오기/);
+  assert.match(html, /readOnly=""/);
 });

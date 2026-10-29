@@ -18,6 +18,7 @@ interface ShowcaseCreateFormProps {
   context?: 'COMMUNITY' | 'ASSET';
   initialSourceId?: number;
   onCreated?: () => void;
+  initialLegacy?: boolean;
 }
 
 function LegacyShowcaseCreateForm({ onClose, context = 'COMMUNITY', initialSourceId, onCreated }: ShowcaseCreateFormProps) {
@@ -406,7 +407,7 @@ function LegacyShowcaseCreateForm({ onClose, context = 'COMMUNITY', initialSourc
 }
 
 export default function ShowcaseCreateForm(props: ShowcaseCreateFormProps) {
-  const [legacy, setLegacy] = useState(false);
+  const [legacy, setLegacy] = useState(props.initialLegacy ?? false);
   if (!augmentationRecipeScreenEnabled) return <LegacyShowcaseCreateForm {...props}/>;
   return <><div className="flex gap-3 border-b border-border p-4"><button type="button" aria-pressed={!legacy} onClick={() => setLegacy(false)} disabled={!legacy}>증강 설정 레시피</button><button type="button" aria-pressed={legacy} onClick={() => setLegacy(true)} disabled={legacy}>기존 형식 레시피</button></div>{legacy ? <LegacyShowcaseCreateForm {...props}/> : <AugmentationRecipeForm {...props}/>}</>;
 }

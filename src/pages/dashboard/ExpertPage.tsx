@@ -10,7 +10,6 @@ import {
   XCircle,
   TrendingUp,
   Award,
-  Star,
   Eye,
   MessageSquare
 } from 'lucide-react';
@@ -173,7 +172,7 @@ function CertifiedExpertDashboard() {
 
       {performance.error && <p role="alert" className="text-red-500">{performance.error} <button onClick={performance.reload}>성과 다시 조회</button></p>}
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-primary rounded-3xl p-8 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
           <AntCoin className="absolute -right-4 -bottom-4 w-32 h-32 opacity-20 group-hover:scale-110 transition-transform" />
           <p className="text-xs font-black uppercase tracking-widest opacity-70 mb-2">총 획득 앤트</p>
@@ -193,13 +192,7 @@ function CertifiedExpertDashboard() {
           </p>
         </div>
 
-        <div className="bg-card rounded-3xl p-8 border border-border shadow-sm">
-          <div className="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-500 mb-6">
-            <Star size={24} />
-          </div>
-          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">피드백 만족도</p>
-          <p className="text-3xl font-black text-foreground">{performance.data?.feedbackSatisfaction ?? '평가 없음'} {performance.data?.feedbackSatisfaction != null && <span className="text-sm font-bold text-muted-foreground ml-1">/ 5.0</span>}</p>
-        </div>
+
       </div>
 
       {/* Main List Section */}

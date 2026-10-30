@@ -1,5 +1,5 @@
 export interface AugmentationSettings {
-  numSamplesPerClass: number; strength: number; finetuneSteps: number; steps: number; seed: number;
+  numSamplesPerClass: number; strength: number; finetuneSteps: number; steps: number; seed: number | null;
 }
 export const augmentationFields = [
   { key: 'numSamplesPerClass', label: '클래스별 생성 장수', min: 1, max: 100, step: 1 },
@@ -14,22 +14,23 @@ export function readAugmentationSettings(value: unknown): AugmentationSettings {
   const result = {} as AugmentationSettings;
   for (const field of augmentationFields) {
     const v = (value as Record<string, unknown>)[field.key];
+    if (field.key === 'seed' && v == null) { result.seed = null; continue; }
     if (typeof v !== 'number' || !Number.isFinite(v) || v < field.min || v > field.max || (field.step === 1 && !Number.isInteger(v))) throw new Error(`${field.label} 기록을 확인할 수 없습니다.`);
     result[field.key] = v;
   }
   return result;
 }
 export function settingsFromDraft(draft: AugmentationDraft) {
-  if (Object.values(draft).some(value => !value.trim())) throw new Error('증강 설정을 모두 입력해 주세요.');
-  return readAugmentationSettings(Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, Number(value)])));
+  if (Object.entries(draft).some(([key, value]) => key !== 'seed' && !value.trim())) throw new Error('증강 설정을 모두 입력해 주세요.');
+  return readAugmentationSettings(Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, key === 'seed' && !value.trim() ? null : Number(value)])));
 }
 export function draftFromSettings(value: unknown): AugmentationDraft {
   const settings = readAugmentationSettings(value);
-  return Object.fromEntries(Object.entries(settings).map(([key, value]) => [key, String(value)])) as AugmentationDraft;
+  return Object.fromEntries(Object.entries(settings).map(([key, value]) => [key, value == null ? '' : String(value)])) as AugmentationDraft;
 }
 export function augmentationJobParameters(settings: AugmentationSettings) {
   const s = readAugmentationSettings(settings);
-  return { num_samples_per_class: s.numSamplesPerClass, strength: s.strength, finetune_steps: s.finetuneSteps, steps: s.steps, seed: s.seed };
+  return { num_samples_per_class: s.numSamplesPerClass, strength: s.strength, finetune_steps: s.finetuneSteps, steps: s.steps, ...(s.seed != null ? { seed: s.seed } : {}) };
 }
 export function augmentationRecipePayload(meta: { title: string; description: string; overview: string }, settings: AugmentationSettings, isPublic: boolean, sourceJobId?: number) {
   if (!meta.title.trim() || !meta.description.trim()) throw new Error('제목과 설명을 입력해 주세요.');

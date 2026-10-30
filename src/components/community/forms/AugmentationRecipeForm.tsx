@@ -1,5 +1,4 @@
 import ProjectAugmentationPicker from './ProjectAugmentationPicker';
-import { augmentationRecipesEnabled } from '../../../lib/backendFeatures';
 import { useEffect, useRef, useState } from 'react';
 import api from '../../../lib/axios';
 import { requestMessage } from '../../../lib/liveData';
@@ -10,7 +9,7 @@ import RecipeImageField from './RecipeImageField';
 import { uploadTempFiles, type TempUploadedFile } from '../../../lib/fileUpload';
 import { useCommunityStore } from '../../../store/useCommunityStore';
 
-export default function AugmentationRecipeForm({ onClose, onCreated, context = 'COMMUNITY', initialSourceId, sourceJobId: initialSourceJobId, integrationReady = augmentationRecipesEnabled }: { onClose: () => void; onCreated?: () => void; context?: 'ASSET' | 'COMMUNITY'; initialSourceId?: number; sourceJobId?: number; integrationReady?: boolean }) {
+export default function AugmentationRecipeForm({ onClose, onCreated, context = 'COMMUNITY', initialSourceId, sourceJobId: initialSourceJobId }: { onClose: () => void; onCreated?: (recipeId?: number) => void; context?: 'ASSET' | 'COMMUNITY'; initialSourceId?: number; sourceJobId?: number }) {
   const [sourceJobId, setSourceJobId] = useState(initialSourceJobId);
   const [projectPicker, setProjectPicker] = useState(false);
   const [meta, setMeta] = useState({ title: '', description: '', overview: '' });
@@ -31,7 +30,7 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
   const request = useRef<AbortController | null>(null);
   const dirty = useRef(false);
   const load = async (recipeId?: number, jobId = sourceJobId) => {
-    if (!integrationReady || lock.current) return;
+    if (lock.current) return;
     if (dirty.current && !window.confirm('작성 중인 내용을 선택한 원본의 설정으로 바꿀까요?')) return;
     request.current?.abort(); const controller = new AbortController(); request.current = controller;
     lock.current = true; setLoading(true); setError(null);
@@ -40,13 +39,17 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
       if (controller.signal.aborted) return;
       const data = response.data?.data;
       if (response.data?.success === false || !data || (recipeId != null ? data.recipeId !== recipeId || data.isDeleted : Number(data.jobId) !== jobId || data.type !== 'AUGMENTATION' || data.status !== 'SUCCESS')) throw new Error('불러올 원본 정보를 확인할 수 없습니다.');
-      // TODO(FE integration): 작업 조회 응답 → 레시피 폼 자동 입력의 연결 지점.
-      // BE는 실제 ML 실행에 사용한 설정(확정 시드 포함)을 반환하고,
-      // FE가 아래 5개 입력칸에 매핑한다. BE가 폼 자동 입력을 구현할 필요는 없다.
-      // data.augmentationSettings는 제안 계약이다. #259의 작업 조회는 최상위 필드를
-      // 사용하므로 실제 응답에 맞게 FE 매핑을 수정해야 한다. BE에 이 중첩 구조를 강제하지 않는다.
-      // 결과 리포트도 동일한 실행 기록을 사용하며, 없는 과거 값은 기본값으로 보충하지 않는다.
-      const next = draftFromSettings(data.augmentationSettings);
+      // BE 작업 응답은 최상위 실행값, 레시피 응답은 augmentationSettings를 사용한다.
+      if (recipeId != null && data.settingsFormat === 'LEGACY') {
+        setSettings({ numSamplesPerClass: '', strength: '', finetuneSteps: '', steps: '', seed: '' });
+        setMeta({ title: data.title ?? '', description: data.description ?? '', overview: data.overview?.content ?? '' });
+        setExtras({ features: data.overview?.features ?? [], recommendations: data.overview?.recommendations ?? [] });
+        setSourceJobId(undefined); setSource(data.title); setReady(true); setPicker(false); setProjectPicker(false); setImage(null);
+        setError('기존 형식은 설정을 자동 변환할 수 없습니다. 아래에 새 증강 설정을 직접 입력하거나 완료된 증강 작업을 불러와 주세요.');
+        return;
+      }
+      if (recipeId == null && data.seed == null) throw new Error('설정 기록이 없는 예전 작업이라 불러올 수 없습니다.');
+      const next = draftFromSettings(recipeId != null ? data.augmentationSettings : data);
       setSettings(next); setReady(true); setPicker(false); setProjectPicker(false); setSourceJobId(recipeId != null ? undefined : jobId); setSource(recipeId != null ? data.title : `JOB-${jobId}`);
       if (recipeId != null) { setMeta({ title: data.title ?? '', description: data.description ?? '', overview: data.overview?.content ?? '' }); setExtras({ features: data.overview?.features ?? [], recommendations: data.overview?.recommendations ?? [] }); }
       setImage(null); setFeatureText(''); setRecommendationText(''); dirty.current = false;
@@ -54,13 +57,13 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
     finally { if (request.current === controller) { lock.current = false; setLoading(false); } }
   };
   useEffect(() => {
-    if (integrationReady && (initialSourceId != null || initialSourceJobId != null)) void load(initialSourceId, initialSourceJobId);
+    if ((initialSourceId != null || initialSourceJobId != null)) void load(initialSourceId, initialSourceJobId);
     return () => { request.current?.abort(); lock.current = false; };
     // Initial source belongs to this mounted form.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSourceId, initialSourceJobId, integrationReady]);
+  }, [initialSourceId, initialSourceJobId]);
   return <form className="space-y-6 p-6 sm:p-8" onSubmit={async event => {
-    event.preventDefault(); if (!integrationReady || lock.current || !ready) return;
+    event.preventDefault(); if (lock.current || !ready) return;
     setError(null);
     let payload;
     try { payload = { ...augmentationRecipePayload(meta, settingsFromDraft(settings), context !== 'ASSET', sourceJobId), ...extras }; }
@@ -68,19 +71,15 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
     lock.current = true; setBusy(true);
     try {
       const uploaded = image ? await uploadTempFiles([image], undefined, cache.current) : [];
-      // TODO(FE/BE contract): #260의 등록 계약 확인 후 payload를 맞춘다.
-      // 작업에서 저장: sourceJobId로 서버가 권한 확인 후 설정을 복사하는 제안.
-      // 레시피에서 복사/직접 작성: augmentationSettings 전달. 두 원본은 동시에 보내지 않는다.
-      // 개인 저장 isPublic=false, 커뮤니티는 true인 새 사본 등록. 공개 전환 API는 필요하지 않다.
       const response = await api.post('/community/recipes', { ...payload, ...(uploaded[0] ? { thumbnailFileId: uploaded[0].fileId } : {}) });
       if (response.data?.success === false) throw new Error(response.data.message || '레시피를 저장하지 못했습니다.');
       void useCommunityStore.getState().fetchRecipeList();
-      (onCreated ?? onClose)();
+      const id = Number(String(response.data?.data?.recipeId ?? '').replace(/^REC-/, ''));
+      if (onCreated) onCreated(Number.isSafeInteger(id) && id > 0 ? id : undefined); else onClose();
     } catch (e) { setError(requestMessage(e)); } finally { lock.current = false; setBusy(false); }
   }}>
     <div className="flex justify-between gap-4"><h3 className="text-2xl font-black">{context === 'ASSET' ? '내 증강 레시피 저장' : '증강 레시피 공유'}</h3><button type="button" disabled={busy} onClick={onClose}>닫기</button></div>
     <p className="text-sm text-muted-foreground">증강 실행 설정을 저장하는 화면입니다. 입력 이미지와 결과 파일은 복사하지 않습니다. {context === 'ASSET' ? '저장 시 비공개로 등록됩니다.' : '공개 사본을 새로 등록합니다. 내 레시피 원본은 변경되지 않습니다.'}</p>
-    {!integrationReady && <div role="status" className="space-y-1 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm"><p className="font-bold">레시피 저장·불러오기 연동 준비 중</p><p>새 입력 화면을 먼저 공개했습니다. 입력 내용과 선택한 이미지는 서버에 저장되지 않으며 화면을 닫으면 사라집니다.</p>{sourceJobId != null && <p>원본 작업: JOB-{sourceJobId} · 실제 실행 설정은 API 연결 후 불러옵니다.</p>}</div>}
     {initialSourceJobId == null && <section className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4" aria-label="레시피 작성 방법">
       <h4 className="font-bold">어떤 설정으로 작성할까요?</h4>
       <p className="text-sm text-muted-foreground">아래에서 저장된 설정을 불러오거나, 직접 입력할 수 있습니다.</p>
@@ -89,21 +88,22 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
         <button type="button" disabled={loading || busy} aria-expanded={projectPicker} onClick={() => { setProjectPicker(!projectPicker); setPicker(false); }} className="rounded-xl border border-border bg-card p-3 text-primary">프로젝트 증강 작업에서 불러오기</button>
         <button type="button" disabled={loading || busy} aria-expanded={picker && recipeType === 'FORKED'} onClick={() => { setRecipeType('FORKED'); setPicker(true); setProjectPicker(false); }} className="rounded-xl border border-border bg-card p-3 text-primary">포크한 레시피 불러오기</button>
       </div>
-      {projectPicker && <ProjectAugmentationPicker enabled={integrationReady} busy={loading || busy} onSelect={id => void load(undefined, id)} onClose={() => setProjectPicker(false)}/>}
-      {picker && <ForkedRecipePicker key={recipeType} type={recipeType} busy={!integrationReady || loading || busy} onSelect={id => void load(id)} onClose={() => setPicker(false)}/>}
+      {projectPicker && <ProjectAugmentationPicker busy={loading || busy} onSelect={id => void load(undefined, id)} onClose={() => setProjectPicker(false)}/>}
+      {picker && <ForkedRecipePicker key={recipeType} type={recipeType} busy={loading || busy} onSelect={id => void load(id)} onClose={() => setPicker(false)}/>}
     </section>}
     {source && <p role="status">불러온 설정: {source}</p>}
     {loading && <p role="status">실행 설정을 불러오는 중…</p>}
     {error && <p role="alert" className="text-red-500">{error}</p>}
-    {integrationReady && !ready && !loading && <button type="button" onClick={() => void load(initialSourceId)}>다시 불러오기</button>}
+    {!ready && !loading && <button type="button" onClick={() => void load(initialSourceId)}>다시 불러오기</button>}
     <fieldset disabled={loading || busy} className="space-y-5">
       <section className="space-y-3 rounded-2xl border border-border p-4"><h4 className="font-bold">증강 설정</h4>
-      {integrationReady && sourceJobId != null && <p className="text-sm text-muted-foreground">실제 실행한 설정을 그대로 저장합니다. 설정 변경은 저장한 레시피를 불러와 새 레시피로 작성해 주세요.</p>}
-      <div className="grid gap-4 sm:grid-cols-2">{augmentationFields.map(field => <label key={field.key} className="block text-sm font-bold">{field.label}<input required type="number" min={field.min} max={field.max} step={field.key === 'strength' ? 'any' : field.step} readOnly={sourceJobId != null} value={settings[field.key]} onChange={e => { dirty.current = true; setSettings({ ...settings, [field.key]: e.target.value }); }} className="mt-2 w-full rounded-xl border border-border bg-background p-3" /></label>)}</div>
+      {sourceJobId != null && <p className="text-sm text-muted-foreground">실제 실행한 설정을 그대로 저장합니다. 설정 변경은 저장한 레시피를 불러와 새 레시피로 작성해 주세요.</p>}
+      <div className="grid gap-4 sm:grid-cols-2">{augmentationFields.map(field => <label key={field.key} className="block text-sm font-bold">{field.label}<input required={field.key !== 'seed'} placeholder={field.key === 'seed' ? '비워 두면 실행 시 랜덤' : undefined} type="number" min={field.min} max={field.max} step={field.key === 'strength' ? 'any' : field.step} readOnly={sourceJobId != null} value={settings[field.key]} onChange={e => { dirty.current = true; setSettings({ ...settings, [field.key]: e.target.value }); }} className="mt-2 w-full rounded-xl border border-border bg-background p-3" /></label>)}</div>
       </section>
       <label className="block">레시피 제목<LimitedInput maxLength={100} required value={meta.title} onChange={e => { dirty.current = true; setMeta({ ...meta, title: e.target.value }); }} className="w-full rounded-xl border border-border bg-background p-3" /></label>
       <label className="block">설명<LimitedTextarea maxLength={2000} required value={meta.description} onChange={e => { dirty.current = true; setMeta({ ...meta, description: e.target.value }); }} className="w-full rounded-xl border border-border bg-background p-3" /></label>
       <label className="block">상세 본문<LimitedTextarea maxLength={2000} value={meta.overview} onChange={e => { dirty.current = true; setMeta({ ...meta, overview: e.target.value }); }} className="w-full rounded-xl border border-border bg-background p-3" /></label>
+      <p className="text-xs text-muted-foreground">불러온 레시피의 대표 이미지는 복사되지 않습니다. 필요하면 새 이미지를 선택해 주세요.</p>
       <RecipeImageField file={image} onChange={file => { dirty.current = true; setImage(file); }} disabled={busy}/>
       {([{ key: 'features', label: '핵심 특징', value: featureText, set: setFeatureText }, { key: 'recommendations', label: '추천 사용 사례', value: recommendationText, set: setRecommendationText }] as const).map(item => <div key={item.key} className="space-y-2"><label className="block">{item.label} ({(extras[item.key] ?? []).length}/20개)<LimitedInput maxLength={200} value={item.value} disabled={(extras[item.key] ?? []).length >= 20} onChange={e => item.set(e.target.value)} onKeyDown={e => {
         if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
@@ -113,6 +113,6 @@ export default function AugmentationRecipeForm({ onClose, onCreated, context = '
       }} placeholder="입력 후 Enter로 추가" className="w-full rounded-xl border border-border bg-background p-3" /></label><div className="flex flex-wrap gap-2">{(extras[item.key] ?? []).map((value, index) => <button type="button" key={`${index}-${value}`} onClick={() => { setExtras({ ...extras, [item.key]: (extras[item.key] ?? []).filter((_, i) => i !== index) }); dirty.current = true; }} className="rounded-lg border border-border p-2 text-sm" aria-label={`${value} 삭제`}>{value} ×</button>)}</div></div>)}
 
     </fieldset>
-    <button disabled={!integrationReady || busy || loading || !ready} className="rounded-xl bg-primary px-6 py-3 font-bold text-white disabled:opacity-50">{!integrationReady ? '연동 준비 중' : busy ? '저장 중…' : context === 'ASSET' ? '내 레시피로 저장' : '공개 사본 등록'}</button>
+    <button disabled={busy || loading || !ready} className="rounded-xl bg-primary px-6 py-3 font-bold text-white disabled:opacity-50">{busy ? '저장 중…' : context === 'ASSET' ? '내 레시피로 저장' : '공개 사본 등록'}</button>
   </form>;
 }

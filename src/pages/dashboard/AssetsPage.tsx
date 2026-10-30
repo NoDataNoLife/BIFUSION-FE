@@ -1,6 +1,6 @@
 import RecipeOrigin from '../../components/community/RecipeOrigin';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { GitFork, Eye, Search, Plus, Calendar, RefreshCw } from 'lucide-react';
 import RecipeDetail from '../../components/dashboard/RecipeDetail';
 import DatasetDetailView from '../../components/dashboard/DatasetDetailView';
@@ -13,28 +13,28 @@ import type { MyDatasetListResponse, MyRecipeListResponse } from '../../store/us
 type Tab = 'recipes' | 'uploaded-recipes' | 'datasets' | 'augmented';
 interface Page { content: (MyRecipeListResponse | MyDatasetListResponse)[]; totalPages: number; totalElements: number }
 export default function AssetsPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('recipes');
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<{ id: number; type: 'recipe' | 'dataset' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [shareLegacy, setShareLegacy] = useState<boolean | null>(null);
+  const [sharing, setSharing] = useState<boolean | null>(null);
   const [createSourceId, setCreateSourceId] = useState<number | undefined>();
   const recipeTab = activeTab === 'recipes' || activeTab === 'uploaded-recipes';
   const types = { recipes: 'FORKED', 'uploaded-recipes': 'MINE', datasets: 'UPLOADED', augmented: 'AUGMENTED' };
   const { data, error, loading: isLoading, reload } = useApiQuery<Page>(recipeTab ? '/assets/recipes' : '/assets/datasets', { type: types[activeTab], page, size: 12 });
   const back = () => { setSelected(null); reload(); };
-  const openFromRecipe = (id: number) => { setShareLegacy(null); setCreateSourceId(id); setIsCreateModalOpen(true); };
+  const openFromRecipe = (id: number) => { setSharing(null); setCreateSourceId(id); setIsCreateModalOpen(true); };
   const createModal = <CreateAssetModal
-    key={`${createSourceId ?? 'new'}-${shareLegacy}`}
-    context={shareLegacy == null ? 'ASSET' : 'COMMUNITY'}
-    initialLegacy={shareLegacy ?? undefined}
+    key={`${createSourceId ?? 'new'}-${sharing}`}
+    context={sharing == null ? 'ASSET' : 'COMMUNITY'}
     isOpen={isCreateModalOpen}
     initialRecipeId={createSourceId}
-    onClose={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); setShareLegacy(null); reload(); }}
-    onCreated={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); setShareLegacy(null); setSelected(null); setActiveTab('uploaded-recipes'); setPage(0); reload(); }}
+    onClose={() => { setIsCreateModalOpen(false); setCreateSourceId(undefined); setSharing(null); reload(); }}
+    onCreated={recipeId => { if (sharing != null && recipeId != null) { navigate(`/dashboard/community?recipeId=${recipeId}`); return; } setIsCreateModalOpen(false); setCreateSourceId(undefined); setSharing(null); setSelected(null); setActiveTab('uploaded-recipes'); setPage(0); reload(); }}
   />;
-  if (selected?.type === 'recipe') return <><RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} onShareRecipe={activeTab === 'uploaded-recipes' ? legacy => { setShareLegacy(legacy); setCreateSourceId(selected.id); setIsCreateModalOpen(true); } : undefined} onCreateFromRecipe={activeTab === 'recipes' ? () => openFromRecipe(selected.id) : undefined}/>{createModal}</>;
+  if (selected?.type === 'recipe') return <><RecipeDetail key={selected.id} recipe={{ id: String(selected.id) }} onBack={back} onShareRecipe={activeTab === 'uploaded-recipes' ? () => { setSharing(true); setCreateSourceId(selected.id); setIsCreateModalOpen(true); } : undefined} onCreateFromRecipe={activeTab === 'recipes' ? () => openFromRecipe(selected.id) : undefined}/>{createModal}</>;
   if (selected?.type === 'dataset') return <DatasetDetailView key={selected.id} datasetId={selected.id} onBack={back} />;
   const displayRecipes = (recipeTab ? data?.content ?? [] : []).filter((r): r is MyRecipeListResponse => 'recipeId' in r).filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ id: r.recipeId, inspectionTarget: r.inspectionTarget, forkedFrom: r.forkedFrom, title: r.title, description: r.description, thumbnailUrl: r.bannerImageUrl, isExpertVerified: r.expertVerified, forkedCount: r.forkCount ?? '—', viewCount: r.viewCount ?? '—' }));
   const displayDatasets = (!recipeTab ? data?.content ?? [] : []).filter((d): d is MyDatasetListResponse => 'datasetId' in d).filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase())).map(d => ({ id: d.datasetId, inspectionTarget: d.inspectionTarget, name: d.name, thumbnail: d.bannerImageUrl, size: formatBytes(d.totalSize), fileCount: d.fileCount, uploadedAt: d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('ko-KR') : '날짜 미등록', format: d.fileFormats?.join(', ') || '형식 미등록' }));
@@ -60,7 +60,7 @@ export default function AssetsPage() {
             />
           </div>
           <button
-            onClick={() => { setShareLegacy(null); setCreateSourceId(undefined); setIsCreateModalOpen(true); }}
+            onClick={() => { setSharing(null); setCreateSourceId(undefined); setIsCreateModalOpen(true); }}
             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm whitespace-nowrap cursor-pointer"
           >
             <Plus size={18} /> 새 자산 추가

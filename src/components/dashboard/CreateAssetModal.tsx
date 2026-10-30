@@ -9,12 +9,11 @@ interface CreateAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialRecipeId?: number;
-  onCreated?: () => void;
+  onCreated?: (recipeId?: number) => void;
   context?: 'ASSET' | 'COMMUNITY';
-  initialLegacy?: boolean;
 }
 
-export default function CreateAssetModal({ isOpen, onClose, initialRecipeId, onCreated, context = 'ASSET', initialLegacy }: CreateAssetModalProps) {
+export default function CreateAssetModal({ isOpen, onClose, initialRecipeId, onCreated, context = 'ASSET' }: CreateAssetModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory>(initialRecipeId != null ? 'RECIPE' : null);
 
   if (!isOpen) return null;
@@ -84,7 +83,7 @@ export default function CreateAssetModal({ isOpen, onClose, initialRecipeId, onC
         {/* Content Area */}
         <div className="overflow-y-auto flex-1">
           {!selectedCategory && renderCategorySelection()}
-          {selectedCategory === 'RECIPE' && <ShowcaseCreateForm onClose={handleClose} onCreated={onCreated} initialSourceId={initialRecipeId} context={context} initialLegacy={initialLegacy} />}
+          {selectedCategory === 'RECIPE' && <ShowcaseCreateForm onClose={handleClose} onCreated={onCreated} initialSourceId={initialRecipeId} context={context} />}
           {selectedCategory === 'DATASET' && <DatasetCreateForm onClose={handleClose} context="ASSET" />}
         </div>
       </div>

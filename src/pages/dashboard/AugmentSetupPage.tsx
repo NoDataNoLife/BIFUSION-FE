@@ -57,7 +57,7 @@ export default function AugmentSetupPage() {
       const settings = readAugmentationSettings(data.augmentationSettings);
       const parameters = augmentationJobParameters(settings);
       setImagesPerClass(String(parameters.num_samples_per_class)); setStrength(String(parameters.strength));
-      setFinetuneSteps(String(parameters.finetune_steps)); setSamplingSteps(String(parameters.steps)); setSeed(String(parameters.seed)); setFixedSeed(true);
+      setFinetuneSteps(String(parameters.finetune_steps)); setSamplingSteps(String(parameters.steps)); setSeed(parameters.seed == null ? '' : String(parameters.seed)); setFixedSeed(parameters.seed != null);
       setRecipeTitle(data.title); setRecipeReady(true);
     }).catch(error => { if (!controller.signal.aborted) setRecipeError(requestMessage(error)); })
       .finally(() => { if (!controller.signal.aborted) setRecipeLoading(false); });

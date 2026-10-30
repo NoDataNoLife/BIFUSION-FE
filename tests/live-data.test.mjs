@@ -40,7 +40,6 @@ await build({ stdin: { resolveDir: process.cwd(), loader: 'ts', contents: `
   export { inspectionUnavailable } from './src/lib/inspectionErrors';
   export { AntCostNotice, AntRequestError } from './src/components/common/AntActionNotice';
   export { recipeReviewPayload } from './src/lib/recipeReviewPayload';
-  export { newRecipeDraft, draftFromRecipe, recipeRegistrationPayload } from './src/lib/recipeDraft';
   export { AxiosError } from 'axios';
   export { useNotificationStore } from './src/store/useNotificationStore';
   export { useProjectStore } from './src/store/useProjectStore';
@@ -395,45 +394,8 @@ test('manager role rollout enables explicit MANAGER requests without changing ME
 });
 
 
-test('imported recipe settings preserve zero, custom choices and batch size without importing ownership', () => {
-  const source = { recipeId: 88, title: '원본', description: '설명', author: { userId: 99 }, isExpertVerified: true,
-    overview: { content: '본문', features: ['특징'], recommendations: ['활용'] },
-    settings: { model: 'model-custom', steps: 250, sampler: 'custom-sampler', cfgScale: 0, seed: '0', resolution: '640x480', batchSize: 12 } };
-  const draft = app.draftFromRecipe(source);
-  assert.equal(draft.cfgScale, '0');
-  assert.equal(draft.seed, '0');
-  assert.equal(draft.sampler, 'custom-sampler');
-  assert.equal(draft.resolution, '640x480');
-  const payload = app.recipeRegistrationPayload(draft, false);
-  assert.equal(payload.batchSize, 12);
-  assert.equal(payload.steps, 250);
-  assert.equal(payload.seed, 0);
-  assert.equal(payload.isPublic, false);
-  assert.equal('forkedFromId' in payload, false);
-  assert.equal('author' in payload, false);
-  assert.equal('isExpertVerified' in payload, false);
-  draft.features.push('새 특징');
-  assert.deepEqual(source.overview.features, ['특징']);
-});
 
-test('missing source parameters remain empty and cannot silently become zero or defaults', () => {
-  const draft = app.draftFromRecipe({ title: '제목', description: '설명', settings: null, overview: null });
-  assert.equal(draft.steps, '');
-  assert.equal(draft.seed, '');
-  assert.equal(draft.modelName, '');
-  assert.deepEqual(draft.features, []);
-  assert.throws(() => app.recipeRegistrationPayload(draft, false));
-  assert.throws(() => app.draftFromRecipe({ isDeleted: true }));
-});
 
-test('new recipe registration rejects invalid numeric input and honors explicit publication context', () => {
-  const draft = { ...app.newRecipeDraft(), title: '새 레시피', description: '설명' };
-  assert.equal(app.recipeRegistrationPayload(draft, true).isPublic, true);
-  assert.equal(app.recipeRegistrationPayload(draft, false).isPublic, false);
-  for (const invalid of [{ steps: '' }, { steps: '1.2' }, { batchSize: '0' }, { seed: '2147483648' }, { cfgScale: 'NaN' }]) {
-    assert.throws(() => app.recipeRegistrationPayload({ ...draft, ...invalid }, false));
-  }
-});
 
 
 test('invitation response uses both nested IDs and rejects processed or invalid invitations', async () => {
@@ -759,7 +721,7 @@ test('augmentation recipe settings round trip without losing actual seed or stre
 });
 
 test('legacy and incomplete augmentation recipes cannot silently become runnable settings', () => {
-  for (const value of [null, undefined, {}, { model: 'legacy', steps: 50, seed: 42 }, { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50 }]) {
+  for (const value of [null, undefined, {}, { model: 'legacy', steps: 50, seed: 42 }]) {
     assert.throws(() => app.readAugmentationSettings(value));
   }
   const base = { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 };
@@ -794,7 +756,7 @@ test('new recipe settings render Korean labels and never invent a legacy configu
 });
 
 test('job-backed recipe form cannot save before a real snapshot is loaded', () => {
-  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, integrationReady: true, onClose() {} }));
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, onClose() {} }));
   assert.match(html, /저장 시 비공개로 등록/);
   assert.match(html, /파인튜닝 스텝/);
   assert.match(html, /disabled=""[^>]*>내 레시피로 저장/);
@@ -845,8 +807,8 @@ test('legacy results show only verified values without inventing current default
 });
 
 test('job store retains normalized server snapshots without using request seed as actual execution history', async () => {
-  const snapshot = { type: 'TRAINING', parameters: { kShot: 5, epochs: 30, seed: 0 }, inputs: { augmentationJobId: 44 } };
-  api.defaults.adapter = async config => response(config, { jobId: 9, type: 'TRAINING', status: 'SUCCESS', projectId: 2, seedNumber: 0, executionSnapshot: snapshot });
+  const snapshot = { kShot: 5, epochs: 30, seed: 0, augmentationJobId: 44 };
+  api.defaults.adapter = async config => response(config, { jobId: 9, type: 'TRAINING', status: 'SUCCESS', projectId: 2, seedNumber: 0, ...snapshot });
   const job = await app.useJobStore.getState().fetchJobStatus('9');
   assert.equal(job.executionSeed, 0);
   assert.equal(job.executionSnapshot.parameters.seed, 0);
@@ -858,49 +820,43 @@ test('job store retains normalized server snapshots without using request seed a
 });
 
 
-test('new recipe screen is the default while API-backed saving and imports remain disabled', () => {
+test('new recipe screen uses deployed registration contract without legacy form', () => {
   const html = app.renderToString(app.createElement(app.ShowcaseCreateForm, { context: 'ASSET', onClose() {} }));
   assert.match(html, /클래스별 생성 장수/);
   assert.match(html, /증강 강도/);
   assert.match(html, /파인튜닝 스텝/);
-  assert.match(html, /기존 형식 레시피/);
-  assert.match(html, /서버에 저장되지 않으며/);
-  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
+  assert.doesNotMatch(html, /기존 형식 레시피/);
+  assert.match(html, /내 레시피로 저장/);
+  assert.match(html, /레시피/);
   assert.match(html, /내 레시피 불러오기/);
   assert.match(html, /포크한 레시피 불러오기/);
   assert.doesNotMatch(html, /Euler a|BIFUSION-Diffusion/);
 });
 
-test('job recipe preview identifies the source but does not claim a snapshot was loaded', () => {
-  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { context: 'ASSET', sourceJobId: 44, integrationReady: false, onClose() {} })).replace(/<!--.*?-->/g, '');
-  assert.match(html, /원본 작업: JOB-44/);
-  assert.match(html, /API 연결 후 불러옵니다/);
-  assert.doesNotMatch(html, /불러온 설정:|다시 불러오기/);
-  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
-});
 
-test('recipe settings preview blocks reuse until API integration is enabled', () => {
+test('recipe settings allow reuse after deployed API integration', () => {
   const html = app.renderToString(app.createElement(app.RecipeAugmentationSettings, { recipeId: 3, value: { numSamplesPerClass: 10, strength: 0.3, finetuneSteps: 400, steps: 50, seed: 42 } }));
-  assert.match(html, /disabled=""[^>]*>레시피 재사용 연동 준비 중/);
+  assert.match(html, /이 설정으로 증강하기/);
   assert.doesNotMatch(html, /recipeId=3/);
 });
 
-test('recipe creation exposes project import independently of pending fork and save integration', () => {
+test('recipe creation exposes project imports and public registration', () => {
   const html = app.renderToString(app.createElement(app.ShowcaseCreateForm, { context: 'COMMUNITY', onClose() {} }));
   assert.match(html, /프로젝트 증강 작업에서 불러오기/);
-  assert.match(html, /disabled=""[^>]*>연동 준비 중/);
+  assert.match(html, /레시피/);
   assert.doesNotMatch(html, /disabled=""[^>]*>프로젝트 증강 작업에서 불러오기/);
 });
 
-test('project import preview explains that real settings remain unavailable', () => {
+test('project import offers actual completed job settings', () => {
   const html = app.renderToString(app.createElement(app.ProjectAugmentationPicker, { enabled: false, busy: false, onSelect() {}, onClose() {} }));
   assert.match(html, /프로젝트의 증강 작업 선택/);
-  assert.match(html, /실제 설정 불러오기와 저장은 API 연동 후/);
+  assert.match(html, /완료된 증강 작업의 실제 설정/);
+  assert.doesNotMatch(html, /연동 준비|API 연동 후/);
   assert.match(html, /입력 이미지와 결과 파일은 복사하지 않습니다/);
 });
 
 test('community recipe sharing describes a public copy while personal saving stays private', () => {
-  const render = context => app.renderToString(app.createElement(app.AugmentationRecipeForm, { context, integrationReady: true, onClose() {} }));
+  const render = context => app.renderToString(app.createElement(app.AugmentationRecipeForm, { context, onClose() {} }));
   assert.match(render('COMMUNITY'), /공개 사본 등록/);
   assert.match(render('COMMUNITY'), /원본은 변경되지 않습니다/);
   assert.match(render('ASSET'), /비공개로 등록됩니다/);
@@ -908,7 +864,23 @@ test('community recipe sharing describes a public copy while personal saving sta
 });
 
 test('saving from a result keeps the source fixed and does not offer unrelated imports', () => {
-  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { sourceJobId: 44, context: 'ASSET', integrationReady: false, onClose() {} }));
+  const html = app.renderToString(app.createElement(app.AugmentationRecipeForm, { sourceJobId: 44, context: 'ASSET', onClose() {} }));
   assert.doesNotMatch(html, /프로젝트 증강 작업에서 불러오기|내 레시피 불러오기/);
   assert.match(html, /readOnly=""/);
+});
+
+
+test('optional recipe seed remains null and is omitted from execution requests', () => {
+  const settings = { numSamplesPerClass: 2, strength: 0.3, finetuneSteps: 20, steps: 10, seed: null };
+  assert.deepEqual(app.settingsFromDraft(app.draftFromSettings(settings)), settings);
+  assert.equal(Object.hasOwn(app.augmentationJobParameters(settings), 'seed'), false);
+  assert.equal(app.augmentationJobParameters({ ...settings, seed: 0 }).seed, 0);
+});
+
+test('deployed inference inputs preserve training job identity and signed image URLs', async () => {
+  api.defaults.adapter = async config => response(config, { jobId: 10, type: 'INFERENCE', status: 'SUCCESS', trainingJobId: 7, inputImages: [{ fileId: 3, fileName: 'input.png', url: 'https://example.com/input.png' }] });
+  const job = await app.useJobStore.getState().fetchJobStatus('10');
+  assert.equal(job.executionSnapshot.inputs.trainingJobId, 7);
+  assert.equal(job.executionSnapshot.inputs.modelId, null);
+  assert.equal(job.executionSnapshot.inputs.files[0].imageUrl, 'https://example.com/input.png');
 });

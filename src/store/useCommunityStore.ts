@@ -75,6 +75,7 @@ export interface RecipeListResponse {
 }
 
 export interface RecipeDetailResponse {
+  settingsFormat?: 'LEGACY' | 'AUGMENTATION';
   augmentationSettings?: AugmentationSettings | null;
   sourceJobId?: number | null;
   isDeleted?: boolean;

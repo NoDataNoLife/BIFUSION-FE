@@ -1,111 +1,60 @@
-# BIFUSION-FE 초기 환경 세팅 및 트러블슈팅 로그
+# BIFUSION Frontend
 
-현재 AI 연동·팀 공유 자료는 [문서 안내](docs/README.md)를 참고하세요.
+소량 생의학(Biomedical) 이미지의 데이터 증강(Augmentation), Few-shot 분류 모델 학습(Training), 추론(Inference) 및 레시피·커뮤니티 공유를 지원하는 웹 플랫폼 **BIFUSION**의 프론트엔드 저장소입니다.
 
-이 문서는 프로젝트의 초기 스타일 시스템(Tailwind CSS v4 + shadcn/ui 기반) 구축 과정과 발생했던 주요 이슈 및 해결 방법을 기록합니다.
+---
 
-## 0. vite+react preview 확인 방법
+## 1. 주요 기능
 
-```powershell
+- **프로젝트 및 데이터셋 관리**: 작업 단위 프로젝트 생성, 데이터셋 업로드 및 자산(Asset) 상태 조회
+- **AI 작업 워크플로 실행**: 이미지 증강·학습·추론 파라미터 설정, 작업 요청 및 실시간 상태 폴링(`useJobPolling`)
+- **작업 결과 확인 및 예외 분리**: 완료 산출물 다운로드·미리보기 제공, 네트워크/조회 오류와 실제 ML 작업 실패 상태 분리 표시
+- **레시피 및 전문가 검수 커뮤니티**: 실험 설정 레시피 공유·복제(Fork) 및 검수 피드백 조회
+
+---
+
+## 2. 기술 스택
+
+- **Core**: React 19, TypeScript 5.9, Vite 7
+- **Routing**: React Router v7
+- **State & Data Fetching**: Zustand v5, TanStack Query v5, Axios
+- **Styling**: Tailwind CSS v4, Lucide Icons
+- **Deployment**: Vercel (`vercel.json` 리라이트 구성)
+
+---
+
+## 3. 디렉토리 구조
+
+```text
+BIFUSION-FE/
+├── src/
+│   ├── components/       # 공통 UI 및 작업 설정·결과 표시 컴포넌트
+│   ├── hooks/            # 작업 상태 폴링(useJobPolling) 등 커스텀 훅
+│   ├── lib/              # Axios 클라이언트 및 API 호출 모듈
+│   ├── pages/            # 대시보드, 프로젝트, 데이터셋, 커뮤니티 등 라우트 화면
+│   ├── store/            # 인증 및 AI 작업 상태(useJobStore) 관리 스토어
+│   ├── types/            # API 입출력 및 도메인 타입 정의
+│   ├── App.tsx           # 라우터 및 전역 프로바이더 설정
+│   └── main.tsx          # 애플리케이션 진입점
+├── tests/                # Node 내장 테스트 러너 기반 AI 워크플로 검증 테스트
+├── package.json
+└── vite.config.ts
+```
+
+---
+
+## 4. 실행 및 테스트 방법
+
+```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
 npm run dev
+
+# 프로덕션 빌드
+npm run build
+
+# 워크플로 단위 테스트 실행
+npm test
 ```
-
-터미널에 뜬
-`http://localhost:포트번호/` 로 브라우저 접속해 미리보기 확인 가능
-
-## 1. 프로젝트 개요
-
-- **목적**: Bifusion 브랜드 가이드를 기반으로 한 프론트엔드 환경 구축
-- **핵심 기술 스택**: React, Vite, TypeScript, Tailwind CSS v4, shadcn/ui
-
-## 2. 디자인 가이드 반영 (Brand Assets)
-
-### 브랜드 컬러
-
-- **Primary (Orange)**: `#E68A00` (Bifusion 로고 메인 컬러)
-- **Secondary (Dark Gray)**: `#434D5A` (텍스트 및 서브 컬러)
-- **Accent (Brown)**: `#8D5A00` (강조 컬러)
-
-### 폰트 시스템
-
-- **Main Sans**: `Inter` (가독성 위주)
-- **Point/Retro**: `HBIOS-SYS` (도트 그래픽 느낌의 시스템 폰트)
-
----
-
-## 3. 세팅 과정 및 트러블슈팅
-
-### 이슈 1: Tailwind CSS v4 도입 및 PostCSS 충돌
-
-**상황**: `npx tailwindcss init -p` 실행 시 에러 발생 및 `tailwindcss`를 직접 PostCSS 플러그인으로 사용할 수 없다는 경고 노출.
-**원인**: 최신 Tailwind CSS v4는 기존 v3와 달리 전용 PostCSS 패키지(`@tailwindcss/postcss`)를 요구함.
-
-**해결**:
-
-1. 패키지 설치: `npm install -D @tailwindcss/postcss`
-2. `postcss.config.js` 수정:
-
-   ```javascript
-   export default {
-     plugins: {
-       "@tailwindcss/postcss": {}, // v4 전용 플러그인 적용
-       autoprefixer: {},
-     },
-   }
-   ```
-
-### 이슈 2: Unknown Utility Class `border-border` 에러
-
-**상황**: `src/index.css`에서 `@apply border-border` 사용 시 "Cannot apply unknown utility class" 에러 발생.
-**원인**: Tailwind v4는 CSS-First 방식으로 변경되어, `@theme` 블록 내에 정의되지 않은 변수를 `@apply`로 즉시 사용하는 방식에 제약이 있음.
-
-**해결**:
-`src/index.css`를 Tailwind v4의 `@theme` 문법으로 전면 개편하여 모든 변수를 통합 관리함.
-
----
-
-## 4. 최종 설정 현황
-
-### `src/index.css` (Tailwind v4 Theme)
-
-모든 브랜드 컬러와 UI 변수를 CSS 내에서 직접 정의합니다.
-
-```css
-@import "tailwindcss";
-
-@theme {
-  --color-primary: #E68A00;
-  --color-secondary: #434D5A;
-  --color-accent: #8D5A00;
-  
-  --font-sans: "Inter", sans-serif;
-  --font-hbios: "HBIOS-SYS", monospace;
-  /* ... 기타 UI 변수 */
-}
-```
-
-### UI 유틸리티 (`src/lib/utils.ts`)
-
-shadcn/ui 및 동적 클래스 병합을 위한 `cn` 함수를 구성했습니다.
-
-```typescript
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-```
-
----
-
-## 5. 사용 방법
-
-설정된 클래스를 통해 디자인 가이드를 즉시 적용할 수 있습니다.
-
-- 배경색: `bg-primary`, `bg-secondary`
-- 글자색: `text-primary`, `text-accent`
-- 폰트: `font-sans`, `font-hbios`
-
----
-최종 업데이트: 2026-03-19
